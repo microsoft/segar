@@ -1,9 +1,9 @@
 
-from rpp.mdps.mdps import MDP
-from rpp.mdps.observations import RGBObservation
-from rpp.tasks.puttputt import PuttPuttRandomCenterInitialization, PuttPutt
-from rpp.mdps.states import StateDict
-from rpp.sim.sim import Simulator
+from segar.mdps.mdps import MDP
+from segar.mdps.observations import RGBObservation
+from segar.tasks.puttputt import PuttPuttRandomCenterInitialization, PuttPutt
+from segar.mdps.states import StateDict
+from segar.sim.sim import Simulator
 
 import gym3
 import numpy as np

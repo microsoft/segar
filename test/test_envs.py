@@ -2,16 +2,16 @@
 import logging
 import traceback
 
-from rpp.mdps.mdps import MDP
-from rpp.mdps.observations import RGBObservation, ObjectStateObservation, \
+from segar.mdps.mdps import MDP
+from segar.mdps.observations import RGBObservation, ObjectStateObservation, \
     TileStateObservation, AllObjectsStateObservation, AllTilesStateObservation
-from rpp.configs.handler import get_env_config
-from rpp.tasks.billiards import BilliardsInitialization, Billiards, \
+from segar.configs.handler import get_env_config
+from segar.tasks.billiards import BilliardsInitialization, Billiards, \
     billiards_default_config
-from rpp.tasks.puttputt import PuttPuttInitialization, Invisiball, PuttPutt, \
+from segar.tasks.puttputt import PuttPuttInitialization, Invisiball, PuttPutt, \
     puttputt_default_config, invisiball_config
-from rpp.tools.sample_trajectories import rollout
-from rpp.sim.sim import Simulator
+from segar.tools.sample_trajectories import rollout
+from segar.sim.sim import Simulator
 
 
 _TASKS = ('puttputt', 'invisiball', 'billiards')

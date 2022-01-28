@@ -30,7 +30,7 @@ jobs:
 
       - name: Builds the docs
         run: |
-          sphinx-apidoc --force -o docs/_source rpp/
+          sphinx-apidoc --force -o docs/_source segar/
           sphinx-build docs/_source docs/_build -E
       - uses: actions/upload-artifact@v1
         with:
