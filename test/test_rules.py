@@ -288,32 +288,45 @@ class TestRules(unittest.TestCase):
             out()
 
     def test_rule_priorities(self):
-        sim = Simulator(auto_adopt=True)
+        sim = Simulator(local_sim=True)
         sim.reset()
 
         class Ball(Object, default={Label: 'ball'}):
             pass
 
+        class Ball2(Object, default={ID: 'golfball', Label: 'ball'}):
+            pass
+
         numbers = [
-            (Object, 2),
+            (Object, 1),
             (Ball, 1),
+            (Ball2, 1),
             (Charger, 1)
         ]
 
+        # Copying for rules is necessary for multi-sim needs.
         priors = [
             Prior(Position, [0.5, 0.5], entity_type=Object),
             Prior(Position, [1., 1.], entity_type=Charger),
             Prior(Position, [1.5, 1.5], relation=IsEqual(Label, 'ball')),
-            Prior(Position, [2., 2.], relation=IsEqual(ID, 0))
+            Prior(Position, [2., 2.], relation=IsEqual(ID, 'golfball'))
         ]
-
         init = ArenaInitialization(
             config={'numbers': numbers, 'priors': priors})
+        init.set_sim(sim)
+        if init.sim is not sim:
+            raise ValueError('init has wrong sim.')
+
+        for prior in init._priors:
+            if prior.sim is not sim:
+                raise ValueError('Prior should have same sim.')
+
         init.sample()
         init.set_arena()
+
         for thing in sim.things.values():
             if thing.has_factor(Position):
-                if thing[ID] == 0:
+                if thing[ID] == 'golfball':
                     self.assertEqual(thing[Position], np.array([2.0, 2.0]))
                 elif thing.has_factor(Label) and thing[Label] == 'ball':
                     self.assertEqual(thing[Position], np.array([1.5, 1.5]))

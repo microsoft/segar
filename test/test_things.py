@@ -35,11 +35,10 @@ class TestThings(unittest.TestCase):
         sim = get_sim()
         sim.reset()
 
-        with sim.auto_adopt(True):
-            o = Object()
-            t1 = Tile({Position: [5, 5]})
-            t2 = Tile()
-            t3 = Tile()
+        o = Object(sim=sim)
+        t1 = Tile({Position: [5, 5]}, sim=sim)
+        t2 = Tile(sim=sim)
+        t3 = Tile(sim=sim)
         tiles = [t1, t2, t3]
 
         def set_orders(orders):

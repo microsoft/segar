@@ -114,10 +114,7 @@ def test_stacked_observation(n_stack=5):
         _test_stacked_observation_one(obs_class, n_stack=n_stack)
 
 
-def test_apply_action():
-    sim = get_sim()
-    sim.reset()
-
+def _create_mdp(sim=None):
     visual_config = get_env_config('visual', 'linear_ae', dist_name='baseline')
     rgb_obs = RGBObservation(resolution=256, config=visual_config)
 
@@ -137,7 +134,16 @@ def test_apply_action():
                   action_type=action_type, baseline_action=baseline_action,
                   initialization=initialization)
 
-    mdp = MDP(rgb_obs, task)
+    mdp = MDP(rgb_obs, task, sim=sim)
+    return mdp
+
+
+def test_apply_action():
+    print('Testing actions apply correctly.')
+    sim = get_sim()
+    sim.reset()
+    mdp = _create_mdp()
+
     mass = sim.things[0][Mass].value
     gravity = sim.parameters[Gravity]
     mu = sim.things['global_friction'][Friction].value
@@ -161,6 +167,29 @@ def test_apply_action():
         if not np.allclose(expected_vel, vel, atol=1e-7):
             raise ValueError(f'Velocity {vel} doesn\'t match expected '
                              f'{expected_vel}.')
+    print('[PASSED]')
+
+
+def test_local_sim():
+    print('Testing local sims.')
+    sim = Simulator(local_sim=True)
+    sim_global = get_sim()
+    mdp = _create_mdp(sim)
+    if sim is sim_global:
+        raise ValueError('Local sim creation failed.')
+
+    if sim is not mdp.sim:
+        raise ValueError('MDP sim not set to local sim.')
+
+    if mdp.sim is not mdp._task.sim:
+        raise ValueError('MDP sim not task sim.')
+
+    if mdp.sim is not mdp._observation.sim:
+        raise ValueError('MDP sim not observation sim.')
+
+    if mdp.sim is not mdp._task._initialization.sim:
+        raise ValueError('MDP sim not initialization sim.')
+    print('[PASSED]')
 
 
 def run_all_tests():
