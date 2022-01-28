@@ -11,7 +11,7 @@ import numpy as np
 
 from segar import get_sim
 from segar.factors import (BaseShape, Circle, Factor, FactorContainer, ID,
-                         Label, Order, Position, Shape, Size, Text, Visible)
+                           Label, Order, Position, Shape, Size, Text, Visible)
 from segar.types import ThingID
 
 

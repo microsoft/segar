@@ -6,12 +6,12 @@ from typing import Union
 
 from segar.sim.location_priors import RandomEdgeLocation, RandomMiddleLocation
 from segar.things import (Charger, Magnet, Bumper, Damper, Object,
-                        ThingFactory, SandTile, MagmaTile, Hole, FireTile,
-                        Tile)
+                          ThingFactory, SandTile, MagmaTile, Hole, FireTile,
+                          Tile)
 from segar.factors import (DiscreteRangeNoise, Position, Shape,
-                         RandomConvexHull, Circle, Size, GaussianNoise,
-                         GaussianMixtureNoise, Mass, Mobile, Charge,
-                         Magnetism, Friction, UniformNoise)
+                           RandomConvexHull, Circle, Size, GaussianNoise,
+                           GaussianMixtureNoise, Mass, Mobile, Charge,
+                           Magnetism, Friction, UniformNoise)
 from segar.rules import Prior
 from segar.tasks.puttputt import puttputt_default_config, \
     puttputt_random_middle_config, invisiball_config

@@ -12,8 +12,8 @@ import warnings
 import numpy as np
 
 from segar.factors import (Position, Velocity, Shape, Done, Alive,
-                         StoredEnergy, Mobile, Mass, InfiniteEnergy, Circle,
-                         ConvexHullShape)
+                           StoredEnergy, Mobile, Mass, InfiniteEnergy, Circle,
+                           ConvexHullShape)
 from segar.things.boundaries import Wall, SquareWall
 from segar.things import Object, Thing
 from segar.types import Time

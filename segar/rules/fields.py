@@ -7,7 +7,7 @@ __all__ = ('lorentz_law',)
 from typing import Tuple
 
 from segar.factors import (Position, Velocity, Acceleration, Charge,
-                         Magnetism, Mass)
+                           Magnetism, Mass)
 
 from .transitions import TransitionFunction, Aggregate
 

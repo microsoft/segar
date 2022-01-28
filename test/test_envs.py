@@ -8,8 +8,8 @@ from segar.mdps.observations import RGBObservation, ObjectStateObservation, \
 from segar.configs.handler import get_env_config
 from segar.tasks.billiards import BilliardsInitialization, Billiards, \
     billiards_default_config
-from segar.tasks.puttputt import PuttPuttInitialization, Invisiball, PuttPutt, \
-    puttputt_default_config, invisiball_config
+from segar.tasks.puttputt import PuttPuttInitialization, Invisiball, \
+    PuttPutt, puttputt_default_config, invisiball_config
 from segar.tools.sample_trajectories import rollout
 from segar.sim.sim import Simulator
 

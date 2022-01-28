@@ -5,7 +5,7 @@
 __all__ = ('Tile', 'Hole', 'SandTile', 'MagmaTile', 'FireTile')
 
 from segar.factors import (Shape, Square, Circle, Label, Text, Order, Floor,
-                         Friction, Heat, Consumes)
+                           Friction, Heat, Consumes)
 from .things import Thing
 
 

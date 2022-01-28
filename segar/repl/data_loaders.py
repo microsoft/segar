@@ -5,15 +5,15 @@ from torch.utils.data import DataLoader
 
 from segar.configs.handler import get_env_config
 from segar.factors import (Charge, Magnetism, Mass, StoredEnergy, Density,
-                         Position, Shape, Circle, Mobile, GaussianNoise,
-                         RandomConvexHull, UniformNoise, Factor,
-                         GaussianMixtureNoise, Friction, Size)
+                           Position, Shape, Circle, Mobile, GaussianNoise,
+                           RandomConvexHull, UniformNoise, Factor,
+                           GaussianMixtureNoise, Friction, Size)
 from segar.mdps import RGBObservation, StateObservation, Initialization
 from segar.rules import Prior
 from segar.sim.location_priors import (RandomBottomLocation, RandomTopLocation,
-                                     RandomMiddleLocation)
+                                       RandomMiddleLocation)
 from segar.things import (Charger, Magnet, Bumper, Damper, Object, SandTile,
-                        MagmaTile, Hole, FireTile, Tile, ThingFactory)
+                          MagmaTile, Hole, FireTile, Tile, ThingFactory)
 from segar.repl.static_datasets.iid_samples import create_iid_from_init
 from segar.tasks.puttputt import PuttPuttInitialization, GolfBall, GoalTile
 

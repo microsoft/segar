@@ -15,11 +15,11 @@ from segar.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
 from segar.mdps.tasks import Task
 from segar.rendering.rgb_rendering import register_color
 from segar.factors import (Position, Label, Mass, Charge, Shape, Text, ID,
-                         Order, Circle, DiscreteRangeNoise,
-                         RandomConvexHull, GaussianNoise, Size,
-                         GaussianMixtureNoise, Mobile, Magnetism,
-                         UniformNoise, Friction, Alive, Done, Velocity,
-                         Acceleration, Visible)
+                           Order, Circle, DiscreteRangeNoise,
+                           RandomConvexHull, GaussianNoise, Size,
+                           GaussianMixtureNoise, Mobile, Magnetism,
+                           UniformNoise, Friction, Alive, Done, Velocity,
+                           Acceleration, Visible)
 from segar.rules import Prior
 from segar.things import Object, Tile, ThingFactory, Charger, Magnet, Bumper, \
     Damper, Ball, SandTile, MagmaTile, Hole, FireTile, Entity

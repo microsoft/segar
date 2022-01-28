@@ -1,7 +1,7 @@
 import unittest
 
 from segar.factors import (factors, number_factors, arrays, bools, noise,
-                         properties)
+                           properties)
 from segar.factors import Factor
 
 

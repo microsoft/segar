@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from segar.factors import (Heat, Friction, Charge, Magnetism, Density,
-                         StoredEnergy, Mass, Alive, Factor)
+                           StoredEnergy, Mass, Alive, Factor)
 
 
 class Generator:

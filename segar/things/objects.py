@@ -8,8 +8,8 @@ are mobile, etc.
 __all__ = ('Object', 'Magnet', 'Charger', 'Bumper', 'Damper', 'Ball')
 
 from segar.factors import (Acceleration, Alive, Charge, Circle, Collides,
-                         Density, Done, InfiniteEnergy, Label, Magnetism,
-                         Mass, Mobile, Shape, StoredEnergy, Text, Velocity)
+                           Density, Done, InfiniteEnergy, Label, Magnetism,
+                           Mass, Mobile, Shape, StoredEnergy, Text, Velocity)
 from .things import Thing
 
 

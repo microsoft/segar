@@ -14,9 +14,9 @@ import numpy as np
 
 from segar import get_sim
 from segar.factors import (Factor, Charge, Mass, Magnetism, StoredEnergy,
-                         Position, Velocity, Acceleration, Done, Alive,
-                         Friction, Heat, FACTORS, VectorFactor,
-                         BooleanFactor, NumericFactor)
+                           Position, Velocity, Acceleration, Done, Alive,
+                           Friction, Heat, FACTORS, VectorFactor,
+                           BooleanFactor, NumericFactor)
 from segar.parameters import Resolution, DoesNotHaveFactor
 from segar.rendering.rgb_rendering import RGBTextureRenderer
 from segar.sim import Simulator

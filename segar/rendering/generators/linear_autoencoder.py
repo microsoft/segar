@@ -20,11 +20,11 @@ from torch.utils.data import Dataset, DataLoader
 import wandb
 
 from segar.factors import (Heat, Friction, Charge, Magnetism, Density,
-                         StoredEnergy, Mass, Alive)
+                           StoredEnergy, Mass, Alive)
 from segar.logging import set_logger
 from segar.rendering.generators.generator import Generator
 from segar.repl.boilerplate import (make_optimizer, data_iterator, updater,
-                                  Trainer, set_device, get_device)
+                                    Trainer, set_device, get_device)
 
 
 torch.multiprocessing.set_sharing_strategy('file_system')

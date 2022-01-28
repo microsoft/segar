@@ -4,11 +4,11 @@ import unittest
 import numpy as np
 
 from segar.factors import (Charge, Magnetism, Mass, Floor, Heat, Friction,
-                         GaussianNoise, Label, Position, ID)
+                           GaussianNoise, Label, Position, ID)
 from segar.mdps.initializations import ArenaInitialization
 from segar.rules import (SetFactor, IsEqual, conditional_transition,
-                       TransitionFunction, Differential, DidNotMatch,
-                       DidNotPass, inspect_signature, IsOn, Contains, Prior)
+                         TransitionFunction, Differential, DidNotMatch,
+                         DidNotPass, inspect_signature, IsOn, Contains, Prior)
 from segar.sim import Simulator
 from segar.parameters import Gravity
 from segar.things import Object, Magnet, Tile, Charger, Entity

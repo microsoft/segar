@@ -14,8 +14,8 @@ from segar.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
 from segar.mdps.tasks import Task
 from segar.rendering.rgb_rendering import register_color
 from segar.factors import (Label, Mass, Charge, Shape, Text, Circle,
-                         GaussianNoise, Size, Position, ID, Done, Alive,
-                         Visible, Velocity)
+                           GaussianNoise, Size, Position, ID, Done, Alive,
+                           Visible, Velocity)
 from segar.rules import Prior
 from segar.things import Ball, Hole, Entity, Object
 from segar.sim.location_priors import RandomBottomLocation
