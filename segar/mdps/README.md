@@ -1,5 +1,5 @@
-This tutorial covers creating MDPs using the rpp library. Theoretically,
-what is implemented in RPP is a POMDP, which has the form:
+This tutorial covers creating MDPs using the segar library. Theoretically,
+what is implemented in SEGAR is a POMDP, which has the form:
 
 $T =  \langle \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R},
 \mathcal{O}, \mathcal{Z}, s_0\rangle$, where:
@@ -18,18 +18,18 @@ $T =  \langle \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R},
 For simplicity we will refer to this as an "MDP". In practical terms, we have
 split the MDP into the following functional components:
 
-* __Simulator object__(`rpp.sim.core.Simulator`) controls the underlying
+* __Simulator object__(`segar.sim.core.Simulator`) controls the underlying
 state space $\mathcal{S}$ and the transition function $\mathcal{P}$.
-* __Observations objects__(`rpp.mdps.observations.Observations`), make up
+* __Observations objects__(`segar.mdps.observations.Observations`), make up
 the observation function and corresponding space $(\mathcal{Z}, \mathcal{O})$.
-* __Task objects__(`rpp.mdps.tasks.Task`) control the initialization $s_0$
-(`rpp.mdps.initializations.Initialization`), the reward $\mathcal{R}$, and
+* __Task objects__(`segar.mdps.tasks.Task`) control the initialization $s_0$
+(`segar.mdps.initializations.Initialization`), the reward $\mathcal{R}$, and
 the actions $\mathcal{A}$. The task also embodies the semantics of the MDP,
 controlling what states correspond to reward, what observations the agent
 sees, etc.
 * __MDP objects__ put this all together and coordinate all of the components.
 
-For the simulator object, please see `rpp.sim.README.md` for a tutorial.
+For the simulator object, please see `segar.sim.README.md` for a tutorial.
 This tutorial covers the remaining components.
 
 ## Observations
@@ -42,10 +42,10 @@ provided by the Observations objects:
 import numpy as np
 import pprint
 
-from rpp.configs.handler import get_env_config
-from rpp.mdps.observations import RGBObservation
-from rpp.sim import Simulator
-from rpp.factors import *
+from segar.configs.handler import get_env_config
+from segar.mdps.observations import RGBObservation
+from segar.sim import Simulator
+from segar.factors import *
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -68,7 +68,7 @@ rgb_obs = RGBObservation(resolution=256, config=visual_config, annotation=True)
 ```
 
 `RGBObservations` render the states into pixels, default using a generative
-model of visual features provided by the repo. See `rpp/rendering/README.md`
+model of visual features provided by the repo. See `segar/rendering/README.md`
 for more details.
 
 
@@ -124,7 +124,7 @@ reference which state should be used to generate observations:
 
 
 ```python
-from rpp.mdps.observations import ObjectStateObservation, TileStateObservation
+from segar.mdps.observations import ObjectStateObservation, TileStateObservation
 
 sim.reset()  # Resets the simulator.
 
@@ -204,7 +204,7 @@ We can combine the observation spaces using `MultimodalObservation`.
 
 
 ```python
-from rpp.mdps.observations import MultimodalObservation
+from segar.mdps.observations import MultimodalObservation
 mm_obs = MultimodalObservation(obj_obs, tile_obs)
 pp.pprint(mm_obs(sim.state))
 ```
@@ -220,7 +220,7 @@ pp.pprint(mm_obs(sim.state))
 
 
 ```python
-from rpp.mdps.observations import AllObjectsStateObservation
+from segar.mdps.observations import AllObjectsStateObservation
 sim.add_ball(position=np.array([0.5, 0.5]), text='X', initial_factors={Charge: -0.7, Magnetism: 0.1,
              Mass: 0.5})
 sim.add_magnet(position=np.array([-0.5, 0.5]), text='M', initial_factors={Mobile: True, Mass: 0.1})
@@ -261,7 +261,7 @@ multimodal observation from stacked ones.
 
 
 ```python
-from rpp.mdps.observations import make_stacked_observation
+from segar.mdps.observations import make_stacked_observation
 
 sim = Simulator(state_buffer_length=10)
 sim.add_ball(position=np.array([0.5, 0.5]), text='X', unique_id='tennis_ball', 
@@ -295,17 +295,17 @@ Tasks control initialization, reward, and actions. However, the
 initialization function itself is complex, as it involves control over what
 is placed in the arena and where, what the factors are, etc.
 
-`rpp.mdps.initializations.ArenaInitialization` is a convenient class for
+`segar.mdps.initializations.ArenaInitialization` is a convenient class for
 initializing environments for tasks. A configuration is used to construct
 the initialization object. For more details on configurations, see
-`rpp/config/README.md`.
+`segar/config/README.md`.
 
 
 ```python
-from rpp.sim.location_priors import RandomMiddleLocation, RandomEdgeLocation
-from rpp.things import *
-from rpp.rules import Prior
-from rpp.mdps.initializations import ArenaInitialization
+from segar.sim.location_priors import RandomMiddleLocation, RandomEdgeLocation
+from segar.things import *
+from segar.rules import Prior
+from segar.mdps.initializations import ArenaInitialization
 
 object_factory = ThingFactory([Charger, Magnet, Bumper, Damper, Ball])
 tile_factory = ThingFactory({SandTile: 2. / 5, MagmaTile: 1. / 5, FireTile: 1. / 5, Hole: 1. / 5})
@@ -337,7 +337,7 @@ Now that the initialization is set up, we can construct our Task object:
 
 
 ```python
-from rpp.mdps.tasks import Task
+from segar.mdps.tasks import Task
 
 sim.reset()
 
@@ -400,7 +400,7 @@ imshow(image)
 
 
 There is additional functionality in the task and initialization to track
-the semantics of objects and tiles. For examples, see `rpp/tasks/README.md`.
+the semantics of objects and tiles. For examples, see `segar/tasks/README.md`.
 
 ## The MDP
 
@@ -413,8 +413,8 @@ gym3 environment, so it is usable as such. Here we will simply construct the
 ```python
 from IPython.display import Image
 
-from rpp.mdps.mdps import MDP
-from rpp.tools.sample_trajectories import save_gif
+from segar.mdps.mdps import MDP
+from segar.tools.sample_trajectories import save_gif
 
 mdp = MDP(rgb_obs, task)
 mdp.reset()

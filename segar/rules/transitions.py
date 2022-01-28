@@ -8,10 +8,10 @@ from typing import Any, Callable, Generic, Optional, Type, TypeVar, Union
 
 import numpy as np
 
-from rpp.factors import Factor, ID, Label
-from rpp.parameters import Parameter
-from rpp.things import Entity, Object, Thing, Tile
-from rpp.types import Time
+from segar.factors import Factor, ID, Label
+from segar.parameters import Parameter
+from segar.things import Entity, Object, Thing, Tile
+from segar.types import Time
 
 from .relations import And, IsEqual, Relation, Or
 from .rules import match_pattern, Rule

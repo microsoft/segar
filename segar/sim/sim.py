@@ -17,27 +17,27 @@ import warnings
 
 import numpy as np
 
-from rpp import set_sim, timeit
-from rpp.factors import (Factor, Floor, Friction, Charge, ID, InfiniteEnergy,
-                         Label, Magnetism, Mass, Order, Position, Shape,
-                         StoredEnergy, Text, Velocity, FACTORS,
-                         FACTOR_DEFAULTS)
-from rpp.things import (Bumper, Charger, Damper, Entity, FireTile, Hole,
-                        MagmaTile, Magnet, Object, SandTile, Tile)
-from rpp.rules import (colliding, overlaps, DidNotMatch,
-                       DidNotPass, Differential, Rule, Transition,
-                       TransitionFunction, move, lorentz_law,
-                       apply_friction, apply_burn, stop_condition,
-                       kill_condition, consume, accelerate)
-from rpp.rules.collisions import (overlap_time, object_collision,
-                                  overlap_time_wall, wall_collision,
-                                  overlaps_wall, fix_overlap_wall,
-                                  fix_overlap_objects)
-from rpp.types import ThingID, Time
-from rpp.parameters import (Framerate, FloorFriction, Gravity, MinMass,
-                            MaxVelocity, WallDamping, MinVelocity)
+from segar import set_sim, timeit
+from segar.factors import (Factor, Floor, Friction, Charge, ID, InfiniteEnergy,
+                           Label, Magnetism, Mass, Order, Position, Shape,
+                           StoredEnergy, Text, Velocity, FACTORS,
+                           FACTOR_DEFAULTS)
+from segar.things import (Bumper, Charger, Damper, Entity, FireTile, Hole,
+                          MagmaTile, Magnet, Object, SandTile, Tile)
+from segar.rules import (colliding, overlaps, DidNotMatch,
+                         DidNotPass, Differential, Rule, Transition,
+                         TransitionFunction, move, lorentz_law,
+                         apply_friction, apply_burn, stop_condition,
+                         kill_condition, consume, accelerate)
+from segar.rules.collisions import (overlap_time, object_collision,
+                                    overlap_time_wall, wall_collision,
+                                    overlaps_wall, fix_overlap_wall,
+                                    fix_overlap_objects)
+from segar.types import ThingID, Time
+from segar.parameters import (Framerate, FloorFriction, Gravity, MinMass,
+                              MaxVelocity, WallDamping, MinVelocity)
 
-from rpp.things.boundaries import Wall, SquareWall
+from segar.things.boundaries import Wall, SquareWall
 
 logger = logging.getLogger(__name__)
 

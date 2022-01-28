@@ -1,6 +1,6 @@
 # Built-in Tasks
 
-This tutorial covers using the built-in tasks available in RPP: PuttPutt,
+This tutorial covers using the built-in tasks available in SEGAR: PuttPutt,
 Invisiball, and Billiards.
 
 First, let's set up our simulator and our RGB observation space based on CIFAR
@@ -8,10 +8,10 @@ features.
 
 
 ```python
-from rpp.configs.handler import get_env_config
-from rpp.mdps.mdps import MDP
-from rpp.mdps.observations import RGBObservation
-from rpp.sim import Simulator
+from segar.configs.handler import get_env_config
+from segar.mdps.mdps import MDP
+from segar.mdps.observations import RGBObservation
+from segar.sim import Simulator
 
 
 vis_config = get_env_config('visual', 'linear_ae', 'five')
@@ -28,12 +28,12 @@ observations = RGBObservation(resolution=256, config=vis_config)
 
 Next, let's make the PuttPutt initialization and task. There are some
 convenient configs useful for setting up the initialization object. These
-can be found at [puttputt.py](https://github.com/microsoft/roboputtputt/blob/main/rpp/tasks/puttputt.py)
+can be found at [puttputt.py](https://github.com/microsoft/roboputtputt/blob/main/segar/tasks/puttputt.py)
 for more details.
 
 
 ```python
-from rpp.tasks.puttputt import PuttPuttInitialization, PuttPutt
+from segar.tasks.puttputt import PuttPuttInitialization, PuttPutt
 
 init_config = get_env_config('initialization', 'puttputt', 'random_middle')
 initialization = PuttPuttInitialization(config=init_config)
@@ -46,7 +46,7 @@ Now build the MDP, initialize, and generate some trajectories.
 ```python
 from IPython.display import Image, display
 
-from rpp.tools.sample_trajectories import rollout, save_gif
+from segar.tools.sample_trajectories import rollout, save_gif
 
 mdp = MDP(observations, puttputt)
 
@@ -68,17 +68,17 @@ Image(open('_ipynb_assets/puttputt_sample.gif','rb').read())
 Note this is what your agent sees. Note that we drew a initialization
 configuation from a preset, we can define our own, for instance if we want
 the golf ball and goal in different locations. The
-[initialization module](https://github.com/microsoft/roboputtputt/blob/main/rpp/mdps/initializations.py)
+[initialization module](https://github.com/microsoft/roboputtputt/blob/main/segar/mdps/initializations.py)
 has a convenient typing for arena locations:
 
 
 ```python
 from copy import deepcopy
 
-from rpp.sim.location_priors import RandomLeftLocation, RandomRightLocation
-from rpp.tasks.puttputt import puttputt_random_middle_config, GolfBall, GoalTile
-from rpp.rules import Prior
-from rpp.factors import Position
+from segar.sim.location_priors import RandomLeftLocation, RandomRightLocation
+from segar.tasks.puttputt import puttputt_random_middle_config, GolfBall, GoalTile
+from segar.rules import Prior
+from segar.factors import Position
 
 print(puttputt_random_middle_config['priors'])
 
@@ -174,7 +174,7 @@ some long-range forces are in play.
 
 
 ```python
-from rpp.tasks.puttputt import Invisiball
+from segar.tasks.puttputt import Invisiball
 
 init_config = get_env_config('initialization', 'invisiball', 'default')
 
@@ -206,7 +206,7 @@ Billiards is what you would expect: control the cue ball, get the balls into
 
 
 ```python
-from rpp.tasks.billiards import Billiards, BilliardsInitialization
+from segar.tasks.billiards import Billiards, BilliardsInitialization
 
 init_config = get_env_config('initialization', 'billiards', 'default')
 

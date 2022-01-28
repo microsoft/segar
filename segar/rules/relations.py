@@ -7,8 +7,8 @@ __all__ = ('Relation', 'overlaps', 'Or', 'And', 'IsEqual', 'IsOn',
 
 from typing import Callable, Tuple, Type, TypeVar, Union
 
-from rpp.factors import Position, Shape, Velocity, Factor
-from rpp.things import Object, Entity, Tile
+from segar.factors import Position, Shape, Velocity, Factor
+from segar.things import Object, Entity, Tile
 
 from .rules import match_pattern, Rule
 

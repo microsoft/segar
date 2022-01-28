@@ -11,12 +11,12 @@ import warnings
 
 import numpy as np
 
-from rpp.factors import (Position, Velocity, Shape, Done, Alive,
-                         StoredEnergy, Mobile, Mass, InfiniteEnergy, Circle,
-                         ConvexHullShape)
-from rpp.things.boundaries import Wall, SquareWall
-from rpp.things import Object, Thing
-from rpp.types import Time
+from segar.factors import (Position, Velocity, Shape, Done, Alive,
+                           StoredEnergy, Mobile, Mass, InfiniteEnergy, Circle,
+                           ConvexHullShape)
+from segar.things.boundaries import Wall, SquareWall
+from segar.things import Object, Thing
+from segar.types import Time
 
 from .relations import Relation
 from .transitions import SetFactor, TransitionFunction

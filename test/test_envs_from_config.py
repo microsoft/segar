@@ -7,10 +7,10 @@ import traceback
 
 import numpy as np
 
-from rpp.mdps.constructors import mdp_constructor
-from rpp.configs.handler import get_env_config
-from rpp.tasks.billiards import billiards_default_config
-from rpp.tasks.puttputt import puttputt_default_config, \
+from segar.mdps.constructors import mdp_constructor
+from segar.configs.handler import get_env_config
+from segar.tasks.billiards import billiards_default_config
+from segar.tasks.puttputt import puttputt_default_config, \
     invisiball_config
 
 

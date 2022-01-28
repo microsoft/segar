@@ -9,16 +9,16 @@ from typing import Optional
 
 import numpy as np
 
-from rpp.mdps.initializations import ArenaInitialization
-from rpp.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
-from rpp.mdps.tasks import Task
-from rpp.rendering.rgb_rendering import register_color
-from rpp.factors import (Label, Mass, Charge, Shape, Text, Circle,
-                         GaussianNoise, Size, Position, ID, Done, Alive,
-                         Visible, Velocity)
-from rpp.rules import Prior
-from rpp.things import Ball, Hole, Entity, Object
-from rpp.sim.location_priors import RandomBottomLocation
+from segar.mdps.initializations import ArenaInitialization
+from segar.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
+from segar.mdps.tasks import Task
+from segar.rendering.rgb_rendering import register_color
+from segar.factors import (Label, Mass, Charge, Shape, Text, Circle,
+                           GaussianNoise, Size, Position, ID, Done, Alive,
+                           Visible, Velocity)
+from segar.rules import Prior
+from segar.things import Ball, Hole, Entity, Object
+from segar.sim.location_priors import RandomBottomLocation
 
 
 _DEFAULT_CUEBALL_MASS = 1.0

@@ -1,7 +1,7 @@
 # TODO fix and update this.
 # flake8: noqa
 
-from rpp.rendering.rendering import Renderer
+from segar.rendering.rendering import Renderer
 
 
 class OpticalFloRenderer(Renderer):

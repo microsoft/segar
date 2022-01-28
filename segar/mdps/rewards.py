@@ -2,7 +2,7 @@
 
 """
 
-from rpp.factors import Alive
+from segar.factors import Alive
 
 
 def dead_reward_fn(object_state: dict, reward: float = -100.) -> float:

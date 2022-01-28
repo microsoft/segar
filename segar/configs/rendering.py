@@ -5,8 +5,8 @@
 
 import os
 
-from rpp.assets import ASSET_DIR
-from rpp.rendering.generators import (
+from segar.assets import ASSET_DIR
+from segar.rendering.generators import (
     InceptionClusterGenerator, LinearAEGenerator)
 
 

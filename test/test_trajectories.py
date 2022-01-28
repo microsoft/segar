@@ -10,8 +10,8 @@ from os import path
 import pickle
 import traceback
 
-from rpp import load_sim_from_file
-from rpp.tools.sample_trajectories import rollout_sim_only
+from segar import load_sim_from_file
+from segar.tools.sample_trajectories import rollout_sim_only
 
 
 logger = logging.getLogger('tests.test_trajectories')

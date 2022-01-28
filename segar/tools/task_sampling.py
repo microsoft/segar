@@ -1,7 +1,7 @@
 
 from typing import Type
 
-from rpp.mdps import Task, Initialization
+from segar.mdps import Task, Initialization
 
 
 def spawn_tasks(task_cls: Type[Task], init_cls: Type[Initialization],

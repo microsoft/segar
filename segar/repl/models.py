@@ -10,7 +10,7 @@ import torch.nn.functional as nnF
 import torch.nn as nn
 
 
-logger = logging.getLogger('rpp.repl.models')
+logger = logging.getLogger('segar.repl.models')
 
 
 def loss_xent(logits, labels, ignore_index=-1):

@@ -2,8 +2,8 @@
 __all__ = ('Prior',)
 
 from typing import Optional, Type, TypeVar, Union
-from rpp.factors import Factor, Noise
-from rpp.things import Entity
+from segar.factors import Factor, Noise
+from segar.things import Entity
 from .transitions import TransitionFunction, SetFactor
 from .relations import Relation
 

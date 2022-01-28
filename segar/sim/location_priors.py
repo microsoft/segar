@@ -15,8 +15,8 @@ from typing import Tuple
 
 import numpy as np
 
-from rpp import get_sim
-from rpp.factors import Noise, Position
+from segar import get_sim
+from segar.factors import Noise, Position
 
 
 def _get_boundaries(min_distance: float = 0.1) -> Tuple[float, float]:

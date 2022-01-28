@@ -9,11 +9,11 @@ from typing import Any, Optional, Union
 import cv2
 import numpy as np
 
-from rpp import get_sim
-from rpp.factors import Factor, Floor
-from rpp.things import Thing
-from rpp.sim import Simulator
-from rpp.parameters import (
+from segar import get_sim
+from segar.factors import Factor, Floor
+from segar.things import Thing
+from segar.sim import Simulator
+from segar.parameters import (
     Resolution,
     _TEXT_FACE,
     _TEXT_SCALE,

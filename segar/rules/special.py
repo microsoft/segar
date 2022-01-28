@@ -7,9 +7,9 @@ __all__ = ('move', 'stop_condition', 'kill_condition', 'apply_burn',
 
 from typing import Tuple
 
-from rpp.parameters import MinMass, Gravity, MinVelocity
-from rpp.factors import (Position, Velocity, Acceleration, Mobile, Alive,
-                         Mass, Visible, Friction, Heat, Done, Consumes)
+from segar.parameters import MinMass, Gravity, MinVelocity
+from segar.factors import (Position, Velocity, Acceleration, Mobile, Alive,
+                           Mass, Visible, Friction, Heat, Done, Consumes)
 from .relations import IsOn, Contains
 from .transitions import (Aggregate, SetFactor, Differential,
                           TransitionFunction, conditional_transition)

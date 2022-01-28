@@ -22,10 +22,10 @@ from scipy.linalg import norm
 import torch
 from tqdm import tqdm
 
-from rpp.assets import ASSET_DIR
-from rpp.factors import Factor
-from rpp.metrics import wasserstein_distance
-from rpp.rendering.generators.generator import Generator
+from segar.assets import ASSET_DIR
+from segar.factors import Factor
+from segar.metrics import wasserstein_distance
+from segar.rendering.generators.generator import Generator
 
 
 INCEPTION_DIR = os.path.join(ASSET_DIR, 'inception_linear')

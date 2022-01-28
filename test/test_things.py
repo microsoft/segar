@@ -3,11 +3,11 @@ import unittest
 
 import numpy as np
 
-from rpp import get_sim
-from rpp.factors import Shape, Size, Circle, Order, Position
-from rpp.rules import IsOn
-from rpp.sim import Simulator
-from rpp.things import Object, Tile
+from segar import get_sim
+from segar.factors import Shape, Size, Circle, Order, Position
+from segar.rules import IsOn
+from segar.sim import Simulator
+from segar.things import Object, Tile
 
 
 sim = Simulator()

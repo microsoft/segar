@@ -6,18 +6,18 @@ import logging
 
 import numpy as np
 
-from rpp.factors import Charge, Mobile, Hexagon, Size, Square, Shape, \
+from segar.factors import Charge, Mobile, Hexagon, Size, Square, Shape, \
     Position, Velocity, Alive, Done, Mass, Friction
-from rpp.types import Time
-from rpp.parameters import Gravity
-from rpp.configs.handler import get_env_config
-from rpp.mdps import RGBObservation, ObjectStateObservation, \
+from segar.types import Time
+from segar.parameters import Gravity
+from segar.configs.handler import get_env_config
+from segar.mdps import RGBObservation, ObjectStateObservation, \
     TileStateObservation, AllObjectsStateObservation, Task, MDP, \
     ArenaInitialization, AllTilesStateObservation, make_stacked_observation
-from rpp.sim.sim import Simulator
-from rpp.rules import Prior
-from rpp.things import Object
-from rpp import get_sim
+from segar.sim.sim import Simulator
+from segar.rules import Prior
+from segar.things import Object
+from segar import get_sim
 
 
 logger = logging.getLogger('tests.func')

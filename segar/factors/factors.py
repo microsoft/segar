@@ -299,7 +299,7 @@ class FactorContainer(Factor[dict], default={}):
         if name in ('value', '_value'):
             raise ValueError('`value` should be set at __init__. Getting '
                              'here is an error. This may be due to placing '
-                             'an RPP component inside an object that is '
+                             'an SEGAR component inside an object that is '
                              'being pickled.')
 
         for k, v in self.value.items():

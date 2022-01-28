@@ -3,19 +3,19 @@ from typing import Optional, Type
 
 from torch.utils.data import DataLoader
 
-from rpp.configs.handler import get_env_config
-from rpp.factors import (Charge, Magnetism, Mass, StoredEnergy, Density,
-                         Position, Shape, Circle, Mobile, GaussianNoise,
-                         RandomConvexHull, UniformNoise, Factor,
-                         GaussianMixtureNoise, Friction, Size)
-from rpp.mdps import RGBObservation, StateObservation, Initialization
-from rpp.rules import Prior
-from rpp.sim.location_priors import (RandomBottomLocation, RandomTopLocation,
-                                     RandomMiddleLocation)
-from rpp.things import (Charger, Magnet, Bumper, Damper, Object, SandTile,
-                        MagmaTile, Hole, FireTile, Tile, ThingFactory)
-from rpp.repl.static_datasets.iid_samples import create_iid_from_init
-from rpp.tasks.puttputt import PuttPuttInitialization, GolfBall, GoalTile
+from segar.configs.handler import get_env_config
+from segar.factors import (Charge, Magnetism, Mass, StoredEnergy, Density,
+                           Position, Shape, Circle, Mobile, GaussianNoise,
+                           RandomConvexHull, UniformNoise, Factor,
+                           GaussianMixtureNoise, Friction, Size)
+from segar.mdps import RGBObservation, StateObservation, Initialization
+from segar.rules import Prior
+from segar.sim.location_priors import (RandomBottomLocation, RandomTopLocation,
+                                       RandomMiddleLocation)
+from segar.things import (Charger, Magnet, Bumper, Damper, Object, SandTile,
+                          MagmaTile, Hole, FireTile, Tile, ThingFactory)
+from segar.repl.static_datasets.iid_samples import create_iid_from_init
+from segar.tasks.puttputt import PuttPuttInitialization, GolfBall, GoalTile
 
 
 def create_initialization():

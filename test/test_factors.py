@@ -1,8 +1,8 @@
 import unittest
 
-from rpp.factors import (factors, number_factors, arrays, bools, noise,
-                         properties)
-from rpp.factors import Factor
+from segar.factors import (factors, number_factors, arrays, bools, noise,
+                           properties)
+from segar.factors import Factor
 
 
 _ALL_MODS = (factors, number_factors, arrays, bools, noise, properties)

@@ -1,21 +1,21 @@
 # Rules and relations
 
-RPP provides a framework on the simulator rules, which determine how states transition from one to another over subsequent time steps. RPP comes with a set of built-in rules for the simulator, but these can be changed at the user's disgression.
+SEGAR provides a framework on the simulator rules, which determine how states transition from one to another over subsequent time steps. SEGAR comes with a set of built-in rules for the simulator, but these can be changed at the user's disgression.
 
 ### Rules
 Rules are functions from one set of factors to another. Consider the following built-in rules:
 
 
 ```python
-from rpp.rules import lorentz_law, move, apply_friction
+from segar.rules import lorentz_law, move, apply_friction
 print(lorentz_law)
 print(move)
 print(apply_friction)
 ```
 
-    rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)])
-    rpp.rules.transitions.Differential[rpp.factors.arrays.Position] <- move([Position, Velocity, MinVelocity])
-    rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- apply_friction([(Mass, Velocity, Acceleration), (Friction,), Gravity])
+    segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)])
+    segar.rules.transitions.Differential[segar.factors.arrays.Position] <- move([Position, Velocity, MinVelocity])
+    segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- apply_friction([(Mass, Velocity, Acceleration), (Friction,), Gravity])
 
 
 These rules all apply on sets of (sets of) factors (see the factors README for more details). If the rule contains a single set of factors, this applies to a single Entity (see the things README for more details). If a rule contains multiple sets, then the rule applies to multiple things.
@@ -24,10 +24,10 @@ Rules apply automatic pattern matching, such that a rule will not return a valid
 
 
 ```python
-from rpp.factors import Position, Charge, Mass, Velocity, Friction
-from rpp.sim import Simulator
-from rpp.things import Object, Tile
-from rpp.parameters import Gravity, MinVelocity
+from segar.factors import Position, Charge, Mass, Velocity, Friction
+from segar.sim import Simulator
+from segar.things import Object, Tile
+from segar.parameters import Gravity, MinVelocity
 
 sim = Simulator()  # Must initialize sim before creating things.
 
@@ -55,8 +55,8 @@ print(lorentz_law(o))
 print(lorentz_law(o, t))
 ```
 
-    DidNotMatch(rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]), (Object(id=ID(0)),))
-    DidNotMatch(rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]), (Object(id=ID(0)), Tile(id=ID(2))))
+    DidNotMatch(segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]), (Object(id=ID(0)),))
+    DidNotMatch(segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]), (Object(id=ID(0)), Tile(id=ID(2))))
 
 
 However, if we pass the correct inputs:
@@ -69,8 +69,8 @@ f_apply = apply_friction(o2, t, g)
 print(f_apply, type(f_apply))
 ```
 
-    Acceleration([0. 0.]) += [ 0.01414214 -0.01414214] <class 'rpp.rules.transitions.Aggregate'>
-    Acceleration([0. 0.]) += [-0.35355339 -0.35355339] <class 'rpp.rules.transitions.Aggregate'>
+    Acceleration([0. 0.]) += [ 0.01414214 -0.01414214] <class 'segar.rules.transitions.Aggregate'>
+    Acceleration([0. 0.]) += [-0.35355339 -0.35355339] <class 'segar.rules.transitions.Aggregate'>
 
 
 The output of these applications are `Aggregate` objects, which inform the sim to aggregate all rules that apply to the target factor as the new value. In this case, what is aggregating is the acceleration of the object, corresponding to the addition of forces.
@@ -83,7 +83,7 @@ m_apply = move(o2, min_vel)
 print(m_apply, type(m_apply))
 ```
 
-    Position([0. 0.]) += Δt [1. 1.] <class 'rpp.rules.transitions.Differential'>
+    Position([0. 0.]) += Δt [1. 1.] <class 'segar.rules.transitions.Differential'>
 
 
 This rule application is a `Differential`, which says that the position will change in the direction of the velocity, integrated over the time interval, assuming that the velocity is constant over said interval.
@@ -98,11 +98,11 @@ Roughly speaking:
 
 ### Rule design
 
-RPP allows users to design their own rules, then add them to the sim. Let's design a custom rule: 
+SEGAR allows users to design their own rules, then add them to the sim. Let's design a custom rule: 
 
 
 ```python
-from rpp.rules import TransitionFunction, Differential
+from segar.rules import TransitionFunction, Differential
 
 @TransitionFunction
 def fast_loses_mass(m: Mass, v: Velocity) -> Differential[Velocity]:
@@ -112,10 +112,10 @@ def fast_loses_mass(m: Mass, v: Velocity) -> Differential[Velocity]:
 print(fast_loses_mass)
 ```
 
-    rpp.rules.transitions.Differential[rpp.factors.arrays.Velocity] <- fast_loses_mass([Mass, Velocity])
+    segar.rules.transitions.Differential[segar.factors.arrays.Velocity] <- fast_loses_mass([Mass, Velocity])
 
 
-This is a strange rule, but it helps demonstrate the flexibility for creating custom rules in RPP. Let's see how it would be applied:
+This is a strange rule, but it helps demonstrate the flexibility for creating custom rules in SEGAR. Let's see how it would be applied:
 
 
 ```python
@@ -139,7 +139,7 @@ sim.add_rule(fast_loses_mass)
 print(sim.rules)
 ```
 
-    [rpp.rules.transitions.Differential[rpp.factors.arrays.Position] <- move([Position, Velocity, MinVelocity]), rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]), rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- apply_friction([(Mass, Velocity, Acceleration), (Friction,), Gravity]), rpp.rules.transitions.SetFactor[rpp.factors.number_factors.Mass] <- apply_burn([(Mass, Mobile), (Heat,)]), typing.Tuple[rpp.rules.transitions.SetFactor[rpp.factors.arrays.Velocity], rpp.rules.transitions.SetFactor[rpp.factors.arrays.Acceleration]] <- stop_condition([(Mobile, Alive, Velocity, Acceleration)]), typing.Tuple[rpp.rules.transitions.SetFactor[rpp.factors.number_factors.Mass], rpp.rules.transitions.SetFactor[rpp.factors.arrays.Velocity], rpp.rules.transitions.SetFactor[rpp.factors.bools.Alive], rpp.rules.transitions.SetFactor[rpp.factors.arrays.Acceleration], rpp.rules.transitions.SetFactor[rpp.factors.bools.Visible]] <- kill_condition([Mass, Velocity, Visible, Acceleration, Alive, MinMass]), typing.Tuple[rpp.rules.transitions.SetFactor[rpp.factors.bools.Done], rpp.rules.transitions.SetFactor[rpp.factors.bools.Visible], rpp.rules.transitions.SetFactor[rpp.factors.bools.Mobile]] <- consume([(Mobile, Done, Visible), (Consumes,)]), rpp.rules.transitions.Differential[rpp.factors.arrays.Velocity] <- accelerate([Velocity, Acceleration]), rpp.rules.transitions.Differential[rpp.factors.arrays.Velocity] <- fast_loses_mass([Mass, Velocity])]
+    [segar.rules.transitions.Differential[segar.factors.arrays.Position] <- move([Position, Velocity, MinVelocity]), segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]), segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- apply_friction([(Mass, Velocity, Acceleration), (Friction,), Gravity]), segar.rules.transitions.SetFactor[segar.factors.number_factors.Mass] <- apply_burn([(Mass, Mobile), (Heat,)]), typing.Tuple[segar.rules.transitions.SetFactor[segar.factors.arrays.Velocity], segar.rules.transitions.SetFactor[segar.factors.arrays.Acceleration]] <- stop_condition([(Mobile, Alive, Velocity, Acceleration)]), typing.Tuple[segar.rules.transitions.SetFactor[segar.factors.number_factors.Mass], segar.rules.transitions.SetFactor[segar.factors.arrays.Velocity], segar.rules.transitions.SetFactor[segar.factors.bools.Alive], segar.rules.transitions.SetFactor[segar.factors.arrays.Acceleration], segar.rules.transitions.SetFactor[segar.factors.bools.Visible]] <- kill_condition([Mass, Velocity, Visible, Acceleration, Alive, MinMass]), typing.Tuple[segar.rules.transitions.SetFactor[segar.factors.bools.Done], segar.rules.transitions.SetFactor[segar.factors.bools.Visible], segar.rules.transitions.SetFactor[segar.factors.bools.Mobile]] <- consume([(Mobile, Done, Visible), (Consumes,)]), segar.rules.transitions.Differential[segar.factors.arrays.Velocity] <- accelerate([Velocity, Acceleration]), segar.rules.transitions.Differential[segar.factors.arrays.Velocity] <- fast_loses_mass([Mass, Velocity])]
 
 
 Now verify that this rule indeed applies to the mass:

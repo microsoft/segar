@@ -12,15 +12,15 @@ from typing import Any, Optional, Type, Union
 from gym.spaces import Box, Tuple
 import numpy as np
 
-from rpp import get_sim
-from rpp.factors import (Factor, Charge, Mass, Magnetism, StoredEnergy,
-                         Position, Velocity, Acceleration, Done, Alive,
-                         Friction, Heat, FACTORS, VectorFactor,
-                         BooleanFactor, NumericFactor)
-from rpp.parameters import Resolution, DoesNotHaveFactor
-from rpp.rendering.rgb_rendering import RGBTextureRenderer
-from rpp.sim import Simulator
-from rpp.types import ThingID
+from segar import get_sim
+from segar.factors import (Factor, Charge, Mass, Magnetism, StoredEnergy,
+                           Position, Velocity, Acceleration, Done, Alive,
+                           Friction, Heat, FACTORS, VectorFactor,
+                           BooleanFactor, NumericFactor)
+from segar.parameters import Resolution, DoesNotHaveFactor
+from segar.rendering.rgb_rendering import RGBTextureRenderer
+from segar.sim import Simulator
+from segar.types import ThingID
 
 
 class Observation:

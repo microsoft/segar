@@ -7,8 +7,8 @@ from typing import Optional, Type, Union
 import numpy as np
 import torch
 
-from rpp.factors import (Heat, Friction, Charge, Magnetism, Density,
-                         StoredEnergy, Mass, Alive, Factor)
+from segar.factors import (Heat, Friction, Charge, Magnetism, Density,
+                           StoredEnergy, Mass, Alive, Factor)
 
 
 class Generator:

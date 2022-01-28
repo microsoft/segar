@@ -11,7 +11,7 @@ from torch.optim import Optimizer
 from tqdm import tqdm
 import wandb
 
-from rpp.utils import append_dict, average_dict
+from segar.utils import append_dict, average_dict
 
 
 _DEVICE = 'cpu'

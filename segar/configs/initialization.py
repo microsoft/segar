@@ -4,18 +4,18 @@
 
 from typing import Union
 
-from rpp.sim.location_priors import RandomEdgeLocation, RandomMiddleLocation
-from rpp.things import (Charger, Magnet, Bumper, Damper, Object,
-                        ThingFactory, SandTile, MagmaTile, Hole, FireTile,
-                        Tile)
-from rpp.factors import (DiscreteRangeNoise, Position, Shape,
-                         RandomConvexHull, Circle, Size, GaussianNoise,
-                         GaussianMixtureNoise, Mass, Mobile, Charge,
-                         Magnetism, Friction, UniformNoise)
-from rpp.rules import Prior
-from rpp.tasks.puttputt import puttputt_default_config, \
+from segar.sim.location_priors import RandomEdgeLocation, RandomMiddleLocation
+from segar.things import (Charger, Magnet, Bumper, Damper, Object,
+                          ThingFactory, SandTile, MagmaTile, Hole, FireTile,
+                          Tile)
+from segar.factors import (DiscreteRangeNoise, Position, Shape,
+                           RandomConvexHull, Circle, Size, GaussianNoise,
+                           GaussianMixtureNoise, Mass, Mobile, Charge,
+                           Magnetism, Friction, UniformNoise)
+from segar.rules import Prior
+from segar.tasks.puttputt import puttputt_default_config, \
     puttputt_random_middle_config, invisiball_config
-from rpp.tasks.billiards import billiards_default_config
+from segar.tasks.billiards import billiards_default_config
 
 
 default_config = {

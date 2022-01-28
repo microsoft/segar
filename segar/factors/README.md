@@ -1,6 +1,6 @@
 # Factors tutorial
 
-This tutorial covers the atomic units of Robo Putt-Putt (RPP): the factors.
+This tutorial covers the atomic units of The Sandbox Environment for Generalizable Agent Research (SEGAR): the factors.
 Factors make up the underlying state space, and their values make up the underlying states.
 Factors are _types_, and many of them inherit from built-in types, such as `float`, `int`, `bool`, etc.
 
@@ -9,7 +9,7 @@ Here are some basic examples of creating and manipulating factors:
 
 
 ```python
-from rpp.factors import Charge, Mass, Alive, Position, Factor
+from segar.factors import Charge, Mass, Alive, Position, Factor
 c1 = Charge(0.3)
 c2 = Charge(0.3)
 m = Mass(0.3)
@@ -97,11 +97,11 @@ print(fc[Charge])
 
 
 ### Random factor generation
-RPP comes with factor generation from random numbers. This can help generate distributions of factors used for initialization, or even can be used to generate stochastic transition functions:
+SEGAR comes with factor generation from random numbers. This can help generate distributions of factors used for initialization, or even can be used to generate stochastic transition functions:
 
 
 ```python
-from rpp.factors import UniformNoise, GaussianNoise, GaussianNoise2D
+from segar.factors import UniformNoise, GaussianNoise, GaussianNoise2D
 u1 = UniformNoise(0., 1.)  # Uniform from 0 to 1
 u2 = UniformNoise(0.1, 1.)  # Uniform from 0.1 to 1
 g1 = GaussianNoise(0., 0.1)  # Normal distribution with 0 mean and 0.1 std
@@ -114,7 +114,7 @@ print(u1.sample(), g1.sample(), g2D.sample())
     Factor(0.2933396462141178) Factor(-0.17201698297461065) Factor([0.13358935 0.15078861])
 
 
-RPP allows the researcher to compare distributions (via the Wasserstein distance), ultimately to measure how different different sets of tasks are (say between train and test in a generalization experiment).
+SEGAR allows the researcher to compare distributions (via the Wasserstein distance), ultimately to measure how different different sets of tasks are (say between train and test in a generalization experiment).
 
 
 ```python

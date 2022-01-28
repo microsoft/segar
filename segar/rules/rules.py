@@ -6,11 +6,11 @@ from types import GenericAlias
 from typing import (_GenericAlias, Callable, Optional, Type, TypeVar, Union,
                     get_args, get_origin, get_type_hints)
 
-from rpp import get_sim
-from rpp.factors import Factor
-from rpp.parameters import Parameter
-from rpp.things import Entity
-from rpp.things.boundaries import Wall
+from segar import get_sim
+from segar.factors import Factor
+from segar.parameters import Parameter
+from segar.things import Entity
+from segar.things.boundaries import Wall
 
 
 F = TypeVar('F', bound=Factor)

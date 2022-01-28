@@ -5,13 +5,13 @@ import numpy as np
 import pickle
 from PIL import Image
 
-from rpp import get_sim, timeit
-from rpp.configs import get_env_config
-from rpp.mdps import MDP, RGBObservation
-from rpp.tasks.billiards import BilliardsInitialization, Billiards
-from rpp.tasks import PuttPuttInitialization, Invisiball, PuttPutt
-from rpp.sim import Simulator
-from rpp.rendering import Renderer
+from segar import get_sim, timeit
+from segar.configs import get_env_config
+from segar.mdps import MDP, RGBObservation
+from segar.tasks.billiards import BilliardsInitialization, Billiards
+from segar.tasks import PuttPuttInitialization, Invisiball, PuttPutt
+from segar.sim import Simulator
+from segar.rendering import Renderer
 
 
 _TASKS = ('puttputt', 'invisiball', 'billiards')

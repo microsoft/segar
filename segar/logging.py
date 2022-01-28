@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger('rpp')
+logger = logging.getLogger('segar')
 
 
 class DuplicateFilter(object):

@@ -7,7 +7,7 @@ spaces.
 ### Rendering basics
 
 To set up a renderer, just create the corresponding rendering object.
-Currently, RPP supports color-based rendering, which assigns a color to each
+Currently, SEGAR supports color-based rendering, which assigns a color to each
  type of object or tile, and a pattern-based renderer, which uses a
  generative model conditioned on the underlying factors.
 
@@ -19,10 +19,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import PIL
 
-from rpp.configs.handler import get_env_config
-from rpp.rendering.rgb_rendering import RGBRenderer, RGBTextureRenderer
-from rpp.sim import Simulator
-from rpp.factors import *
+from segar.configs.handler import get_env_config
+from segar.rendering.rgb_rendering import RGBRenderer, RGBTextureRenderer
+from segar.sim import Simulator
+from segar.factors import *
 
 sim = Simulator()
 
@@ -129,12 +129,12 @@ of visual features from a fixed baseline.
 
 ### Obscuring factors in visual features.
 
-RPP renderers also are capable of obscuring visual features, such that they
+SEGAR renderers also are capable of obscuring visual features, such that they
 wont be visible to the agent.
 
 
 ```python
-from rpp.factors import Heat
+from segar.factors import Heat
 plt.close()
 fig = plt.figure(figsize=(20, 10))
 

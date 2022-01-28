@@ -13,7 +13,7 @@ from typing import TypeVar, Union
 import numpy as np
 from scipy.linalg import norm
 
-from rpp.factors.factors import Factor
+from segar.factors.factors import Factor
 
 
 T = TypeVar('T')

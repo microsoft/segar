@@ -10,8 +10,8 @@ import numpy as np
 import os
 import random
 
-from rpp.things import Thing, Wall
-from rpp.factors import Circle, ConvexHullShape, Factor, Mobile
+from segar.things import Thing, Wall
+from segar.factors import Circle, ConvexHullShape, Factor, Mobile
 
 from .generators import Generator
 from .rendering import (Visual, Renderer, WallVisual, CircleVisual, PolyVisual)

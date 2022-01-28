@@ -1,4 +1,4 @@
-This tutorial covers using the simulator in RPP.
+This tutorial covers using the simulator in SEGAR.
 
 
 ```python
@@ -6,7 +6,7 @@ import pprint
 
 import numpy as np
 
-from rpp.sim import Simulator
+from segar.sim import Simulator
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -14,7 +14,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 ## The simulator
 
-The simulator is a core component of the RPP research suite.
+The simulator is a core component of the SEGAR research suite.
 It controls:
 * The underlying factors of the environment: the objects and tiles along
 with their affordances
@@ -26,7 +26,7 @@ As such, the simulator is *separated* from the semantics of the MDP, the
 task, the reward, etc. Its job is to only to manage the underlying factors
 and to simulate physics.
 
-Creating a simulator is the first step in using RPP:
+Creating a simulator is the first step in using SEGAR:
 
 
 ```python
@@ -84,16 +84,16 @@ pp.pprint(sim.thing_states[0])
 
 
 The state contains all attributes necessary to intantiate an object, but a
-number of these will be useful for building MDPs (see the `rpp/mdps/README.md`
+number of these will be useful for building MDPs (see the `segar/mdps/README.md`
 for more details).
 
 It's good to be able to see the state of objects, but visualization can be
 very useful to see what's going on. For this, we borrow a renderer from the
-rendering module (see `rpp/rendering/README.md` for details).
+rendering module (see `segar/rendering/README.md` for details).
 
 
 ```python
-from rpp.rendering.rgb_rendering import RGBRenderer
+from segar.rendering.rgb_rendering import RGBRenderer
 import PIL
 from matplotlib.pyplot import imshow
 
@@ -124,7 +124,7 @@ That's a very simple arena, but we expected that. Let's add some more things.
 
 
 ```python
-from rpp.factors import Hexagon, RandomConvexHull, Mobile, Size, Charge, Shape
+from segar.factors import Hexagon, RandomConvexHull, Mobile, Size, Charge, Shape
 
 sim.add_magnet(position=np.array([-0.5, 0.5]), text='M', initial_factors={Mobile: True, Size:0.3})
 sim.add_sand(position=np.array([0.1, -0.1]), text='S', initial_factors={Shape: Hexagon(0.4)})
@@ -147,7 +147,7 @@ imshow(image)
                           MinVelocity: MinVelocity(0.0001),
                           Gravity: Gravity(10.0),
                           WallDamping: WallDamping(0.025),
-                          <class 'rpp.types.Time'>: 0.01},
+                          <class 'segar.types.Time'>: 0.01},
         'safe_mode': False,
         'save_path': None,
         'scaling_factor': 2.8284271247461903,
@@ -399,7 +399,7 @@ the tools module for generating and viewing trajectories.
 ```python
 from IPython.display import Image
 
-from rpp.tools.sample_trajectories import rollout_sim_only, save_gif
+from segar.tools.sample_trajectories import rollout_sim_only, save_gif
 
 renderer.reset(sim)
 trajectories, imgs = rollout_sim_only(sim, renderer=renderer)
@@ -424,14 +424,14 @@ Finally, the sim has rules. You can view the rules by checking the `rules` metho
 pp.pprint(sim.rules)
 ```
 
-    [   rpp.rules.transitions.Differential[rpp.factors.arrays.Position] <- move([Position, Velocity, MinVelocity]),
-        rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]),
-        rpp.rules.transitions.Aggregate[rpp.factors.arrays.Acceleration] <- apply_friction([(Mass, Velocity, Acceleration), (Friction,), Gravity]),
-        rpp.rules.transitions.SetFactor[rpp.factors.numbers.Mass] <- apply_burn([(Mass, Mobile), (Heat,)]),
-        typing.Tuple[rpp.rules.transitions.SetFactor[rpp.factors.arrays.Velocity], rpp.rules.transitions.SetFactor[rpp.factors.arrays.Acceleration]] <- stop_condition([(Mobile, Alive, Velocity, Acceleration)]),
-        typing.Tuple[rpp.rules.transitions.SetFactor[rpp.factors.numbers.Mass], rpp.rules.transitions.SetFactor[rpp.factors.arrays.Velocity], rpp.rules.transitions.SetFactor[rpp.factors.bools.Alive], rpp.rules.transitions.SetFactor[rpp.factors.arrays.Acceleration], rpp.rules.transitions.SetFactor[rpp.factors.bools.Visible]] <- kill_condition([Mass, Velocity, Visible, Acceleration, Alive, MinMass]),
-        typing.Tuple[rpp.rules.transitions.SetFactor[rpp.factors.bools.Done], rpp.rules.transitions.SetFactor[rpp.factors.bools.Visible], rpp.rules.transitions.SetFactor[rpp.factors.bools.Mobile]] <- consume([(Mobile, Done, Visible), (Consumes,)]),
-        rpp.rules.transitions.Differential[rpp.factors.arrays.Velocity] <- accelerate([Velocity, Acceleration])]
+    [   segar.rules.transitions.Differential[segar.factors.arrays.Position] <- move([Position, Velocity, MinVelocity]),
+        segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- lorentz_law([(Position, Velocity, Charge, Magnetism), (Position, Velocity, Charge, Mass, Acceleration)]),
+        segar.rules.transitions.Aggregate[segar.factors.arrays.Acceleration] <- apply_friction([(Mass, Velocity, Acceleration), (Friction,), Gravity]),
+        segar.rules.transitions.SetFactor[segar.factors.numbers.Mass] <- apply_burn([(Mass, Mobile), (Heat,)]),
+        typing.Tuple[segar.rules.transitions.SetFactor[segar.factors.arrays.Velocity], segar.rules.transitions.SetFactor[segar.factors.arrays.Acceleration]] <- stop_condition([(Mobile, Alive, Velocity, Acceleration)]),
+        typing.Tuple[segar.rules.transitions.SetFactor[segar.factors.numbers.Mass], segar.rules.transitions.SetFactor[segar.factors.arrays.Velocity], segar.rules.transitions.SetFactor[segar.factors.bools.Alive], segar.rules.transitions.SetFactor[segar.factors.arrays.Acceleration], segar.rules.transitions.SetFactor[segar.factors.bools.Visible]] <- kill_condition([Mass, Velocity, Visible, Acceleration, Alive, MinMass]),
+        typing.Tuple[segar.rules.transitions.SetFactor[segar.factors.bools.Done], segar.rules.transitions.SetFactor[segar.factors.bools.Visible], segar.rules.transitions.SetFactor[segar.factors.bools.Mobile]] <- consume([(Mobile, Done, Visible), (Consumes,)]),
+        segar.rules.transitions.Differential[segar.factors.arrays.Velocity] <- accelerate([Velocity, Acceleration])]
 
 
 The rules can be added and removed from the sim. Let's remove Lorentz law, which controls how objects move according to charge and magnetism:

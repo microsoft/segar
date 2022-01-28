@@ -1,4 +1,4 @@
-"""RPP Objects.
+"""SEGAR Objects.
 
 Objects collide with other collidable objects, have mass, charge,
 are mobile, etc.
@@ -7,9 +7,9 @@ are mobile, etc.
 
 __all__ = ('Object', 'Magnet', 'Charger', 'Bumper', 'Damper', 'Ball')
 
-from rpp.factors import (Acceleration, Alive, Charge, Circle, Collides,
-                         Density, Done, InfiniteEnergy, Label, Magnetism,
-                         Mass, Mobile, Shape, StoredEnergy, Text, Velocity)
+from segar.factors import (Acceleration, Alive, Charge, Circle, Collides,
+                           Density, Done, InfiniteEnergy, Label, Magnetism,
+                           Mass, Mobile, Shape, StoredEnergy, Text, Velocity)
 from .things import Thing
 
 

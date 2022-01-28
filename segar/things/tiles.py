@@ -4,8 +4,8 @@
 
 __all__ = ('Tile', 'Hole', 'SandTile', 'MagmaTile', 'FireTile')
 
-from rpp.factors import (Shape, Square, Circle, Label, Text, Order, Floor,
-                         Friction, Heat, Consumes)
+from segar.factors import (Shape, Square, Circle, Label, Text, Order, Floor,
+                           Friction, Heat, Consumes)
 from .things import Thing
 
 

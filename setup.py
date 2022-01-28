@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='rpp',
+    name='segar',
     install_requires=[
         "absl-py",
         "numpy",

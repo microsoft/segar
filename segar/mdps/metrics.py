@@ -2,10 +2,10 @@
 import numpy as np
 import ot
 
-from rpp.factors.number_factors import NumericFactor
-from rpp.factors.bools import BooleanFactor
-from rpp.factors.arrays import VectorFactor
-from rpp.metrics import wasserstein_distance
+from segar.factors.number_factors import NumericFactor
+from segar.factors.bools import BooleanFactor
+from segar.factors.arrays import VectorFactor
+from segar.metrics import wasserstein_distance
 
 
 def task_set_init_dist(tasks1: list, tasks2: list) -> float:

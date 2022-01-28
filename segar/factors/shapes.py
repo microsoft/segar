@@ -15,9 +15,9 @@ import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.qhull import ConvexHull, Delaunay
 
-from rpp.factors.arrays import Position
-from rpp.factors.factors import Factor
-from rpp.factors.number_factors import Size
+from segar.factors.arrays import Position
+from segar.factors.factors import Factor
+from segar.factors.number_factors import Size
 
 
 class BaseShape:

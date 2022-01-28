@@ -8,9 +8,9 @@ from typing import Union
 
 import numpy as np
 
-from rpp.factors import Circle, ConvexHullShape
-from rpp.things import Thing
-from rpp.parameters import WallDamping
+from segar.factors import Circle, ConvexHullShape
+from segar.things import Thing
+from segar.parameters import WallDamping
 
 
 class Wall:

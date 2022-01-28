@@ -6,8 +6,8 @@ __all__ = ('lorentz_law',)
 
 from typing import Tuple
 
-from rpp.factors import (Position, Velocity, Acceleration, Charge,
-                         Magnetism, Mass)
+from segar.factors import (Position, Velocity, Acceleration, Charge,
+                           Magnetism, Mass)
 
 from .transitions import TransitionFunction, Aggregate
 

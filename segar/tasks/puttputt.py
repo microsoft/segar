@@ -10,20 +10,20 @@ from typing import Optional
 
 import numpy as np
 
-from rpp.mdps.initializations import ArenaInitialization
-from rpp.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
-from rpp.mdps.tasks import Task
-from rpp.rendering.rgb_rendering import register_color
-from rpp.factors import (Position, Label, Mass, Charge, Shape, Text, ID,
-                         Order, Circle, DiscreteRangeNoise,
-                         RandomConvexHull, GaussianNoise, Size,
-                         GaussianMixtureNoise, Mobile, Magnetism,
-                         UniformNoise, Friction, Alive, Done, Velocity,
-                         Acceleration, Visible)
-from rpp.rules import Prior
-from rpp.things import Object, Tile, ThingFactory, Charger, Magnet, Bumper, \
+from segar.mdps.initializations import ArenaInitialization
+from segar.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
+from segar.mdps.tasks import Task
+from segar.rendering.rgb_rendering import register_color
+from segar.factors import (Position, Label, Mass, Charge, Shape, Text, ID,
+                           Order, Circle, DiscreteRangeNoise,
+                           RandomConvexHull, GaussianNoise, Size,
+                           GaussianMixtureNoise, Mobile, Magnetism,
+                           UniformNoise, Friction, Alive, Done, Velocity,
+                           Acceleration, Visible)
+from segar.rules import Prior
+from segar.things import Object, Tile, ThingFactory, Charger, Magnet, Bumper, \
     Damper, Ball, SandTile, MagmaTile, Hole, FireTile, Entity
-from rpp.sim.location_priors import (
+from segar.sim.location_priors import (
     RandomEdgeLocation, RandomBottomLocation, RandomTopLocation,
     RandomMiddleLocation)
 

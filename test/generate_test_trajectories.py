@@ -1,8 +1,8 @@
 import argparse
 
-from rpp.sim.sim import Simulator
-from rpp.mdps.initializations import ArenaInitialization
-from rpp.tools.sample_trajectories import rollout_sim_only, save_trajectories
+from segar.sim.sim import Simulator
+from segar.mdps.initializations import ArenaInitialization
+from segar.tools.sample_trajectories import rollout_sim_only, save_trajectories
 
 from test_configs import configs
 

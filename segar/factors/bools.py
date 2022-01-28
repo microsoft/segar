@@ -5,7 +5,7 @@
 __all__ = ('Visible', 'Alive', 'Done', 'InfiniteEnergy', 'Mobile',
            'BooleanFactor')
 
-from rpp.factors.factors import Factor
+from segar.factors.factors import Factor
 
 
 class BooleanFactor(Factor[bool]):

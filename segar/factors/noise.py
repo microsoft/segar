@@ -14,8 +14,8 @@ from typing import Any, List, Tuple, TypeVar, Generic
 import numpy as np
 import numpy.random as nprandom
 
-from rpp.factors.factors import Factor
-from rpp.metrics import wasserstein_distance
+from segar.factors.factors import Factor
+from segar.metrics import wasserstein_distance
 
 
 T = TypeVar('T')

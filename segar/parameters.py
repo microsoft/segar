@@ -11,7 +11,7 @@ from typing import TypeVar
 
 import cv2
 
-from rpp.factors import NumericFactor
+from segar.factors import NumericFactor
 
 
 T = TypeVar('T')

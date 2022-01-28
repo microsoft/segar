@@ -13,9 +13,9 @@ from typing import Optional
 from gym.spaces import Box
 import numpy as np
 
-from rpp import get_sim
-from rpp.sim import Simulator
-from rpp.things import Entity
+from segar import get_sim
+from segar.sim import Simulator
+from segar.things import Entity
 from .initializations import Initialization
 
 

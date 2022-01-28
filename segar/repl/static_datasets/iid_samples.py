@@ -5,8 +5,8 @@
 import numpy as np
 from torch.utils.data import Dataset
 
-from rpp import get_sim
-from rpp.mdps import Initialization, Observation
+from segar import get_sim
+from segar.mdps import Initialization, Observation
 
 
 class IIDFromInit(Dataset):

@@ -3,7 +3,7 @@ __all__ = ('ThingFactory',)
 
 from typing import Type, TypeVar, Union
 
-from rpp.factors import Choice
+from segar.factors import Choice
 from .things import Entity, Thing
 
 

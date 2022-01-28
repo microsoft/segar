@@ -14,10 +14,10 @@ from typing import Optional
 import gym
 import numpy as np
 
-from rpp import get_sim, timeit
-from rpp.rendering.rgb_rendering import RGBRenderer
-from rpp.sim import Simulator
-from rpp.utils import append_dict
+from segar import get_sim, timeit
+from segar.rendering.rgb_rendering import RGBRenderer
+from segar.sim import Simulator
+from segar.utils import append_dict
 
 from .observations import Observation
 from .tasks import Task

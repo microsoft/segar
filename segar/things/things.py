@@ -1,4 +1,4 @@
-"""A thing is the base object in RPP.
+"""A thing is the base object in SEGAR.
 
 """
 
@@ -9,9 +9,9 @@ from typing import Any, Dict, Optional, Type, TypeVar
 
 import numpy as np
 
-from rpp.factors import (BaseShape, Circle, Factor, FactorContainer, ID,
-                         Label, Order, Position, Shape, Size, Text, Visible)
-from rpp.types import ThingID
+from segar.factors import (BaseShape, Circle, Factor, FactorContainer, ID,
+                           Label, Order, Position, Shape, Size, Text, Visible)
+from segar.types import ThingID
 
 
 T = TypeVar('T', bound=Type[Factor])

@@ -10,7 +10,7 @@ __all__ = ('NumericFactor', 'Order', 'Size', 'Mass', 'Density', 'Charge',
 import math
 from typing import TypeVar, Union
 
-from rpp.factors.factors import Factor
+from segar.factors.factors import Factor
 
 
 T = TypeVar('T')

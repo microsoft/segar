@@ -19,12 +19,12 @@ import torch.multiprocessing
 from torch.utils.data import Dataset, DataLoader
 import wandb
 
-from rpp.factors import (Heat, Friction, Charge, Magnetism, Density,
-                         StoredEnergy, Mass, Alive)
-from rpp.logging import set_logger
-from rpp.rendering.generators.generator import Generator
-from rpp.repl.boilerplate import (make_optimizer, data_iterator, updater,
-                                  Trainer, set_device, get_device)
+from segar.factors import (Heat, Friction, Charge, Magnetism, Density,
+                           StoredEnergy, Mass, Alive)
+from segar.logging import set_logger
+from segar.rendering.generators.generator import Generator
+from segar.repl.boilerplate import (make_optimizer, data_iterator, updater,
+                                    Trainer, set_device, get_device)
 
 
 torch.multiprocessing.set_sharing_strategy('file_system')
@@ -224,7 +224,7 @@ FLAGS = flags.FLAGS
 def main(argv):
     logger.info(f'Running with arguments {argv}.')
     set_device('cpu')
-    wandb.init(project='rpp_ae_features')
+    wandb.init(project='segar_ae_features')
     seed = FLAGS.seed
     for n in range(FLAGS.n_models):
         set_seeds(seed)

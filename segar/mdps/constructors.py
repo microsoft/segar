@@ -6,14 +6,14 @@
 import logging
 from typing import Union
 
-from rpp.sim import Simulator
-from rpp.mdps import MDP, RGBObservation, ObjectStateObservation, \
+from segar.sim import Simulator
+from segar.mdps import MDP, RGBObservation, ObjectStateObservation, \
     MultimodalObservation
-from rpp.tasks import PuttPuttInitialization, PuttPutt, \
+from segar.tasks import PuttPuttInitialization, PuttPutt, \
     Invisiball, BilliardsInitialization, Billiards
 
 
-logger = logging.getLogger('rpp')
+logger = logging.getLogger('segar')
 
 obj_types = Union[MDP, Simulator, RGBObservation, ObjectStateObservation,
                   MultimodalObservation, PuttPuttInitialization, PuttPutt,
@@ -21,7 +21,7 @@ obj_types = Union[MDP, Simulator, RGBObservation, ObjectStateObservation,
 
 
 def class_constructor(c: str = None, **kwargs) -> obj_types:
-    """Constructs a RPP MDP object or sub-object using str name and kwargs.
+    """Constructs a SEGAR MDP object or sub-object using str name and kwargs.
 
     :param c: Class name.
     :param kwargs: Initialization kwargs.

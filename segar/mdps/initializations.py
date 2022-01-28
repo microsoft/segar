@@ -10,11 +10,11 @@ __all__ = ('Initialization', 'ArenaInitialization')
 from copy import deepcopy
 from typing import Optional, Type, Union
 
-from rpp import get_sim
-from rpp.factors import Noise, Position
-from rpp.rules import Prior, Transition
-from rpp.sim import Simulator
-from rpp.things import Entity, ThingFactory
+from segar import get_sim
+from segar.factors import Noise, Position
+from segar.rules import Prior, Transition
+from segar.sim import Simulator
+from segar.things import Entity, ThingFactory
 
 
 class Initialization:
