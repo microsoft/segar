@@ -1,0 +1,12 @@
+numpy
+scipy
+matplotlib
+opencv-python-headless
+scikit-image
+sklearn
+h5py
+torch
+gym
+ray
+ray[default, rllib]
+wandb
