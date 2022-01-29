@@ -14,11 +14,6 @@ steps:
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
 - task: ComponentGovernanceComponentDetection@0
-- task: ComponentGovernanceComponentDetection@0
-  inputs:
-    scanType: 'Register'
-    verbosity: 'Verbose'
-    alertWarningLevel: 'High'
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
