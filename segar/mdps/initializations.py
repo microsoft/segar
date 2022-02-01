@@ -81,7 +81,6 @@ class ArenaInitialization(Initialization):
 
         super().__init__()
 
-        self.boundaries = self.sim.boundaries
         self._enforce_distances = enforce_distances
         self._min_distance = min_distance
 
@@ -121,8 +120,10 @@ class ArenaInitialization(Initialization):
         self._priors = deepcopy(priors)
         self._numbers = deepcopy(numbers)
         self._positions = deepcopy(positions)
-        for prior in self._priors:
-            prior.set_sim(self.sim)
+
+    @property
+    def boundaries(self) -> tuple[float, float]:
+        return self.sim.boundaries
 
     def set_sim(self, sim):
         super().set_sim(sim)

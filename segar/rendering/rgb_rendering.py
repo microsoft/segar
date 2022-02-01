@@ -179,7 +179,7 @@ class RGBTextureRenderer(RGBRenderer):
     def __init__(self, *args, grayscale: bool = False,
                  viz_generator: Optional[Generator] = None,
                  config: dict = None, annotation: bool = False,
-                 **kwargs):
+                 n_rand_factors: int = 3, **kwargs):
         """
 
         :param grayscale: Whether to make the rendering greyscale.
@@ -224,7 +224,8 @@ class RGBTextureRenderer(RGBRenderer):
             for model_path in generative_model_path:
                 model = gclass(
                     dim_x=self.res, dim_y=self.res,
-                    model_path=model_path, grayscale=grayscale)
+                    model_path=model_path, grayscale=grayscale,
+                    n_rand_factors=n_rand_factors)
                 self.viz_generators.append(model)
         else:
             if not isinstance(viz_generator, list):
