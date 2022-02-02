@@ -1,15 +1,13 @@
-
 import pickle
 import time
 from typing import Callable
 import warnings
 
-_SIM = None  # Global sim
+_SIM = None
 
 
 def get_sim():
     """Gets the sim, if set.
-
     :return: the simulator.
     """
     if _SIM is None:
