@@ -4,7 +4,7 @@ import flax
 from models import MLP, TwinHeadModel
 from algo import select_action, extract_latent_factors
 import numpy as np
-from env import RoboPuttPuttEnv
+from segar.envs.env import SEGAREnv
 import jax.numpy as jnp
 from jax.random import PRNGKey
 import os
@@ -15,13 +15,8 @@ from flax.training import checkpoints
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("env_name", "puttputt-easy-rgb", "Env name")
-flags.DEFINE_integer("num_envs", 1, "Num of parallel envs.")
-flags.DEFINE_integer("num_levels", 100, "Num of levels envs.")
+flags.DEFINE_string("env_name", "emptyx0-easy-rgb", "Env name")
 flags.DEFINE_integer("train_steps", 1_000, "Number of train frames.")
-flags.DEFINE_integer("framestack", 1, "Number of frames to stack")
-flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
-flags.DEFINE_integer("batch_size", 64, "Batch size")
 flags.DEFINE_string("model_dir", ".", "PPO weights directory")
 
 
@@ -33,24 +28,25 @@ def loss_fn(params: flax.core.frozen_dict.FrozenDict, apply_fn: Callable,
 
 
 def main(argv):
-
-    env = RoboPuttPuttEnv(FLAGS.env_name,
-                          num_envs=FLAGS.num_envs,
-                          num_levels=FLAGS.num_levels,
-                          framestack=FLAGS.framestack,
-                          resolution=FLAGS.resolution)
-    n_action = env.action_space.shape[-1]
-
+    """
+    Load the pre-trained PPO model
+    """
     seed = np.random.randint(100000000)
     np.random.seed(seed)
     rng = PRNGKey(seed)
     rng, key = jax.random.split(rng)
+    dummy_env = SEGAREnv(FLAGS.env_name,
+                   num_envs=1,
+                   num_levels=1,
+                   framestack=1,
+                   resolution=64)
+    n_action = dummy_env.action_space.shape[-1]
     model_ppo = TwinHeadModel(action_dim=n_action,
                               prefix_critic='vfunction',
                               prefix_actor="policy",
                               action_scale=1.)
 
-    state = env.reset().astype(jnp.float32) / 255.
+    state = dummy_env.reset().astype(jnp.float32) / 255.
 
     tx = optax.chain(optax.clip_by_global_norm(2), optax.adam(3e-4, eps=1e-5))
     params_model = model_ppo.init(key, state)
@@ -61,6 +57,15 @@ def main(argv):
     model_dir = os.path.join(FLAGS.model_dir, 'model_weights')
     loaded_state = checkpoints.restore_checkpoint('./%s' % model_dir,
                                                   target=train_state_ppo)
+    """
+    Probe 1. Compute dependence between observation features and factors
+    """
+
+    env = SEGAREnv(FLAGS.env_name,
+                   num_envs=64,
+                   num_levels=1,
+                   framestack=1,
+                   resolution=64)
 
     predictor = MLP(dims=[256, 20 * 5])
     tx_predictor = optax.chain(optax.clip_by_global_norm(2),

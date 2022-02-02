@@ -10,6 +10,9 @@ import numpy as np
 def calculate_gae(n_steps: int, discount: float, gae_lambda: float,
                   value: np.ndarray, reward: np.ndarray,
                   done: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Computes the GAE estimator in vector form
+    """
     advantages = []
     gae = 0.
     for t in reversed(range(len(reward) - 1)):
@@ -27,16 +30,9 @@ class Batch:
     Batch of data.
     Inspired by: https://github.com/ku2482/rljax/tree/master/rljax/algorithm .
     """
-    def __init__(
-        self,
-        discount: float,
-        gae_lambda: float,
-        n_steps: int,
-        num_envs: int,
-        n_actions: int,
-        state_shape,
-        latent_factors: False
-    ):
+    def __init__(self, discount: float, gae_lambda: float, n_steps: int,
+                 num_envs: int, n_actions: int, state_shape,
+                 latent_factors: False):
         self._n = 0
         self._p = 0
         self.num_envs = num_envs
@@ -57,8 +53,10 @@ class Batch:
 
     def reset(self):
         self.states = np.empty(
-            (self.n_steps, self.num_envs, *self.state_shape[1:]), dtype=np.uint8)
-        self.actions = np.empty((self.n_steps, self.num_envs, self.n_actions), dtype=np.float32)
+            (self.n_steps, self.num_envs, *self.state_shape[1:]),
+            dtype=np.uint8)
+        self.actions = np.empty((self.n_steps, self.num_envs, self.n_actions),
+                                dtype=np.float32)
         self.rewards = np.empty((self.n_steps, self.num_envs),
                                 dtype=np.float32)
         self.dones = np.empty((self.n_steps, self.num_envs), dtype=np.uint8)
@@ -67,9 +65,11 @@ class Batch:
         self.values_old = np.empty((self.n_steps, self.num_envs),
                                    dtype=np.float32)
         self.task_ids = np.empty((self.n_steps, self.num_envs), dtype=np.int32)
-        self.latent_factors = np.empty((self.n_steps, self.num_envs, 100), dtype=np.float32)
+        self.latent_factors = np.empty((self.n_steps, self.num_envs, 100),
+                                       dtype=np.float32)
 
-    def append(self, state, action, reward, done, log_pi, value, task_ids, latent_factors):
+    def append(self, state, action, reward, done, log_pi, value, task_ids,
+               latent_factors):
         self.states[self._p] = state
         self.actions[self._p] = action
         self.rewards[self._p] = reward
@@ -89,6 +89,10 @@ class Batch:
                                     value=self.values_old,
                                     reward=self.rewards,
                                     done=self.dones)
-        batch = (jnp.array(self.states[:-1]), jnp.array(self.actions[:-1]), jnp.array(self.rewards[:-1]),  jnp.array(self.log_pis_old[:-1]),
-                jnp.array(self.values_old[:-1]), jnp.array(target), jnp.array(gae), jnp.array(self.task_ids[:-1]), jnp.array(self.latent_factors[:-1]))
+        batch = (jnp.array(self.states[:-1]), jnp.array(self.actions[:-1]),
+                 jnp.array(self.rewards[:-1]),
+                 jnp.array(self.log_pis_old[:-1]),
+                 jnp.array(self.values_old[:-1]), jnp.array(target),
+                 jnp.array(gae), jnp.array(self.task_ids[:-1]),
+                 jnp.array(self.latent_factors[:-1]))
         return batch

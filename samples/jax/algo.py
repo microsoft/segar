@@ -62,6 +62,9 @@ def loss_actor_and_critic(params_model: flax.core.frozen_dict.FrozenDict,
                           action: jnp.ndarray, latent_factors: jnp.ndarray,
                           clip_eps: float, critic_coeff: float,
                           entropy_coeff: float, key: PRNGKey) -> jnp.ndarray:
+    """
+    Jointly train actor and critic with entropy reg.
+    """
     state = state.astype(jnp.float32) / 255.
 
     value_pred, pi_dist = apply_fn(params_model, state, latent_factors)
@@ -100,9 +103,11 @@ def select_action(
     rng: PRNGKey,
     sample: bool = False
 ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, PRNGKey]:
+    """
+    Select action either deterministically (mean) or sample
+    """
     value, pi_dist = train_state.apply_fn(train_state.params, state,
                                           latent_factors)
-
     rng, key = jax.random.split(rng)
     if sample:
         action = pi_dist.sample(seed=key)
@@ -122,6 +127,11 @@ def get_transition(
     batch,
     rng: PRNGKey,
 ):
+    """
+    Picks the next action a_t~pi(s_t) and adds the resulting transition to the
+    replay buffer.
+    """
+
     action, log_pi, value, new_key = select_action(train_state,
                                                    state.astype(jnp.float32) /
                                                    255.,
@@ -147,7 +157,10 @@ def flatten_dims(x):
 def update_ppo(train_state: TrainState, batch: Tuple, num_envs: int,
                n_steps: int, n_minibatch: int, epoch_ppo: int, clip_eps: float,
                entropy_coeff: float, critic_coeff: float, rng: PRNGKey):
-
+    """
+    Randomize PPO batch (n_envs x n_steps) into M minibatches, and optimize for 
+    E epochs, as per classical PPO implementation.
+    """
     state, action, reward, log_pi_old, value, target, gae, task_ids, latent_factors = batch
 
     size_batch = num_envs * n_steps

@@ -11,6 +11,9 @@ tfb = tfp.bijectors
 LOG_STD_MIN = -3.0
 LOG_STD_MAX = 2.0
 
+"""
+These regulate default inits for conv, pre-linear and pre-ReLU layers
+"""
 
 def default_conv_init(scale: Optional[float] = jnp.sqrt(2)):
     return nn.initializers.xavier_uniform()
@@ -148,6 +151,12 @@ class TwinHeadModel(nn.Module):
 
     @nn.compact
     def __call__(self, x, latent_factors):
+        """
+        Classical PPO with IMPALA encoder and optionally with augmented latent
+        representation using true factor embeddings.
+
+        Policy is a Tanh(DiagGaussian(mu(o), log_sigma(o)))
+        """
         z = self.encoder(x)
         if self.add_latent_factors:
             z_factors = self.factor_ln(latent_factors)
@@ -159,8 +168,6 @@ class TwinHeadModel(nn.Module):
         v = self.activation_fn(v)
         v = self.v_2(v)
         # Common policy trunk
-        # z_pi = self.z_pi(z)
-        # z_pi = self.activation_fn(z_pi)
 
         # mu(z)
         means = self.means_1(z)
@@ -186,5 +193,4 @@ class TwinHeadModel(nn.Module):
         return v, pi
 
     def encode(self, x):
-        z = self.encoder(x)
-        return z
+        return self.encoder(x)

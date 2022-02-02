@@ -89,6 +89,7 @@ flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 
 
 def main(argv):
+    # Setting all rnadom seeds
     if FLAGS.seed == -1:
         seed = np.random.randint(100000000)
     else:
@@ -96,6 +97,7 @@ def main(argv):
     np.random.seed(seed)
     key = PRNGKey(seed)
 
+    # If W&B is to be used - set job and group names
     if FLAGS.wandb_key is not None:
         os.environ["WANDB_API_KEY"] = FLAGS.wandb_key
     group_name = "%s_%s_%d" % (FLAGS.run_id, FLAGS.env_name,
@@ -113,6 +115,9 @@ def main(argv):
                mode=FLAGS.wandb_mode,
                dir=FLAGS.output_dir)
 
+    # Initialize train and test environemnts
+    # Test environments always have the same number of test levels for 
+    # fair comparison across runs
     MAX_STEPS = 100
     env = SEGAREnv(FLAGS.env_name,
                    num_envs=FLAGS.num_envs,
@@ -133,6 +138,7 @@ def main(argv):
                         seed=FLAGS.seed + 1)
     n_action = env.action_space[0].shape[-1]
 
+    # Create PPO model, optimizer and buffer
     model = TwinHeadModel(action_dim=n_action,
                           prefix_critic='vfunction',
                           prefix_actor="policy",
@@ -156,6 +162,7 @@ def main(argv):
                                     params=params_model,
                                     tx=tx)
 
+    # Optionally, create an MLP to probe latent factors
     if FLAGS.probe_latent_factors:
         predictor = MLP(dims=[256, 20 * 5], batch_norm=True)
         tx_predictor = optax.chain(
@@ -189,6 +196,7 @@ def main(argv):
     sample_episode_acc = [state[0]]
 
     for step in range(1, int(FLAGS.train_steps // FLAGS.num_envs + 1)):
+        # Pick action according to PPO policy and update state
         action_test, _, _, key = select_action(train_state,
                                                state_test.astype(jnp.float32) /
                                                255.,
@@ -200,6 +208,7 @@ def main(argv):
         train_state, state, latent_factors, batch, key, reward, done, train_infos = get_transition(
             train_state, env, state, latent_factors, batch, key)
 
+        # Save episode returns and success rate
         for info in train_infos:
             maybe_success = info.get('success')
             if maybe_success:
@@ -220,6 +229,7 @@ def main(argv):
         if done[0]:
             sample_episode_acc = []
 
+        # Train once the batch is full
         if (step * FLAGS.num_envs) % (FLAGS.n_steps + 1) == 0:
             data = batch.get()
             metric_dict, train_state, key = update_ppo(
@@ -227,6 +237,7 @@ def main(argv):
                 FLAGS.n_minibatch, FLAGS.epoch_ppo, FLAGS.clip_eps,
                 FLAGS.entropy_coeff, FLAGS.critic_coeff, key)
 
+            # Optionally, predict latent factors from observation represetantion
             if FLAGS.probe_latent_factors:
                 X = train_state.apply_fn(train_state.params,
                                          jnp.stack(data[0]).reshape(
@@ -273,6 +284,7 @@ def main(argv):
                    safe_mean([x for x in returns_train_buf
                               ]), safe_mean([x for x in returns_test_buf])))
 
+            # Optionally, log a GIF of the agent's trajectory during training
             # if FLAGS.log_episodes:
             #     sample_episode_acc = np.array(
             #         sample_episode_acc).transpose(0, 3, 1, 2)
@@ -287,6 +299,7 @@ def main(argv):
             #         },
             #         step=FLAGS.num_envs * step)
 
+    # At the end of training, save model locally and on W&B
     model_dir = os.path.join(FLAGS.output_dir, name, 'model_weights')
     if not os.path.isdir(model_dir):
         os.makedirs(model_dir)
@@ -296,8 +309,10 @@ def main(argv):
                                 step=step * FLAGS.num_envs,
                                 overwrite=True,
                                 keep=1)
-    wandb.save(model_dir)
+    if FLAGS.wandb_mode != "disabled":
+        wandb.save(model_dir)
 
+    # Return performance metric for HP tuning
     try:
         run_logger = Run.get_context()
         run_logger.log("test_returns", safe_mean([x for x in returns_buf]))
