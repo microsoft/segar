@@ -7,18 +7,18 @@ import torch
 from torch.utils.data import DataLoader
 import wandb
 
-from rpp import get_sim
-from rpp.configs import get_env_config
-from rpp.logging import set_logger
-from rpp.factors import Charge, Magnetism, Mass, StoredEnergy, Density, Factor
-from rpp.mdps import (Initialization, Observation, RGBObservation,
+from segar import get_sim
+from segar.configs import get_env_config
+from segar.logging import set_logger
+from segar.factors import Charge, Magnetism, Mass, StoredEnergy, Density, Factor
+from segar.mdps import (Initialization, Observation, RGBObservation,
                       StateObservation)
-from rpp.repl.boilerplate import (set_device, updater, data_iterator,
+from segar.repl.boilerplate import (set_device, updater, data_iterator,
                                   Trainer, make_optimizer, get_device)
-from rpp.repl.data_loaders import create_initialization
-from rpp.repl.models import MLPRegressor
-from rpp.repl.static_datasets import IIDFromInit
-from rpp.sim import Simulator
+from segar.repl.data_loaders import create_initialization
+from segar.repl.models import MLPRegressor
+from segar.repl.static_datasets import IIDFromInit
+from segar.sim import Simulator
 
 from numpy_representation import NumpyRepresentation
 
@@ -142,7 +142,7 @@ def main(argv):
     logger.info('Building model.')
     regressor = build_model(data_args)
     opt = make_optimizer(regressor, learning_rate=1e-4)
-    wandb.init(project='rpp_rep_test')
+    wandb.init(project='segar_rep_test')
     logger.info("Training.")
     trainer = Trainer(train_loader, regressor, opt,
                       data_iter, update, test, test_loader=test_loader)
