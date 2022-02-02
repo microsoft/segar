@@ -1,6 +1,6 @@
+import importlib
 import os
 import subprocess
-import importlib
 
 
 def setup_packages():
@@ -16,24 +16,26 @@ def setup_packages():
 
 setup_packages()
 
+import sys
 from collections import deque
 
 import numpy as np
 import optax
 import wandb
 from absl import app, flags
-from flax.training.train_state import TrainState
 from flax.training import checkpoints
-import jax.numpy as jnp
-import jax
-
-from algo import get_transition, update_ppo, extract_latent_factors, select_action, mse_loss
-from buffer import Batch
+from flax.training.train_state import TrainState
 from segar.envs.env import SEGAREnv
-from jax.random import PRNGKey
 
-import sys
-from models import TwinHeadModel, MLP
+import jax
+import jax.numpy as jnp
+from algo import (extract_latent_factors, get_transition, mse_loss,
+                  select_action, update_ppo)
+from buffer import Batch
+from jax.random import PRNGKey
+from models import MLP, TwinHeadModel
+
+from 
 
 try:
     from azureml.core.run import Run
@@ -43,6 +45,7 @@ except:
 
 def safe_mean(x):
     return np.nan if len(x) == 0 else np.mean(x)
+
 
 FLAGS = flags.FLAGS
 # Task
@@ -66,8 +69,9 @@ flags.DEFINE_float("gae_lambda", 0.95, "GAE lambda")
 flags.DEFINE_float("entropy_coeff", 1e-3, "Entropy loss coefficient")
 flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
 # Ablations
-flags.DEFINE_boolean("probe_latent_factors", True,
-                     "Probe latent factors from the PPO state representation?")
+flags.DEFINE_boolean(
+    "probe_latent_factors", True,
+    "Probe latent factors from the PPO state representation?")
 flags.DEFINE_boolean("add_latent_factors", False,
                      "Add latent factors to PPO state representation?")
 flags.DEFINE_boolean("log_episodes", False, "Log episode samples on W&B?")
@@ -94,11 +98,11 @@ def main(argv):
 
     if FLAGS.wandb_key is not None:
         os.environ["WANDB_API_KEY"] = FLAGS.wandb_key
-    group_name = "%s_%s_%d" % (
-        FLAGS.run_id, FLAGS.env_name, FLAGS.num_train_levels)
-    name = "%s_%s_%d_%d" % (FLAGS.run_id, FLAGS.env_name,
-                                    FLAGS.num_train_levels,
-                                    np.random.randint(100000000))
+    group_name = "%s_%s_%d" % (FLAGS.run_id, FLAGS.env_name,
+                               FLAGS.num_train_levels)
+    name = "%s_%s_%d_%d" % (FLAGS.run_id,
+                            FLAGS.env_name, FLAGS.num_train_levels,
+                            np.random.randint(100000000))
 
     wandb.init(project=FLAGS.wandb_project,
                entity=FLAGS.wandb_entity,
@@ -111,22 +115,22 @@ def main(argv):
 
     MAX_STEPS = 100
     env = SEGAREnv(FLAGS.env_name,
-                          num_envs=FLAGS.num_envs,
-                          num_levels=FLAGS.num_train_levels,
-                          framestack=FLAGS.framestack,
-                          resolution=FLAGS.resolution,
-                          max_steps=MAX_STEPS,
-                          _async=False,
-                          seed=FLAGS.seed)
+                   num_envs=FLAGS.num_envs,
+                   num_levels=FLAGS.num_train_levels,
+                   framestack=FLAGS.framestack,
+                   resolution=FLAGS.resolution,
+                   max_steps=MAX_STEPS,
+                   _async=False,
+                   seed=FLAGS.seed)
     env_test = SEGAREnv(FLAGS.env_name,
-                          num_envs=1,
-                          num_levels=FLAGS.num_test_levels,
-                          framestack=FLAGS.framestack,
-                          resolution=FLAGS.resolution,
-                          max_steps=MAX_STEPS,
-                          _async=False,
-                          save_path=os.path.join(FLAGS.output_dir, 'sim.state'),
-                          seed=FLAGS.seed+1)
+                        num_envs=1,
+                        num_levels=FLAGS.num_test_levels,
+                        framestack=FLAGS.framestack,
+                        resolution=FLAGS.resolution,
+                        max_steps=MAX_STEPS,
+                        _async=False,
+                        save_path=os.path.join(FLAGS.output_dir, 'sim.state'),
+                        seed=FLAGS.seed + 1)
     n_action = env.action_space[0].shape[-1]
 
     model = TwinHeadModel(action_dim=n_action,
@@ -153,16 +157,18 @@ def main(argv):
                                     tx=tx)
 
     if FLAGS.probe_latent_factors:
-        predictor = MLP(dims=[256, 20*5], batch_norm=True)
-        tx_predictor = optax.chain(optax.clip_by_global_norm(FLAGS.max_grad_norm),
-                        optax.adam(FLAGS.lr, eps=1e-5))
-        
-        z_obs = train_state.apply_fn(train_state.params, state, method=model.encode)
+        predictor = MLP(dims=[256, 20 * 5], batch_norm=True)
+        tx_predictor = optax.chain(
+            optax.clip_by_global_norm(FLAGS.max_grad_norm),
+            optax.adam(FLAGS.lr, eps=1e-5))
+
+        z_obs = train_state.apply_fn(train_state.params,
+                                     state,
+                                     method=model.encode)
         params_predictor = predictor.init(key, z_obs)
-        train_state_predictor = TrainState.create(
-            apply_fn=predictor.apply,
-            params=params_predictor,
-            tx=tx_predictor)
+        train_state_predictor = TrainState.create(apply_fn=predictor.apply,
+                                                  params=params_predictor,
+                                                  tx=tx_predictor)
 
     batch = Batch(discount=FLAGS.gamma,
                   gae_lambda=FLAGS.gae_lambda,
@@ -179,11 +185,16 @@ def main(argv):
     returns_test_buf = deque(maxlen=10)
     success_test_buf = deque(maxlen=10)
     factor_test_buf = deque(maxlen=10)
-    
+
     sample_episode_acc = [state[0]]
 
     for step in range(1, int(FLAGS.train_steps // FLAGS.num_envs + 1)):
-        action_test, _, _, key = select_action(train_state, state_test.astype(jnp.float32) / 255., latent_factors, key, sample=True)
+        action_test, _, _, key = select_action(train_state,
+                                               state_test.astype(jnp.float32) /
+                                               255.,
+                                               latent_factors,
+                                               key,
+                                               sample=True)
         state_test, _, _, test_infos = env_test.step(action_test)
 
         train_state, state, latent_factors, batch, key, reward, done, train_infos = get_transition(
@@ -196,7 +207,7 @@ def main(argv):
             maybe_epinfo = info.get('returns')
             if maybe_epinfo:
                 returns_train_buf.append(maybe_epinfo)
-        
+
         for info in test_infos:
             maybe_success = info.get('success')
             if maybe_success:
@@ -217,16 +228,22 @@ def main(argv):
                 FLAGS.entropy_coeff, FLAGS.critic_coeff, key)
 
             if FLAGS.probe_latent_factors:
-                X = train_state.apply_fn(train_state.params, jnp.stack(data[0]).reshape(-1, *data[0][0].shape[1:]), method=model.encode)
+                X = train_state.apply_fn(train_state.params,
+                                         jnp.stack(data[0]).reshape(
+                                             -1, *data[0][0].shape[1:]),
+                                         method=model.encode)
                 y = jnp.stack(data[-1]).reshape(-1, *data[-1][0].shape[1:])
-                
+
                 grad_fn = jax.value_and_grad(mse_loss, has_aux=True)
-                (total_loss, square_res), grads = grad_fn(train_state_predictor.params,
-                                            train_state_predictor.apply_fn,
-                                            X=X,
-                                            y=y)
-                train_state_predictor = train_state_predictor.apply_gradients(grads=grads)
-                per_factor_error = square_res.reshape(-1, 20, 5).mean(2).mean(0)
+                (total_loss,
+                 square_res), grads = grad_fn(train_state_predictor.params,
+                                              train_state_predictor.apply_fn,
+                                              X=X,
+                                              y=y)
+                train_state_predictor = train_state_predictor.apply_gradients(
+                    grads=grads)
+                per_factor_error = square_res.reshape(-1, 20,
+                                                      5).mean(2).mean(0)
                 per_factor_error = per_factor_error.mean()
                 factor_train_buf.append(per_factor_error)
 
@@ -234,7 +251,7 @@ def main(argv):
 
             renamed_dict = {}
             for k, v in metric_dict.items():
-                renamed_dict["metrics/%s" %k] = v
+                renamed_dict["metrics/%s" % k] = v
             wandb.log(renamed_dict, step=FLAGS.num_envs * step)
 
             wandb.log(
@@ -252,7 +269,9 @@ def main(argv):
                 },
                 step=FLAGS.num_envs * step)
             print('[%d] Returns (train): %f Returns (test): %f' %
-                  (FLAGS.num_envs * step, safe_mean([x for x in returns_train_buf]), safe_mean([x for x in returns_test_buf]) ))
+                  (FLAGS.num_envs * step,
+                   safe_mean([x for x in returns_train_buf
+                              ]), safe_mean([x for x in returns_test_buf])))
 
             # if FLAGS.log_episodes:
             #     sample_episode_acc = np.array(
@@ -277,6 +296,7 @@ def main(argv):
                                 step=step * FLAGS.num_envs,
                                 overwrite=True,
                                 keep=1)
+    wandb.save(model_dir)
 
     try:
         run_logger = Run.get_context()

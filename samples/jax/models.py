@@ -17,30 +17,29 @@ def default_conv_init(scale: Optional[float] = jnp.sqrt(2)):
 
 
 def default_mlp_init(scale: Optional[float] = 0.01):
-    return nn.initializers.xavier_uniform() # nn.initializers.orthogonal(scale)
+    return nn.initializers.xavier_uniform()
 
 
 def default_logits_init(scale: Optional[float] = 0.01):
-    return nn.initializers.xavier_uniform() #nn.initializers.glorot_uniform() # nn.initializers.orthogonal(scale)
+    return nn.initializers.xavier_uniform()
 
 
 class MLP(nn.Module):
-  dims: Sequence[int]
-  batch_norm: bool = False
+    dims: Sequence[int]
+    batch_norm: bool = False
 
-  @nn.compact
-  def __call__(self, x):
-    if self.batch_norm:
-        x = nn.LayerNorm()(x)
-    for i, dim in enumerate(self.dims):
-        x = nn.Dense(dim,
-                    kernel_init=default_mlp_init(),
-                    name='/%d' % i)(x)
+    @nn.compact
+    def __call__(self, x):
         if self.batch_norm:
             x = nn.LayerNorm()(x)
-        if i < len(self.dims) - 1:
-            x = nn.relu(x)
-    return x
+        for i, dim in enumerate(self.dims):
+            x = nn.Dense(dim, kernel_init=default_mlp_init(),
+                         name='/%d' % i)(x)
+            if self.batch_norm:
+                x = nn.LayerNorm()(x)
+            if i < len(self.dims) - 1:
+                x = nn.relu(x)
+        return x
 
 
 class ResidualBlock(nn.Module):
@@ -118,31 +117,34 @@ class TwinHeadModel(nn.Module):
             self.activation_fn = nn.relu
         elif self.activation == 'tanh':
             self.activation_fn = nn.tanh
-        
+
         self.encoder = Impala(prefix='shared_encoder')
         self.factor_ln = nn.LayerNorm()
-        self.factor_encoder = nn.Dense(256,kernel_init=default_mlp_init(),
-                     name=self.prefix_critic + '/factor')
-        self.obs_joint = nn.Dense(256,kernel_init=default_mlp_init(),
-                     name=self.prefix_critic + '/obs_joint')
+        self.factor_encoder = nn.Dense(256,
+                                       kernel_init=default_mlp_init(),
+                                       name=self.prefix_critic + '/factor')
+        self.obs_joint = nn.Dense(256,
+                                  kernel_init=default_mlp_init(),
+                                  name=self.prefix_critic + '/obs_joint')
         self.v_1 = nn.Dense(256,
-                     kernel_init=default_mlp_init(),
-                     name=self.prefix_critic + '/v_1')
+                            kernel_init=default_mlp_init(),
+                            name=self.prefix_critic + '/v_1')
         self.v_2 = nn.Dense(1,
-                     kernel_init=default_mlp_init(),
-                     name=self.prefix_critic + '/v_2')
+                            kernel_init=default_mlp_init(),
+                            name=self.prefix_critic + '/v_2')
         self.z_pi = nn.Dense(256, kernel_init=default_mlp_init(), name="z_pi")
-        self.means_1 = nn.Dense(256, kernel_init=default_mlp_init(),
-                         name="mu_1")
+        self.means_1 = nn.Dense(256,
+                                kernel_init=default_mlp_init(),
+                                name="mu_1")
         self.means_2 = nn.Dense(self.action_dim,
-                         kernel_init=default_mlp_init(),
-                         name="mu_2")
+                                kernel_init=default_mlp_init(),
+                                name="mu_2")
         self.log_stds_1 = nn.Dense(256,
-                            kernel_init=default_mlp_init(),
-                            name="log_std_1")
+                                   kernel_init=default_mlp_init(),
+                                   name="log_std_1")
         self.log_stds_2 = nn.Dense(self.action_dim,
-                            kernel_init=default_mlp_init(),
-                            name="log_std_2")
+                                   kernel_init=default_mlp_init(),
+                                   name="log_std_2")
 
     @nn.compact
     def __call__(self, x, latent_factors):

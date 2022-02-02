@@ -127,5 +127,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-samples/jax/gpu.Dockerfile
-samples/jax/launch_experiments.py
+samples/jax/experiments

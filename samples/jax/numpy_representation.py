@@ -1,4 +1,3 @@
-    
 from flax.training.train_state import TrainState
 from flax.training import checkpoints
 import jax.numpy as jnp
@@ -10,8 +9,13 @@ from models import TwinHeadModel
 
 
 class NumpyRepresentation:
-
-    def __init__(self, n_action: int, resolution: int = 64,
+    """
+    A simple interface between pre-trained PPO policies (in Jax) and any other 
+    framework, e.g. PyTorch, Tensorflow, etc. Converts all vectors to NumPy.
+    """
+    def __init__(self,
+                 n_action: int,
+                 resolution: int = 64,
                  model_dir: str = './model_weights'):
         self.model_ppo = TwinHeadModel(action_dim=n_action,
                                        prefix_critic='vfunction',
@@ -24,16 +28,15 @@ class NumpyRepresentation:
         tx = optax.chain(optax.clip_by_global_norm(2),
                          optax.adam(3e-4, eps=1e-5))
         params_model = self.model_ppo.init(key, state)
-        train_state_ppo = TrainState.create(
-            apply_fn=self.model_ppo.apply,
-            params=params_model,
-            tx=tx)
-            
+        train_state_ppo = TrainState.create(apply_fn=self.model_ppo.apply,
+                                            params=params_model,
+                                            tx=tx)
+
         self.train_state = checkpoints.restore_checkpoint(
             './%s' % model_dir, target=train_state_ppo)
-    
-    def __call__(self, x_: np.ndarray
-                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+    def __call__(self,
+                 x_: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Input:
             x_: n_batch x resolution x resolution x 3, float32 array [0.,1.]
@@ -44,7 +47,8 @@ class NumpyRepresentation:
         """
         x_ = jnp.array(x_)
         v, pi = self.train_state.apply_fn(self.train_state.params, x_)
-        z = self.train_state.apply_fn(self.train_state.params, x_,
+        z = self.train_state.apply_fn(self.train_state.params,
+                                      x_,
                                       method=self.model_ppo.encode)
         return np.array(z), np.array(pi.distribution.loc), np.array(v)
 
