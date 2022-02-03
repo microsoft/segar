@@ -285,6 +285,7 @@ def main(argv):
                               ]), safe_mean([x for x in returns_test_buf])))
 
             # Optionally, log a GIF of the agent's trajectory during training
+            
             # if FLAGS.log_episodes:
             #     sample_episode_acc = np.array(
             #         sample_episode_acc).transpose(0, 3, 1, 2)
