@@ -82,7 +82,7 @@ class Batch:
         self._p = (self._p + 1) % self.n_steps
         self._n = min(self._n + 1, self.n_steps)
 
-    def get(self):
+    def get(self) -> Tuple:
         gae, target = calculate_gae(n_steps=self.n_steps,
                                     discount=self.discount,
                                     gae_lambda=self.gae_lambda,

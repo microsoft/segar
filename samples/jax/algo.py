@@ -8,6 +8,7 @@ import jax.numpy as jnp
 import numpy as np
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
+
 """
 Inspired by code from Flax:
 https://github.com/google/flax/blob/main/examples/ppo/ppo_lib.py
@@ -15,7 +16,7 @@ https://github.com/google/flax/blob/main/examples/ppo/ppo_lib.py
 
 
 def mse_loss(params: flax.core.frozen_dict.FrozenDict, apply_fn: Callable,
-             X: jnp.ndarray, y: jnp.ndarray):
+             X: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
     X = jax.lax.stop_gradient(
         X)  # prevent latent factors to backprop into representation
     y_hat = apply_fn(params, X)
@@ -25,7 +26,7 @@ def mse_loss(params: flax.core.frozen_dict.FrozenDict, apply_fn: Callable,
     return predictor_loss, (y - y_hat)**2
 
 
-def compute_grad_norm(grads):
+def compute_grad_norm(grads: flax.core.frozen_dict.FrozenDict) -> jnp.ndarray:
     if hasattr(grads, "items"):
         acc = 0.
         n = 0
@@ -38,21 +39,12 @@ def compute_grad_norm(grads):
     return acc
 
 
-def extract_latent_factors(infos):
+def extract_latent_factors(infos: dict):
     latent_features = []
     for i, info in enumerate(infos):
         latent_features.append(info['latent_features'].reshape(-1))
     latent_features = jnp.stack(latent_features)
     return latent_features
-
-
-def compute_grad_norm(tree):
-    if hasattr(tree, "items"):
-        acc = 0.
-        for k, v in tree.items():
-            acc += compute_grad_norm(v)
-        return acc
-    return jnp.linalg.norm(tree)
 
 
 def loss_actor_and_critic(params_model: flax.core.frozen_dict.FrozenDict,
@@ -126,7 +118,7 @@ def get_transition(
     latent_factors,
     batch,
     rng: PRNGKey,
-):
+) -> Tuple[TrainState, jnp.ndarray, jnp.ndarray, Tuple, PRNGKey, jnp.ndarray, jnp.ndarray, dict]:
     """
     Picks the next action a_t~pi(s_t) and adds the resulting transition to the
     replay buffer.
@@ -147,7 +139,7 @@ def get_transition(
 
 
 @partial(jax.jit)
-def flatten_dims(x):
+def flatten_dims(x: jnp.ndarray()):
     return x.swapaxes(0, 1).reshape(x.shape[0] * x.shape[1], *x.shape[2:])
 
 
@@ -156,7 +148,7 @@ def flatten_dims(x):
                           "clip_eps", "entropy_coeff", "critic_coeff"))
 def update_ppo(train_state: TrainState, batch: Tuple, num_envs: int,
                n_steps: int, n_minibatch: int, epoch_ppo: int, clip_eps: float,
-               entropy_coeff: float, critic_coeff: float, rng: PRNGKey):
+               entropy_coeff: float, critic_coeff: float, rng: PRNGKey) -> Tuple[dict, TrainState, PRNGKey]:
     """
     Randomize PPO batch (n_envs x n_steps) into M minibatches, and optimize for 
     E epochs, as per classical PPO implementation.

@@ -68,19 +68,19 @@ from segar.things import (
 class SEGAREnv(gym.Env):
     def __init__(
         self,
-        env_name,
-        start_level=0,  # TODO: is this needed?
-        num_levels=100,
-        num_envs=1,
-        resolution=64,
-        framestack=1,
-        max_steps=50,
-        _async=False,
-        wall_damping=0.025,
-        friction=0.05,
-        save_path="sim.state",
-        action_max=2,
-        seed=123,
+        env_name: str,
+        start_level: int = 0,  # TODO: is this needed?
+        num_levels: int = 100,
+        num_envs: int = 1,
+        resolution: int = 64,
+        framestack: int = 1,
+        max_steps: int = 50,
+        _async: bool = False,
+        wall_damping: float = 0.025,
+        friction: float = 0.05,
+        save_path: str = "sim.state",
+        action_max: float = 2,
+        seed: int = 123,
     ):
         self.resolution = resolution
         self.action_max = action_max
@@ -411,19 +411,19 @@ class SEGARSingleEnv(SEGAREnv):
     # TODO yes I'm acutely aware of how shitty of a solution this is but for now it must do
     def __init__(
         self,
-        env_name,
-        start_level=0,
-        num_levels=100,
-        num_envs=1,
-        resolution=64,
-        framestack=1,
-        max_steps=50,
-        _async=False,
-        wall_damping=0.025,
-        friction=0.05,
-        save_path="sim.state",
-        action_max=2,
-        seed=123,
+        env_name: str,
+        start_level: int = 0,
+        num_levels: int = 100,
+        num_envs: int = 1,
+        resolution: int = 64,
+        framestack: int = 1,
+        max_steps: int = 50,
+        _async: bool = False,
+        wall_damping: float = 0.025,
+        friction: float = 0.05,
+        save_path: int = "sim.state",
+        action_max: float = 2,
+        seed: int = 123,
     ):
         super().__init__(
             env_name=env_name,

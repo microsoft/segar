@@ -2,6 +2,7 @@ import importlib
 import os
 import subprocess
 
+from typing import Any
 
 def setup_packages():
     subprocess.call('pip install -e {0}'.format(
@@ -42,7 +43,7 @@ except:
     print('Failed to import AzureML')
 
 
-def safe_mean(x):
+def safe_mean(x: Any):
     return np.nan if len(x) == 0 else np.mean(x)
 
 
