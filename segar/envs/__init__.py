@@ -1,1 +1,1 @@
-from rpp.envs.env import RoboPuttPuttEnv, RoboPuttPuttSingleEnv
+from segar.envs.env import SEGAREnv, SEGARSingleEnv

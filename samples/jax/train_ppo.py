@@ -34,6 +34,7 @@ from algo import (extract_latent_factors, get_transition, mse_loss,
 from buffer import Batch
 from jax.random import PRNGKey
 from models import MLP, TwinHeadModel
+import glob
 
 try:
     from azureml.core.run import Run
@@ -100,15 +101,15 @@ def main(argv):
         os.environ["WANDB_API_KEY"] = FLAGS.wandb_key
     group_name = "%s_%s_%d" % (FLAGS.run_id, FLAGS.env_name,
                                FLAGS.num_train_levels)
-    name = "%s_%s_%d_%d" % (FLAGS.run_id,
+    run_name = "%s_%s_%d_%d" % (FLAGS.run_id,
                             FLAGS.env_name, FLAGS.num_train_levels,
                             np.random.randint(100000000))
 
-    wandb.init(project=FLAGS.wandb_project,
+    run = wandb.init(project=FLAGS.wandb_project,
                entity=FLAGS.wandb_entity,
                config=FLAGS,
                group=group_name,
-               name=name,
+               name=run_name,
                sync_tensorboard=False,
                mode=FLAGS.wandb_mode,
                dir=FLAGS.output_dir)
@@ -299,7 +300,7 @@ def main(argv):
             #         step=FLAGS.num_envs * step)
 
     # At the end of training, save model locally and on W&B
-    model_dir = os.path.join(FLAGS.output_dir, name, 'model_weights')
+    model_dir = os.path.join(FLAGS.output_dir, run_name, 'model_weights')
     if not os.path.isdir(model_dir):
         os.makedirs(model_dir)
     print('Saving model weights')
@@ -309,7 +310,10 @@ def main(argv):
                                 overwrite=True,
                                 keep=1)
     if FLAGS.wandb_mode != "disabled":
-        wandb.save(model_dir)
+        artifact = wandb.Artifact(run_name, type='model_checkpoint')
+        ckpt = glob.glob(model_dir+'/checkpoint_*')[0]
+        artifact.add_file(ckpt)
+        run.log_artifact(artifact)
 
     # Return performance metric for HP tuning
     try:
