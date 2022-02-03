@@ -47,7 +47,7 @@ from segar.sim.location_priors import (
     RandomTopRightLocation,
 )
 
-from segar.tasks.puttputt import GoalTile, GolfBall, PuttPutt, PuttPuttInitialization
+from segar.tasks.puttputt import GoalTile, GolfBall, PuttPutt
 from segar.things import (
     Ball,
     Bumper,
@@ -89,8 +89,9 @@ class SEGAREnv(gym.Env):
         self.env_name = env_name
 
         task_name, task_distr, obs_type = env_name.split("-")
-        task_name, k = task_name.split("x")
-        k = int(k)
+        if 'empty' not in task_name:
+            task_name, k = task_name.split("x")
+            k = int(k)
 
         if obs_type == "rgb":
             visual_config = get_env_config("visual",

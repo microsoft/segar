@@ -48,7 +48,7 @@ def safe_mean(x):
 
 FLAGS = flags.FLAGS
 # Task
-flags.DEFINE_string("env_name", "emptyx0-easy-rgb", "Env name")
+flags.DEFINE_string("env_name", "empty-easy-rgb", "Env name")
 flags.DEFINE_integer("seed", 1, "Random seed.")
 flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
@@ -133,7 +133,6 @@ def main(argv):
                         resolution=FLAGS.resolution,
                         max_steps=MAX_STEPS,
                         _async=False,
-                        save_path=os.path.join(FLAGS.output_dir, 'sim.state'),
                         seed=FLAGS.seed + 1)
     n_action = env.action_space[0].shape[-1]
 

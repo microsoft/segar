@@ -2,6 +2,7 @@ import pickle
 import time
 from typing import Callable
 import warnings
+from gym import register
 
 _SIM = None
 
@@ -52,3 +53,42 @@ def load_sim_from_file(path):
         sim = pickle.load(f)
     set_sim(sim)
     return sim
+
+task_names = ["empty", "objects", "tiles"]
+difficulties = ["easy", "medium", "hard"]
+observations = ["rgb"]
+
+for task in task_names:
+    for difficulty in difficulties:
+        for observation in observations:
+            for n_entities in [1, 2, 3]:
+                if task == 'empty':
+                    if n_entities == 1:
+                        env_name = f"segar-{task}-{difficulty}-{observation}-v0"
+                        register(
+                            id=env_name,  # FIXME
+                            entry_point="segar.envs:SEGARSingleEnv",
+                            kwargs={"env_name": f"{task}-{difficulty}-{observation}"},  # FIXME
+                            max_episode_steps=100
+                        )
+                    else:
+                        continue
+                else:
+                    env_name = f"segar-{task}x{n_entities}-{difficulty}-{observation}-v0"
+                    register(
+                        id=env_name,  # FIXME
+                        entry_point="segar.envs:SEGARSingleEnv",
+                        kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-{observation}"},  # FIXME
+                        max_episode_steps=100
+                    )
+
+### Currently available:
+# segar-empty-easy-rgb-v0
+# segar-empty-medium-rgb-v0
+# segar-empty-hard-rgb-v0
+# segar-objects-easy-rgb-v0
+# segar-objects-medium-rgb-v0
+# segar-objects-hard-rgb-v0
+# segar-tiles-easy-rgb-v0
+# segar-tiles-medium-rgb-v0
+# segar-tiles-hard-rgb-v0
