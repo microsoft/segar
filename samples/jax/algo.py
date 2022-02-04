@@ -139,7 +139,7 @@ def get_transition(
 
 
 @partial(jax.jit)
-def flatten_dims(x: jnp.ndarray()):
+def flatten_dims(x: jnp.ndarray):
     return x.swapaxes(0, 1).reshape(x.shape[0] * x.shape[1], *x.shape[2:])
 
 
