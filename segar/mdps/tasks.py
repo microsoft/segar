@@ -8,12 +8,13 @@ semantics of the MDP.
 
 __all__ = ('Task',)
 
-from typing import Optional
+from typing import Optional, Type
 
 from gym.spaces import Box
 import numpy as np
 
 from segar import get_sim
+from segar.factors import ID, Factor, Noise
 from segar.sim import Simulator
 from segar.things import Entity
 from .initializations import Initialization
@@ -129,6 +130,9 @@ class Task:
     @property
     def initial_state(self) -> list[Entity]:
         return self._initialization.initial_state
+
+    def get_dists_from_init(self) -> dict[ID, dict[Type[Factor], Noise]]:
+        return self._initialization.get_dists_from_init()
 
     def results(self, state: dict) -> dict:
         """Returns results to be processed by the MDP.

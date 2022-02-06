@@ -2,7 +2,7 @@
 __all__ = ('Prior',)
 
 from typing import Optional, Type, TypeVar, Union
-from segar.factors import Factor, Noise
+from segar.factors import Factor, Noise, Deterministic
 from segar.things import Entity
 from .transitions import TransitionFunction, SetFactor
 from .relations import Relation
@@ -57,6 +57,13 @@ class Prior(TransitionFunction):
         rule_copy._sim = sim
         return rule_copy
 
+    @property
+    def distribution(self):
+        if isinstance(self.source, Noise):
+            return self.source
+        else:
+            return Deterministic(self.source)
+
     def __repr__(self) -> str:
         r = f'{self.target} <- {self.source}'
         if self.factor_type:
@@ -66,3 +73,4 @@ class Prior(TransitionFunction):
         if self._relation:
             r += f' (if {self._relation})'
         return r
+

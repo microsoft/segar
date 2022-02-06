@@ -11,7 +11,7 @@ from copy import deepcopy
 from typing import Optional, Type, Union
 
 from segar import get_sim
-from segar.factors import Noise, Position
+from segar.factors import Noise, Position, Deterministic, ID, Factor
 from segar.rules import Prior, Transition
 from segar.sim import Simulator
 from segar.things import Entity, ThingFactory
@@ -54,6 +54,9 @@ class Initialization:
 
         """
         pass
+
+    def get_dists_from_init(self) -> dict[ID, dict[Type[Factor], Noise]]:
+        raise NotImplementedError
 
     def __call__(self, init_things: Optional[list[Entity]] = None):
         """Sets the simulator according to the initialization.
@@ -207,6 +210,22 @@ class ArenaInitialization(Initialization):
         self._things = things
         self.sim.shuffle_order(things)
         return self._things
+
+    def get_dists_from_init(self) -> dict[ID, dict[Type[Factor], Noise]]:
+        dists = {}
+        for thing in self._things:
+            thing_dists = {}
+            for factor_type, factor in thing.factors.items():
+                for init in self._inits:
+                    if factor is init.factor:
+                        prior: Prior = init.rule
+                        thing_dists[factor_type] = prior.distribution
+
+                if factor_type not in thing_dists:
+                    thing_dists[factor_type] = Deterministic(factor.value)
+            dists[thing[ID]] = thing_dists
+
+        return dists
 
     def set_arena(self, init_things: Optional[list[Entity]] = None) -> None:
         """Adds the tiles from the arena.

@@ -3,7 +3,8 @@ from .bools import Visible, Done, Alive, InfiniteEnergy, Mobile, BooleanFactor
 from .factors import (Factor, FactorContainer, DEFAULTS as FACTOR_DEFAULTS,
                       FACTORS)
 from .noise import (Noise, GaussianNoise, GaussianMixtureNoise, UniformNoise,
-                    DiscreteRangeNoise, Choice, GaussianNoise2D)
+                    DiscreteRangeNoise, Choice, GaussianNoise2D,
+                    Deterministic)
 from .number_factors import (NumericFactor, Order, Size, Mass, Density, Charge,
                              Magnetism, StoredEnergy, Heat, Friction)
 from .properties import Floor, Collides, Consumes, ID, Label, Text
@@ -20,4 +21,4 @@ __all__ = ['Position', 'Velocity', 'Acceleration', 'Visible', 'Done', 'Alive',
            'Friction', 'Floor', 'Collides', 'Consumes', 'ID', 'Label',
            'Text', 'Shape', 'Circle', 'Square', 'RandomConvexHull', 'Hexagon',
            'Triangle', 'ConvexHullShape', 'BaseShape', 'VectorFactor',
-           'BooleanFactor']
+           'BooleanFactor', 'Deterministic']

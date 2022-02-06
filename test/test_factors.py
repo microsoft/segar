@@ -12,7 +12,7 @@ class TestFactor(unittest.TestCase):
 
     def _test_creation_from_mod(self, mod):
         for name in mod.__all__:
-            if name in ['DEFAULTS', 'FACTORS']:
+            if name in ['DEFAULTS', 'FACTORS', 'Deterministic']:
                 continue
             cls = getattr(mod, name)
             if issubclass(cls, Factor):
@@ -80,7 +80,7 @@ class TestFactor(unittest.TestCase):
 
     def test_noise(self):
         for n in noise.__all__:
-            if n == 'Noise':
+            if n in ('Noise', 'Deterministic'):
                 continue
             print(f'Testing noise {n}.')
             n_cls = getattr(noise, n)
