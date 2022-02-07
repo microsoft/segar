@@ -54,6 +54,10 @@ def load_sim_from_file(path):
     set_sim(sim)
     return sim
 
+
+# The following block of code pre-registers a set of default configurations
+# that can be used via env = gym.make('empty-easy-rgb') for example.
+
 task_names = ["empty", "objects", "tiles"]
 difficulties = ["easy", "medium", "hard"]
 observations = ["rgb"]
@@ -81,14 +85,3 @@ for task in task_names:
                         kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-{observation}"},  # FIXME
                         max_episode_steps=100
                     )
-
-### Currently available:
-# segar-empty-easy-rgb-v0
-# segar-empty-medium-rgb-v0
-# segar-empty-hard-rgb-v0
-# segar-objects-easy-rgb-v0
-# segar-objects-medium-rgb-v0
-# segar-objects-hard-rgb-v0
-# segar-tiles-easy-rgb-v0
-# segar-tiles-medium-rgb-v0
-# segar-tiles-hard-rgb-v0

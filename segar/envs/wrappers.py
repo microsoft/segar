@@ -99,7 +99,7 @@ class SequentialTaskWrapper:
             next_obs = self.reset()
             info["success"] = success
         info["task_id"] = self.task_id
-        info["latent_features"] = self.sobs(self.sim.state)
+        info["latent_features"] = self.sobs(self.current_env.env.env.sim.state)
         return next_obs.copy(), rew, done, info
 
     def _pick_env(self, task_id=None):
