@@ -224,9 +224,9 @@ def main(argv):
         )
         state_test, _, _, test_infos = env_test.step(action_test)
 
-        train_state, state, latent_factors, batch,
-        key, reward, done, train_infos = get_transition(
-            train_state, env, state, latent_factors, batch, key)
+        (train_state, state, latent_factors, batch, key, reward, done,
+         train_infos) = get_transition(train_state, env, state, latent_factors,
+                                       batch, key)
 
         # Save episode returns and success rate
         for info in train_infos:
