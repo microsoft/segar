@@ -1,7 +1,7 @@
 from __future__ import annotations
 __author__ = "R Devon Hjelm"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
-                "AI Company"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
 __license__ = "MIT"
 """Simulator
 
@@ -53,6 +53,7 @@ _DEFAULT_FACTOR_UPDATE_ORDER = (
 )
 DEFAULT_RULES = [move, lorentz_law, apply_friction, apply_burn, stop_condition,
                  kill_condition, consume, accelerate]
+_PRECISION = 1e-7  # For collision checks.
 
 FactorOrder = tuple[list[Type[Factor]], ...]
 
@@ -1243,7 +1244,16 @@ class Simulator:
             for collision in final_collisions:
                 collision()
 
-            assert 0 <= rdt_total < dt, (dt, rdt_total, colliding_pair)
+            if not (-_PRECISION <= rdt_total < dt + _PRECISION):
+                raise RuntimeError(f'Collision error, rollback is out of '
+                                   f'bounds. If the error is small, '
+                                   f'try decreasing precision of check not('
+                                   f'{_PRECISION} <= {rdt_total} < {dt} + '
+                                   f'{_PRECISION}).')
+
+            # Due to precision errors.
+            rdt_total = max(Time(0.), rdt_total)
+            rdt_total = min(dt, rdt_total)
 
             self._move_objects(dt=rdt_total)
 

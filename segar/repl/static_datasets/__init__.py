@@ -1,6 +1,6 @@
 __author__ = "R Devon Hjelm"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
-                "AI Company"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
 __license__ = "MIT"
 from .iid_samples import IIDFromInit, create_iid_from_init
 
