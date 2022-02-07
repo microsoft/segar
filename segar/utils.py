@@ -7,8 +7,6 @@ __license__ = "MIT"
 """
 from typing import Any
 
-import numpy as np
-
 
 def append_dict(d: dict[str, list], update_d: dict[str, Any]):
     """Appends new entries from a dictionary to an existing one.
