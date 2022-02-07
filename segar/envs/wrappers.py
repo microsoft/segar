@@ -9,7 +9,6 @@ import random
 import numpy as np
 from gym.spaces import Box
 
-from segar.envs.utils import check_action
 from segar.factors import Charge, Magnetism, Position, Friction
 from segar.mdps import MDP
 from segar.mdps.observations import AllStateObservation
@@ -52,7 +51,6 @@ class SequentialTaskWrapper:
                             safe_mode=False,
                             save_path=save_path)
             task.set_sim(sim)
-            task.check_action = check_action
             task.sample()
             mdp = FrameStackWrapper(
                 ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack)

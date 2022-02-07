@@ -10,12 +10,6 @@ from typing import Any
 import numpy as np
 
 
-def check_action(action):
-    assert (isinstance(action, np.ndarray)
-            and action.shape == (2,)
-            and not np.isnan(action))
-
-
 def append_dict(d: dict[str, list], update_d: dict[str, Any]):
     """Appends new entries from a dictionary to an existing one.
     :param d: Dictionary to update.
