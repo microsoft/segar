@@ -1,6 +1,6 @@
 __author__ = "Mihai Jalobeanu"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
-                "AI Company"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
 __license__ = "MIT"
 """Affordance map rendering
 

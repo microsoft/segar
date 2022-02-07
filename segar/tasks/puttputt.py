@@ -1,6 +1,6 @@
 __author__ = "R Devon Hjelm"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
-                "AI Company"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
 __license__ = "MIT"
 """Puttputt game. Get ball as close as possible to the goal.
 
