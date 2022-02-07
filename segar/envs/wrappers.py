@@ -1,6 +1,5 @@
 from collections import deque
 
-import gym
 import random
 import numpy as np
 from gym.spaces import Box
@@ -38,7 +37,7 @@ class SequentialTaskWrapper:
 
         self.task_list = []
         self.mdp_list = []
-        for level in range(num_levels):
+        for _ in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
             task = PuttPutt(action_range=action_range,
                             initialization=initialization)
@@ -88,9 +87,11 @@ class SequentialTaskWrapper:
     def step(self, action):
         try:
             next_obs, rew, done, info = self.current_env.step(action)
-        except:
+        except Exception as e:
             # repeat again in hopes the crash doesn't get registered
             next_obs, rew, done, info = self.current_env.step(action)
+            print('Ignoring simulator exception:')
+            print(e)
         self.current_step += 1
         success = int(done and (self.current_step < self._max_steps)
                       and self.sim.things["golfball"].Alive.value)
@@ -99,7 +100,7 @@ class SequentialTaskWrapper:
             next_obs = self.reset()
             info["success"] = success
         info["task_id"] = self.task_id
-        info["latent_features"] = self.sobs(self.sim.state)
+        info["latent_features"] = self.sobs(self.current_env.env.env.sim.state)
         return next_obs.copy(), rew, done, info
 
     def _pick_env(self, task_id=None):

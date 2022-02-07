@@ -8,7 +8,6 @@ import jax.numpy as jnp
 import numpy as np
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
-
 """
 Inspired by code from Flax:
 https://github.com/google/flax/blob/main/examples/ppo/ppo_lib.py
@@ -30,7 +29,7 @@ def compute_grad_norm(grads: flax.core.frozen_dict.FrozenDict) -> jnp.ndarray:
     if hasattr(grads, "items"):
         acc = 0.
         n = 0
-        for k, v in grads.items():
+        for _, v in grads.items():
             acc += compute_grad_norm(v)
             n += 1
         acc /= n
@@ -41,7 +40,7 @@ def compute_grad_norm(grads: flax.core.frozen_dict.FrozenDict) -> jnp.ndarray:
 
 def extract_latent_factors(infos: dict):
     latent_features = []
-    for i, info in enumerate(infos):
+    for _, info in enumerate(infos):
         latent_features.append(info['latent_features'].reshape(-1))
     latent_features = jnp.stack(latent_features)
     return latent_features
@@ -118,7 +117,8 @@ def get_transition(
     latent_factors,
     batch,
     rng: PRNGKey,
-) -> Tuple[TrainState, jnp.ndarray, jnp.ndarray, Tuple, PRNGKey, jnp.ndarray, jnp.ndarray, dict]:
+) -> Tuple[TrainState, jnp.ndarray, jnp.ndarray, Tuple, PRNGKey, jnp.ndarray,
+           jnp.ndarray, dict]:
     """
     Picks the next action a_t~pi(s_t) and adds the resulting transition to the
     replay buffer.
@@ -135,7 +135,8 @@ def get_transition(
     latent_factors = extract_latent_factors(info)
     batch.append(state, action, reward, done, np.array(log_pi),
                  np.array(value), task_ids, latent_factors)
-    return train_state, next_state, latent_factors, batch, new_key, reward, done, info
+    return (train_state, next_state, latent_factors, batch, new_key, reward,
+            done, info)
 
 
 @partial(jax.jit)
@@ -148,12 +149,14 @@ def flatten_dims(x: jnp.ndarray):
                           "clip_eps", "entropy_coeff", "critic_coeff"))
 def update_ppo(train_state: TrainState, batch: Tuple, num_envs: int,
                n_steps: int, n_minibatch: int, epoch_ppo: int, clip_eps: float,
-               entropy_coeff: float, critic_coeff: float, rng: PRNGKey) -> Tuple[dict, TrainState, PRNGKey]:
+               entropy_coeff: float, critic_coeff: float,
+               rng: PRNGKey) -> Tuple[dict, TrainState, PRNGKey]:
     """
-    Randomize PPO batch (n_envs x n_steps) into M minibatches, and optimize for 
+    Randomize PPO batch (n_envs x n_steps) into M minibatches, and optimize for
     E epochs, as per classical PPO implementation.
     """
-    state, action, reward, log_pi_old, value, target, gae, task_ids, latent_factors = batch
+    (state, action, reward, log_pi_old, value, target, gae, task_ids,
+     latent_factors) = batch
 
     size_batch = num_envs * n_steps
     assert size_batch % n_minibatch == 0
