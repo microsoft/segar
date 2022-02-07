@@ -1,4 +1,11 @@
 from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+"""Transition functions and applications.
+
+"""
 
 __all__ = ('Differential', 'SetFactor', 'Aggregate', 'DidNotMatch',
            'DidNotPass', 'Transition', 'TransitionFunction',

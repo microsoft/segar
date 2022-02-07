@@ -1,3 +1,7 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Module for training and loading Linear AE visual features.
 
 The features trained available on the repo were constructed using:

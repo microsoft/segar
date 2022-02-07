@@ -1,3 +1,7 @@
+__author__ = "Mihai Jalobeanu"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Affordance map rendering
 
 TODO: fix and update this.
@@ -7,6 +11,8 @@ TODO: fix and update this.
 import cv2
 
 # flake8: noqa
+
+#  TODO: This needs to be updated
 
 
 class AffordanceRenderer:

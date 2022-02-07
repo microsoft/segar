@@ -1,8 +1,12 @@
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+
 """Factors of variation and FactorContainers.
 
 """
-
-from __future__ import annotations
 
 __all__ = ('Factor', 'FactorContainer', 'DEFAULTS', 'FACTORS')
 

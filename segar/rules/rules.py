@@ -1,5 +1,11 @@
 from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+"""Generic rules.
 
+"""
 __all__ = ('Rule', 'inspect_signature', 'match_pattern')
 
 from types import GenericAlias

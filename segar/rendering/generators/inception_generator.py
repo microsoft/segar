@@ -1,8 +1,11 @@
-"""Tools for sim mini
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+"""Generator from Inception model.
 
 """
-
-from __future__ import annotations
 
 import argparse
 import glob

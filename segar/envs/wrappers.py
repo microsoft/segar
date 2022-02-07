@@ -1,3 +1,8 @@
+__author__ = "Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+
 from collections import deque
 
 import random

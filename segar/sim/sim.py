@@ -1,8 +1,11 @@
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Simulator
 
 """
-
-from __future__ import annotations
 
 __all__ = ('Simulator',)
 
@@ -55,7 +58,7 @@ FactorOrder = tuple[list[Type[Factor]], ...]
 
 
 class Simulator:
-    """Minimal custom simulator.
+    """The simulator.
 
     """
 
@@ -271,6 +274,31 @@ class Simulator:
             if all(has_factor):
                 things_[k] = thing
         return things_
+
+    def get_owner(self, factor: Factor) -> Union[Entity, None]:
+        """Returns the thing that owns the queried factor.
+
+        :param factor: Factor to search for.
+
+        """
+        for thing in self.things.values():
+            if thing.contains(factor):
+                return thing
+        return None
+
+    def get_paired_factor(self, key: Factor, query: Type[Factor]
+                          ) -> Union[Factor, None]:
+        """Attempts to find the corresponding factor from the type and
+            another factor that belongs to the same thing.
+
+        :param key: Key factor to reference factor being drawn out.
+        :param query: Type of factor being drawn.
+
+        """
+        owner = self.get_owner(key)
+        if owner.has_factor(query):
+            return owner[query]
+        return None
 
     @property
     def things(self) -> Dict[ThingID, Entity]:

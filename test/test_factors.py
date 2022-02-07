@@ -1,3 +1,7 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 import unittest
 
 from segar.factors import (factors, number_factors, arrays, bools, noise,
@@ -12,7 +16,7 @@ class TestFactor(unittest.TestCase):
 
     def _test_creation_from_mod(self, mod):
         for name in mod.__all__:
-            if name in ['DEFAULTS', 'FACTORS']:
+            if name in ['DEFAULTS', 'FACTORS', 'Deterministic']:
                 continue
             cls = getattr(mod, name)
             if issubclass(cls, Factor):
@@ -80,7 +84,7 @@ class TestFactor(unittest.TestCase):
 
     def test_noise(self):
         for n in noise.__all__:
-            if n == 'Noise':
+            if n in ('Noise', 'Deterministic'):
                 continue
             print(f'Testing noise {n}.')
             n_cls = getattr(noise, n)

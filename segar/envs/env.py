@@ -1,75 +1,36 @@
+__author__ = "Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+
 from pprint import pprint
 
-from segar.sim import Simulator
 import gym
 import numpy as np
 from gym.spaces import Box
+
 from segar.configs.handler import get_env_config
 from segar.envs.wrappers import SequentialTaskWrapper
 from segar.factors import (
-    ID,
-    Acceleration,
-    Alive,
-    Charge,
-    Circle,
-    DiscreteRangeNoise,
-    Done,
-    Friction,
-    Heat,
-    StoredEnergy,
-    GaussianMixtureNoise,
-    GaussianNoise,
-    Label,
-    Magnetism,
-    Mass,
-    Mobile,
-    Order,
-    Position,
-    RandomConvexHull,
-    Shape,
-    Size,
-    Text,
-    UniformNoise,
-    Velocity,
-    Visible,
-)
-
+    Charge, Circle, Friction, Heat, StoredEnergy, GaussianMixtureNoise,
+    GaussianNoise, Magnetism, Mass, Mobile, Position, Shape, Size,
+    UniformNoise, RandomConvexHull)
 from segar.mdps.observations import RGBObservation
-
 from segar.rules import Prior
 from segar.sim.location_priors import (
-    RandomBottomLocation,
-    RandomEdgeLocation,
-    RandomUniformLocation,
-    RandomMiddleLocation,
-    RandomTopLocation,
-    CenterLocation,
-    RandomTopRightLocation,
-)
-
-from segar.tasks.puttputt import GoalTile, GolfBall, PuttPutt
+    RandomBottomLocation, RandomUniformLocation, RandomMiddleLocation,
+    RandomTopLocation, CenterLocation, RandomTopRightLocation)
+from segar.tasks.puttputt import GoalTile, GolfBall
 from segar.things import (
-    Ball,
-    Bumper,
-    Charger,
-    Damper,
-    Entity,
-    FireTile,
-    Hole,
-    MagmaTile,
-    Magnet,
-    Object,
-    SandTile,
-    ThingFactory,
-    Tile,
-)
+    Ball, Bumper, Charger, Damper, FireTile, Hole, MagmaTile, Magnet, Object,
+    SandTile, ThingFactory, Tile)
 
 
 class SEGAREnv(gym.Env):
     def __init__(
         self,
         env_name: str,
-        start_level: int = 0,  # TODO: is this needed?
+        start_level: int = 0,
         num_levels: int = 100,
         num_envs: int = 1,
         resolution: int = 64,
@@ -85,7 +46,7 @@ class SEGAREnv(gym.Env):
         self.resolution = resolution
         self.action_max = action_max
         self.action_range = [-self.action_max, self.action_max]
-
+        self.start_level = start_level  # TODO: is this needed?
         self.env_name = env_name
 
         task_name, task_distr, obs_type = env_name.split("-")
@@ -100,6 +61,7 @@ class SEGAREnv(gym.Env):
             obs = RGBObservation(resolution=self.resolution,
                                  config=visual_config)
 
+        init_config = {}
         if task_name == "empty":
             if task_distr == "easy":
                 init_config = {
@@ -367,9 +329,11 @@ class SEGAREnv(gym.Env):
                       sub_steps=5)
         print("==Distribution config==")
         pprint(init_config)
-        make_env = lambda: SequentialTaskWrapper(
-            obs, init_config, config, self.action_range, num_levels, max_steps,
-            framestack, seed, wall_damping, friction, save_path)
+
+        def make_env():
+            return SequentialTaskWrapper(
+                obs, init_config, config, self.action_range, num_levels,
+                max_steps, framestack, seed, wall_damping, friction, save_path)
 
         if not _async:
             print("Making sync envs.")
@@ -408,7 +372,6 @@ class SEGAREnv(gym.Env):
 
 
 class SEGARSingleEnv(SEGAREnv):
-    # TODO yes I'm acutely aware of how shitty of a solution this is but for now it must do
     def __init__(
         self,
         env_name: str,
@@ -421,7 +384,7 @@ class SEGARSingleEnv(SEGAREnv):
         _async: bool = False,
         wall_damping: float = 0.025,
         friction: float = 0.05,
-        save_path: int = "sim.state",
+        save_path: str = "sim.state",
         action_max: float = 2,
         seed: int = 123,
     ):
@@ -468,12 +431,11 @@ class SEGARSingleEnv(SEGAREnv):
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
     def check_same_env(env1, env2):
         objs = ["golfball", "goal", "global_friction"]
-        x1 = env1.env.envs[0].reset(0)
-        x2 = env2.env.envs[0].reset(0)
+
+        env1.env.envs[0].reset(0)
+        env2.env.envs[0].reset(0)
         for obj in objs:
             factors_level1 = [
                 x.value for x in env1.env.envs[0].mdp_list[0].env.env.sim.
@@ -500,8 +462,8 @@ if __name__ == "__main__":
 
     def check_same_process(env1):
         objs = ["golfball", "goal", "global_friction"]
-        x1 = env1.env.envs[0].reset(0)
-        x2 = env1.env.envs[1].reset(0)
+        env1.env.envs[0].reset(0)
+        env1.env.envs[1].reset(0)
         for obj in objs:
             factors_level1 = [
                 x.value for x in env1.env.envs[0].mdp_list[0].env.env.sim.
@@ -529,19 +491,21 @@ if __name__ == "__main__":
     def check_same_level(env1):
         objs = ["golfball", "goal", "global_friction"]
         for obj in objs:
-            x1 = env1.env.envs[0].reset(0)
+            env1.env.envs[0].reset(0)
             factors_level1 = [
                 x.value for x in env1.env.envs[0].mdp_list[0].env.env.sim.
                 things[obj].factors.values()
                 if type(x.value) == float or type(x.value) == np.ndarray
             ]
-            x2 = env1.env.envs[0].reset(1)
+
+            env1.env.envs[0].reset(1)
             factors_level2 = [
                 x.value for x in env1.env.envs[0].mdp_list[1].env.env.sim.
                 things[obj].factors.values()
                 if type(x.value) == float or type(x.value) == np.ndarray
             ]
-            x1_2 = env1.env.envs[0].reset(0)
+
+            env1.env.envs[0].reset(0)
             factors_level1_2 = [
                 x.value for x in env1.env.envs[0].mdp_list[0].env.env.sim.
                 things[obj].factors.values()
@@ -552,6 +516,7 @@ if __name__ == "__main__":
                 things[obj].factors.items()
                 if type(x.value) == float or type(x.value) == np.ndarray
             ])
+
             is_different = is_different_lvl1 = False
             for f1, f2, f1_2, name in zip(factors_level1, factors_level2,
                                           factors_level1_2, names):
@@ -566,10 +531,6 @@ if __name__ == "__main__":
                 print("[%s] All factors are identical" % (obj))
             if not is_different_lvl1:
                 print("[%s] All factors are identical for level 1" % (obj))
-        # plt.imshow(x1)
-        # plt.show()
-        # plt.imshow(x2)
-        # plt.show()
 
     env1 = SEGAREnv("emptyx0-hard-rgb",
                     num_envs=2,

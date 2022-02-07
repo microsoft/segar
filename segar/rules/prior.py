@@ -1,8 +1,14 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+"""Priors
 
+"""
 __all__ = ('Prior',)
 
 from typing import Optional, Type, TypeVar, Union
-from segar.factors import Factor, Noise
+from segar.factors import Factor, Noise, Deterministic
 from segar.things import Entity
 from .transitions import TransitionFunction, SetFactor
 from .relations import Relation
@@ -56,6 +62,13 @@ class Prior(TransitionFunction):
         rule_copy.__dict__.update(self.__dict__)
         rule_copy._sim = sim
         return rule_copy
+
+    @property
+    def distribution(self):
+        if isinstance(self.source, Noise):
+            return self.source
+        else:
+            return Deterministic(self.source)
 
     def __repr__(self) -> str:
         r = f'{self.target} <- {self.source}'

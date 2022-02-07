@@ -1,8 +1,11 @@
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Numeric factors (ints and floats).
 
 """
-
-from __future__ import annotations
 
 __all__ = ('NumericFactor', 'Order', 'Size', 'Mass', 'Density', 'Charge',
            'Magnetism', 'StoredEnergy', 'Heat', 'Friction')

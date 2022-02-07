@@ -1,3 +1,7 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 from .fields import lorentz_law
 from .collisions import (overlap_time, object_collision, overlaps_wall,
                          overlap_time_wall, fix_overlap_wall,
