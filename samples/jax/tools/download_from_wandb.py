@@ -1,7 +1,10 @@
-# import pandas as pd
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 import os
 import json
-import numpy as np
 
 import wandb
 import time

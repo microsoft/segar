@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 from gym import Env
 import jax.numpy as jnp
 from flax.training.train_state import TrainState

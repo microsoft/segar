@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 import glob
 import os
 
@@ -62,11 +67,12 @@ def main(argv):
     for task in ['empty', 'tiles', 'objects']:
         for difficulty in ['easy', 'medium', 'hard']:
             for num_levels in [1, 10, 50]:
-                prefix = "checkpoint_%s_%s_%d" % (task, difficulty, num_levels)
                 if task == 'empty':
                     env_name = "%s-%s-rgb" % (task, difficulty)
+                    prefix = "checkpoint_%s_%s_%d" % (task, difficulty, num_levels)
                 else:
                     env_name = "%sx1-%s-rgb" % (task, difficulty)
+                    prefix = "checkpoint_%sx1_%s_%d" % (task, difficulty, num_levels)
                 loaded_state = checkpoints.restore_checkpoint(
                     FLAGS.model_dir, prefix=prefix, target=train_state_ppo)
                 ckpt_path = glob.glob(
