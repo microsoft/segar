@@ -1,20 +1,14 @@
-import os
-import sys
-from typing import Callable
-import glob
-
-import flax
-import jax
+from gym import Env
 import jax.numpy as jnp
-import numpy as np
-import optax
-from absl import app, flags
-from flax.training import checkpoints
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
 from samples.jax.algo import select_action
 
-def rollouts(env, train_state, key, n_rollouts=10):
+
+def rollouts(env: Env,
+             train_state: TrainState,
+             key: PRNGKey,
+             n_rollouts: int = 10):
     state = env.reset()
     returns = []
     states = []
@@ -24,11 +18,10 @@ def rollouts(env, train_state, key, n_rollouts=10):
     while n_rollouts:
         states.append(state)
         action, _, _, key = select_action(train_state,
-                                               state.astype(jnp.float32) /
-                                               255.,
-                                               None,
-                                               key,
-                                               sample=True)
+                                          state.astype(jnp.float32) / 255.,
+                                          None,
+                                          key,
+                                          sample=True)
         actions.append(action)
         state, _, _, infos = env.step(action)
         for info in infos:

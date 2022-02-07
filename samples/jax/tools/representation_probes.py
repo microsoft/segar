@@ -1,26 +1,20 @@
-import os
-import sys
-from typing import Callable
 import glob
+import os
 
-import flax
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 import optax
+import pandas as pd
+import seaborn as sns
 from absl import app, flags
 from flax.training import checkpoints
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
-from samples.jax.algo import extract_latent_factors, select_action
-
-from samples.jax.models import MLP, TwinHeadModel
+from samples.jax.models import TwinHeadModel
 from segar.envs.env import SEGAREnv
 from segar.mdps.metrics import task_set_init_dist
-
-import seaborn as sns
-import pandas as pd
-import matplotlib.pyplot as plt
 
 from utils import rollouts
 

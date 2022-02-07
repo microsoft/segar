@@ -66,22 +66,29 @@ for task in task_names:
     for difficulty in difficulties:
         for observation in observations:
             for n_entities in [1, 2, 3]:
-                if task == 'empty':
-                    if n_entities == 1:
-                        env_name = f"segar-{task}-{difficulty}-{observation}-v0"
-                        register(
-                            id=env_name,  # FIXME
-                            entry_point="segar.envs:SEGARSingleEnv",
-                            kwargs={"env_name": f"{task}-{difficulty}-{observation}"},  # FIXME
-                            max_episode_steps=100
-                        )
-                    else:
-                        continue
-                else:
-                    env_name = f"segar-{task}x{n_entities}-{difficulty}-{observation}-v0"
+                if task == 'empty' and n_entities == 1:
+                    env_name = "segar-%s-%s-%s-v0" % (task,
+                                                      difficulty,
+                                                      observation)
                     register(
-                        id=env_name,  # FIXME
+                        id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-{observation}"},  # FIXME
+                        kwargs={"env_name": "%s-%s-%s" % (task,
+                                                          difficulty,
+                                                          observation)},
+                        max_episode_steps=100
+                    )
+                elif task != 'empty':
+                    env_name = "segar-%sx%d-%s-%s-v0" % (task,
+                                                         n_entities,
+                                                         difficulty,
+                                                         observation)
+                    register(
+                        id=env_name,
+                        entry_point="segar.envs:SEGARSingleEnv",
+                        kwargs={"env_name": "%sx%d-%s-%s" % (task,
+                                                             n_entities,
+                                                             difficulty,
+                                                             observation)},
                         max_episode_steps=100
                     )
