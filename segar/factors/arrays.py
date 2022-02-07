@@ -1,9 +1,12 @@
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+
 """Vector-like factors.
 
 """
-
-
-from __future__ import annotations
 
 __all__ = ('VectorFactor', 'Position', 'Velocity', 'Acceleration')
 

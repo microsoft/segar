@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+
 from .arrays import Position, Velocity, Acceleration, VectorFactor
 from .bools import Visible, Done, Alive, InfiniteEnergy, Mobile, BooleanFactor
 from .factors import (Factor, FactorContainer, DEFAULTS as FACTOR_DEFAULTS,

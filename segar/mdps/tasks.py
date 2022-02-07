@@ -1,3 +1,7 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Task component of the MDP
 
 The task encapsulates actions, rewards, stopping conditions and

@@ -1,3 +1,7 @@
+__author__ = "R Devon Hjelm, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """For rendering into pixel-based observations.
 
 """

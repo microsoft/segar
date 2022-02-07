@@ -1,3 +1,7 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Noise distributions for locations in the sim.
 
 """
@@ -16,7 +20,6 @@ from typing import Tuple, Union
 import numpy as np
 from scipy.stats import uniform
 
-from segar import get_sim
 from segar.factors import Noise, Position
 
 
@@ -32,8 +35,6 @@ def _get_boundaries(min_distance: float = 0.1) -> Tuple[float, float]:
 
 
 # These methods are for sampling from specific locations around the arena.
-
-
 class Position2D(Noise[np.ndarray]):
     def __init__(self, lows: np.ndarray, highs: np.ndarray):
         self.lows = lows

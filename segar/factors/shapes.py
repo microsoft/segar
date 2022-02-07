@@ -1,8 +1,11 @@
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """Shape factors and shape objects.
 
 """
-
-from __future__ import annotations
 
 __all__ = ('Shape', 'Circle', 'Square', 'RandomConvexHull', 'Hexagon',
            'Triangle', 'ConvexHullShape', 'BaseShape')

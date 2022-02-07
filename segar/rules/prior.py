@@ -1,4 +1,10 @@
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
+"""Priors
 
+"""
 __all__ = ('Prior',)
 
 from typing import Optional, Type, TypeVar, Union
@@ -73,4 +79,3 @@ class Prior(TransitionFunction):
         if self._relation:
             r += f' (if {self._relation})'
         return r
-

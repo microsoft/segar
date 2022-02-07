@@ -1,8 +1,11 @@
+from __future__ import annotations
+__author__ = "R Devon Hjelm"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila: The Quebec " \
+                "AI Company"
+__license__ = "MIT"
 """For generating random variables from distributions.
 
 """
-
-from __future__ import annotations
 
 __all__ = ('Noise', 'GaussianNoise', 'GaussianMixtureNoise', 'UniformNoise',
            'DiscreteRangeNoise', 'Choice', 'GaussianNoise2D', 'Deterministic')
