@@ -1,6 +1,5 @@
 __author__ = "R Devon Hjelm, Bogdan Mazoure"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
 __license__ = "MIT"
 
 import pickle
@@ -17,7 +16,7 @@ def get_sim():
     :return: the simulator.
     """
     if _SIM is None:
-        raise RuntimeError('Simulator not set yet')
+        raise RuntimeError("Simulator not set yet")
 
     return _SIM
 
@@ -25,8 +24,7 @@ def get_sim():
 def set_sim(sim):
     global _SIM
     if _SIM is not None:
-        warnings.warn('Overwriting sim. This can have unexpected '
-                      'consequences if using old sim objects somewhere.')
+        warnings.warn("Overwriting sim. This can have unexpected " "consequences if using old sim objects somewhere.")
     _SIM = sim
 
 
@@ -38,9 +36,9 @@ def timeit(fn: Callable):
 
         if _SIM is not None:
             if len(args) > 0:
-                key = f'{args[0].__class__.__name__}.{fn.__name__}_time'
+                key = f"{args[0].__class__.__name__}.{fn.__name__}_time"
             else:
-                key = f'{fn.__name__}_time'
+                key = f"{fn.__name__}_time"
             _SIM.update_results(key, t1 - t0)
         return out
 
@@ -54,7 +52,7 @@ def load_sim_from_file(path):
     :param path: Path to pickle file.
     :return: Simulator.
     """
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         sim = pickle.load(f)
     set_sim(sim)
     return sim
@@ -71,29 +69,44 @@ for task in task_names:
     for difficulty in difficulties:
         for observation in observations:
             for n_entities in [1, 2, 3]:
-                if task == 'empty' and n_entities == 1:
-                    env_name = "segar-%s-%s-%s-v0" % (task,
-                                                      difficulty,
-                                                      observation)
+                if task == "empty" and n_entities == 1:
+                    env_name = f"Segar-{task}-{difficulty}-{observation}-v0"
+                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": "%s-%s-%s" % (task,
-                                                          difficulty,
-                                                          observation)},
-                        max_episode_steps=100
+                        kwargs={"env_name": f"{task}-{difficulty}-{observation}"},
+                        max_episode_steps=100,
                     )
-                elif task != 'empty':
-                    env_name = "segar-%sx%d-%s-%s-v0" % (task,
-                                                         n_entities,
-                                                         difficulty,
-                                                         observation)
+                elif task != "empty":
+                    env_name = f"Segar-{task}x{n_entities}-{difficulty}-{observation}-v0"
+                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": "%sx%d-%s-%s" % (task,
-                                                             n_entities,
-                                                             difficulty,
-                                                             observation)},
-                        max_episode_steps=100
+                        kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-{observation}"},
+                        max_episode_steps=100,
                     )
+
+# Current Envs (update as needed)
+# Segar-empty-easy-rgb-v0
+# Segar-empty-medium-rgb-v0
+# Segar-empty-hard-rgb-v0
+# Segar-objectsx1-easy-rgb-v0
+# Segar-objectsx2-easy-rgb-v0
+# Segar-objectsx3-easy-rgb-v0
+# Segar-objectsx1-medium-rgb-v0
+# Segar-objectsx2-medium-rgb-v0
+# Segar-objectsx3-medium-rgb-v0
+# Segar-objectsx1-hard-rgb-v0
+# Segar-objectsx2-hard-rgb-v0
+# Segar-objectsx3-hard-rgb-v0
+# Segar-tilesx1-easy-rgb-v0
+# Segar-tilesx2-easy-rgb-v0
+# Segar-tilesx3-easy-rgb-v0
+# Segar-tilesx1-medium-rgb-v0
+# Segar-tilesx2-medium-rgb-v0
+# Segar-tilesx3-medium-rgb-v0
+# Segar-tilesx1-hard-rgb-v0
+# Segar-tilesx2-hard-rgb-v0
+# Segar-tilesx3-hard-rgb-v0

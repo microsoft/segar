@@ -203,6 +203,45 @@ For tutorials on the features of SEGAR, including running experiments,
 creating environments, etc, please see `segar/README.md`.
 
 
+## Gym Environments Included
+
+Segar is designed to be extensible and for users to design their own environments. 
+To help users get started, it includes a handful of OpenAI-Gym compatible environments for training RL agents 
+to play puttputt/minigolf.
+
+The agent controls the (player-)ball by applying a 2D continuous force vector. The goal is to navigate the ball to the
+goal through obstacles. 
+
+- **Action space:** `(2,), np.float32, [-1,1]` - 2D force vector to apply to the ball
+- **Observation space:** `(64,64,3), np.uint8, [0,255]` - top-down color image.
+- **Reward:** Current distance between ball and goal.
+
+The environments follow the format:
+    
+    Segar-TASK-DIFFICULTY-OBSERVATION-v0
+
+...where we have
+
+- `TASK`: one of `empty`, `objectsxN`, or `tilesxN` and `N` is one of `1`, `2`, `3`
+  - `TASK`:`empty` is an empty square arena with one goal and one ball.
+  - `TASK`:`objectsxN` is a square arena with a goal, a ball, and `N` other random objects (like other non-player balls 
+or magnets)
+  - `TASK`:`tilesxN` is a square arena with a goal, a ball, and `N` random patches of random materials (like sand or 
+lava)
+- `DIFFICULTY`: one of `easy`, `medium`, or `hard`. Generally, in the easy case, the ball and goal are in fixed
+positions, in the medium case, the ball starts at the bottom of the arena and the goal is always at the top, and in 
+the hard case, the ball and goal can be anywhere, uniformly.
+- `OBSERVATION`: currently only `rgb`. We will include different modalities later. This corresponds to the observation
+space `64x64x3` in `np.uint8` (i.e. a color image of 64x64 pixels)
+
+So for example, we have `Segar-empty-easy-rgb-v0` or `Segar-tilesx3-hard-rgb-v0`. [The complete list of current 
+environments](./segar/__init__.py) can be found at the bottom of the file [`segar/__init__.py`](./segar/__init__.py). 
+All environments are registered when you call `import segar`. 
+
+
+More details about the [specs of each environment](./segar/envs/env.py) can be found in the env.py file: 
+[`segar/envs/env.py`](./segar/envs/env.py)
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions 

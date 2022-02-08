@@ -130,3 +130,6 @@ dmypy.json
 samples/jax/experiments
 samples/jax/plots
 samples/jax/data
+
+# IDEs
+.idea/
