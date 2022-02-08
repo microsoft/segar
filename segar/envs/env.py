@@ -385,7 +385,7 @@ class SEGARSingleEnv(SEGAREnv):
         wall_damping: float = 0.025,
         friction: float = 0.05,
         save_path: str = "sim.state",
-        action_max: float = 2,
+        action_max: float = 1,
         seed: int = 123,
     ):
         super().__init__(
@@ -414,6 +414,7 @@ class SEGARSingleEnv(SEGAREnv):
                                 dtype=np.float32)
 
     def step(self, action):
+        action = np.clip(action, -self.action_max, self.action_max)
         obs, rew, done, misc = super().step([action])
         self.last_obs = obs[0]
         return self.last_obs, rew[0], done[0], misc[0]
