@@ -102,8 +102,8 @@ def select_action(
     """
     Select action either deterministically (mean) or sample
     """
-    value, pi_dist = train_state.apply_fn(train_state.params, state,
-                                          latent_factors)
+    value, pi_dist, z = train_state.apply_fn(train_state.params, state,
+                                             latent_factors)
     rng, key = jax.random.split(rng)
     if sample:
         action = pi_dist.sample(seed=key)
@@ -112,7 +112,7 @@ def select_action(
         action = jnp.tanh(pi_dist.distribution.mean())
 
     log_prob = pi_dist.log_prob(action)
-    return action, log_prob, value[:, 0], rng
+    return action, log_prob, value[:, 0], z, rng
 
 
 def get_transition(

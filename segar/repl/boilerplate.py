@@ -1,4 +1,4 @@
-__author__ = "R Devon Hjelm"
+__author__ = "R Devon Hjelm, Bogdan Mazoure"
 __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
                 "Institute"
 __license__ = "MIT"
@@ -16,6 +16,8 @@ from tqdm import tqdm
 import wandb
 
 from segar.utils import append_dict, average_dict
+
+from collections import defaultdict
 
 
 _DEVICE = 'cpu'
@@ -210,18 +212,16 @@ class Trainer:
         self.model.train()
         last_inputs = None
         features = None
+        train_acc, test_acc = defaultdict(list), defaultdict(list)
         while True:
             inputs, next_epoch = self.next_train()
             if next_epoch:
                 train_results, test_results = self.test()
                 for k in train_results.keys():
                     if test_results is None:
-                        wandb.log({f'{k}/train': train_results[k]},
-                                  step=self.epochs)
+                        test_acc[f'{k}/test'].append(test_results[k])
                     else:
-                        wandb.log({f'{k}/train': train_results[k],
-                                   f'{k}/test': test_results[k]},
-                                  step=self.epochs)
+                        train_acc[f'{k}/train'].append(train_results[k])
                 if self.vis_func is not None:
                     self.vis_func(last_inputs, features)
             else:
@@ -230,3 +230,4 @@ class Trainer:
                 last_inputs = inputs
             if self.epochs >= self.max_epochs:
                 break
+        return train_acc, test_acc

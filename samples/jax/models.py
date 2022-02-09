@@ -195,7 +195,7 @@ class TwinHeadModel(nn.Module):
                 [tfb.Scale(scale=self.action_scale),
                  tfb.Tanh()]))
 
-        return v, pi
+        return v, pi, z
 
     def encode(self, x):
         return self.encoder(x)

@@ -215,7 +215,7 @@ def main(argv):
 
     for step in range(1, int(FLAGS.train_steps // FLAGS.num_envs + 1)):
         # Pick action according to PPO policy and update state
-        action_test, _, _, key = select_action(
+        action_test, _, _, _, key = select_action(
             train_state,
             state_test.astype(jnp.float32) / 255.0,
             latent_factors,
