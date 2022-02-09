@@ -7,7 +7,8 @@ cd "$SCRIPT_DIR/.."
 
 for Dir in "${Dirs[@]}"
 do
-  cd "rpp/$Dir"
+  cd "segar/$Dir"
+  echo "Converting ipynb in $Dir...."
   jupyter nbconvert --to markdown README.ipynb
   cd -
 done
