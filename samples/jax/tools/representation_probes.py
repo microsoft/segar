@@ -35,8 +35,8 @@ flags.DEFINE_string("model_dir", "../data", "PPO weights directory")
 
 
 def main(argv):
-    probe_wasserstein = False
-    probe_mine = True
+    probe_wasserstein = True
+    probe_mine = False
     """
     Load the pre-trained PPO model
     """
@@ -68,9 +68,9 @@ def main(argv):
     Probe 1. Compute 2-Wasserstein between task samples
     """
     if probe_wasserstein:
-        returns_df = []
         w2_df = []
         num_test_levels = 500
+        ctr = 0
         for task in ['empty', 'tiles', 'objects']:
             for difficulty in ['easy', 'medium', 'hard']:
                 for num_levels in [1, 10, 50]:
@@ -118,27 +118,34 @@ def main(argv):
                                        rng,
                                        n_rollouts=FLAGS.n_rollouts)
                     summary = np.mean(returns_test) - np.mean(returns_train)
-                    returns_df.append(summary)
                     w2_distance = task_set_init_dist(
                         env_train.env.envs[0].task_list,
                         env_test.env.envs[0].task_list)
-                    w2_df.append(w2_distance)
+                    w2_df.append(
+                        pd.DataFrame({
+                            r'$\eta_{test}-\eta_{train}$': [summary],
+                            r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$':
+                            [w2_distance],
+                            'task': [task],
+                            'difficulty': [difficulty],
+                            'num_levels': [num_levels]
+                        }))
                     print('W2(train levels, test levels)=%.5f' % w2_distance)
-        data = pd.DataFrame({
-            r'$\eta_{test}-\eta_{train}$':
-            returns_df,
-            r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$':
-            w2_df
-        })
-        sns.scatterplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
-                        y=r'$\eta_{test}-\eta_{train}$',
-                        data=data)
-        plt.show()
+                    ctr += 1
+        w2_df = pd.concat(w2_df)
+        sns.lmplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
+                   y=r'$\eta_{test}-\eta_{train}$',
+                   hue='num_levels',
+                   row='task',
+                   col='difficulty',
+                   data=w2_df.reset_index(drop=True))
+        plt.savefig('../plots/01_Wasserstein.png')
 
     if probe_mine:
         num_test_levels = 500
         mi_train_df = []
         mi_test_df = []
+        ctr = 0
         for task in ['empty', 'tiles', 'objects']:
             for difficulty in ['easy', 'medium', 'hard']:
                 for num_levels in [1, 10, 50]:
@@ -203,9 +210,12 @@ def main(argv):
                             mi_lb_train['mi/train'],
                             'epoch':
                             np.arange(len(mi_lb_train['mi/train'])),
-                            'task': task,
-                            'difficulty': difficulty,
-                            'num_levels': num_levels
+                            'task':
+                            task,
+                            'difficulty':
+                            difficulty,
+                            'num_levels':
+                            num_levels
                         }))
                     mi_test_df.append(
                         pd.DataFrame({
@@ -213,64 +223,26 @@ def main(argv):
                             mi_lb_test['mi/test'],
                             'epoch':
                             np.arange(len(mi_lb_train['mi/test'])),
-                            'task': task,
-                            'difficulty': difficulty,
-                            'num_levels': num_levels
+                            'task':
+                            task,
+                            'difficulty':
+                            difficulty,
+                            'num_levels':
+                            num_levels
                         }))
-                    import ipdb;ipdb.set_trace()
+                    ctr += 1
 
-        # predictor = MLP(dims=[256, 20 * 5])
-        # tx_predictor = optax.chain(optax.clip_by_global_norm(2),
-        #                         optax.adam(3e-4, eps=1e-5))
+        mi_train_df = pd.concat(mi_train_df)
+        mi_test_df = pd.concat(mi_test_df)
+        sns.lineplot(x='epoch',
+                     y='MI',
+                     hue='num_levels',
+                     row='task',
+                     col='difficulty',
+                     data=mi_train_df.reset_index(drop=True))
+        sns.savefig('../plots/02_MINE.png')
 
-        # z_obs = loaded_state.apply_fn(loaded_state.params,
-        #                             state,
-        #                             method=model_ppo.encode)
-        # params_predictor = predictor.init(key, z_obs)
-        # train_state_predictor = TrainState.create(apply_fn=predictor.apply,
-        #                                         params=params_predictor,
-        #                                         tx=tx_predictor)
-
-        # batch_obs = []
-        # batch_latents = []
-        # for i in range(FLAGS.train_steps):
-        #     action, log_pi, value, new_key = select_action(
-        #         loaded_state,
-        #         state.astype(jnp.float32) / 255.,
-        #         latent_factors=None,
-        #         rng=rng,
-        #         sample=True)
-        #     state, reward, done, info = env.step(action)
-        #     latent_features = extract_latent_factors(info)
-        #     batch_obs.append(state)
-        #     batch_latents.append(latent_features)
-
-        #     if (len(batch_obs) * len(batch_obs[0])) == FLAGS.batch_size:
-        #         # Representation learning part
-        #         rng, key = jax.random.split(rng)
-        #         X = loaded_state.apply_fn(loaded_state.params,
-        #                                 jnp.stack(batch_obs).reshape(
-        #                                     -1, *batch_obs[0].shape[1:]),
-        #                                 method=model_ppo.encode)
-        #         y = jnp.stack(batch_latents).reshape(-1,
-        #                                             *batch_latents[0].shape[1:])
-
-        #         grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-        #         (total_loss,
-        #         square_res), grads = grad_fn(train_state_predictor.params,
-        #                                     train_state_predictor.apply_fn,
-        #                                     X=X,
-        #                                     y=y)
-        #         train_state_predictor = train_state_predictor.apply_gradients(
-        #             grads=grads)
-
-        #         per_factor_error = square_res.reshape(-1, 20, 5).sum(2).mean(0)
-        #         print('Error')
-        #         print(per_factor_error)
-        #         batch_obs = []
-        #         batch_latents = []
-
-    # return 0
+    return 0
 
 
 if __name__ == '__main__':

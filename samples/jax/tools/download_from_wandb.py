@@ -26,6 +26,8 @@ def main(argv):
 
     for run in tqdm.tqdm(runs):
         params = json.loads(run.json_config)
+        if 'fixed' not in params['run_id']['value']:
+            continue
 
         env_name = params['env_name']['value']
         num_levels = params['num_train_levels']['value']
