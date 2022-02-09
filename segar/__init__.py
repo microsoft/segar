@@ -1,4 +1,3 @@
-__author__ = "R Devon Hjelm, Bogdan Mazoure"
 __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
 __license__ = "MIT"
 
@@ -24,7 +23,8 @@ def get_sim():
 def set_sim(sim):
     global _SIM
     if _SIM is not None:
-        warnings.warn("Overwriting sim. This can have unexpected " "consequences if using old sim objects somewhere.")
+        warnings.warn("Overwriting sim. This can have unexpected " 
+                      "consequences if using old sim objects somewhere.")
     _SIM = sim
 
 
