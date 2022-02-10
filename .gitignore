@@ -133,3 +133,6 @@ samples/jax/data
 
 # IDEs
 .idea/
+
+# Mac
+.DS_Store
