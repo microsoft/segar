@@ -1,6 +1,5 @@
-__author__ = "Bogdan Mazoure, Florian Golemo"
 __copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 )
 __license__ = "MIT"
 

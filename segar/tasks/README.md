@@ -24,6 +24,10 @@ sim = Simulator()
 observations = RGBObservation(resolution=256, config=vis_config)
 ```
 
+    /Users/rdevonhjelm/Library/Mobile Documents/com~apple~CloudDocs/Code/segar/segar/__init__.py:26: UserWarning: Overwriting sim. This can have unexpected consequences if using old sim objects somewhere.
+      warnings.warn("Overwriting sim. This can have unexpected "
+
+
 ### PuttPutt
 
 Next, let's make the PuttPutt initialization and task. There are some
@@ -106,16 +110,13 @@ for i in range(3):
     display(Image(open(out_path,'rb').read()))
 ```
 
-    [Position <- RandomMiddleLocation, Position <- RandomBottomLocation (if is GolfBall), Position <- RandomTopLocation (if is GoalTile), Shape <- RandomConvexHull(p=[[ 0.18844976  0.31998147]
-     [-0.12208152  0.30363257]
-     [-0.18293807  0.23211979]
-     [-0.31083628 -0.13760387]
-     [-0.23995363 -0.17179132]
-     [-0.05624227 -0.23135864]
-     [ 0.06629878 -0.26333952]
-     [ 0.294984   -0.23934778]
-     [ 0.3473446  -0.12076677]
-     [ 0.28321598  0.15499731]]) (if is Tile), Shape <- Circle(r=0.15) (if is GoalTile), Size <- GaussianNoise (if is Object), Size <- GaussianNoise (if is Tile), Mass <- 1.0, Mobile <- True, Charge <- GaussianMixtureNoise (if is Charger), Magnetism <- GaussianMixtureNoise (if is Magnet), Friction <- UniformNoise (if is SandTile)]
+    [Position <- RandomMiddleLocation, Position <- RandomBottomLocation (if is GolfBall), Position <- RandomTopLocation (if is GoalTile), Shape <- RandomConvexHull(p=[[-0.43854748 -0.11083382]
+     [-0.10935095 -0.32398892]
+     [ 0.27303159 -0.20386181]
+     [ 0.39069412  0.13890194]
+     [ 0.26679991  0.29669249]
+     [ 0.02285002  0.39478185]
+     [-0.05108903  0.33422628]]) (if is Tile), Shape <- Circle(r=0.15) (if is GoalTile), Size <- GaussianNoise (if is Object), Size <- GaussianNoise (if is Tile), Mass <- 1.0, Mobile <- True, Charge <- GaussianMixtureNoise (if is Charger), Magnetism <- GaussianMixtureNoise (if is Magnet), Friction <- UniformNoise (if is SandTile)]
 
 
 

@@ -1,6 +1,5 @@
-__author__ = "R Devon Hjelm, Bogdan Mazoure"
 __copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 )
 __license__ = "MIT"
 
@@ -76,7 +75,6 @@ for task in task_names:
             for n_entities in [1, 2, 3]:
                 if task == "empty" and n_entities == 1:
                     env_name = f"Segar-{task}-{difficulty}-{observation}-v0"
-                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
@@ -86,13 +84,15 @@ for task in task_names:
                         max_episode_steps=100,
                     )
                 elif task != "empty":
-                    env_name = f"Segar-{task}x{n_entities}-{difficulty}-{observation}-v0"
-                    # print(env_name)
+                    env_name = f"Segar-{task}x{n_entities}-{difficulty}" \
+                               f"-{observation}-v0"
+
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
                         kwargs={
-                            "env_name": f"{task}x{n_entities}-{difficulty}-{observation}"
+                            "env_name": f"{task}x{n_entities}-{difficulty}-"
+                                        f"{observation}"
                         },
                         max_episode_steps=100,
                     )
