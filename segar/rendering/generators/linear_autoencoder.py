@@ -58,7 +58,7 @@ class RandomUniformFeatures(Dataset):
 
     def __getitem__(self, idx: int) -> np.ndarray:
         bits = np.unpackbits(np.array([idx], dtype=">i8").view(np.uint8))[
-            -self.n_features :
+            -self.n_features:
         ]
         bits = bits.astype(np.float64)
         mag = np.random.uniform(low=-1.0, high=1.0, size=bits.shape)

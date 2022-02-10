@@ -169,7 +169,7 @@ class ArenaInitialization(Initialization):
 
         def check_all_positions(plist: list[Position], fail_on_check=False):
             for i, pos1 in enumerate(plist):
-                for pos2 in plist[i + 1 :]:
+                for pos2 in plist[i + 1:]:
                     if bad_positions(pos1, pos2):
                         if fail_on_check:
                             raise ValueError(

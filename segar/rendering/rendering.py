@@ -529,7 +529,7 @@ class Renderer:
         color: tuple[int, int, int] = (255, 255, 255),
     ) -> None:
 
-        annotation_arr = np.zeros_like(arr[:, self.dim_y :])
+        annotation_arr = np.zeros_like(arr[:, self.dim_y:])
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = size
@@ -541,7 +541,7 @@ class Renderer:
             cv2.putText(annotation_arr, txt, pos, font, font_scale, color, 2)
             pos = (pos[0], pos[1] + 20)  # Move cursor
 
-        self.img[:, self.dim_y :] = annotation_arr
+        self.img[:, self.dim_y:] = annotation_arr
 
     def __call__(self, results: dict[str, Any] = None) -> np.ndarray:
         """Draw current observation (arena background + ball)
