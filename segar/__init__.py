@@ -1,5 +1,7 @@
 __author__ = "R Devon Hjelm, Bogdan Mazoure"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
+)
 __license__ = "MIT"
 
 import pickle
@@ -24,7 +26,10 @@ def get_sim():
 def set_sim(sim):
     global _SIM
     if _SIM is not None:
-        warnings.warn("Overwriting sim. This can have unexpected " "consequences if using old sim objects somewhere.")
+        warnings.warn(
+            "Overwriting sim. This can have unexpected "
+            "consequences if using old sim objects somewhere."
+        )
     _SIM = sim
 
 
@@ -75,7 +80,9 @@ for task in task_names:
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": f"{task}-{difficulty}-{observation}"},
+                        kwargs={
+                            "env_name": f"{task}-{difficulty}-{observation}"
+                        },
                         max_episode_steps=100,
                     )
                 elif task != "empty":
@@ -84,7 +91,9 @@ for task in task_names:
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-{observation}"},
+                        kwargs={
+                            "env_name": f"{task}x{n_entities}-{difficulty}-{observation}"
+                        },
                         max_episode_steps=100,
                     )
 
