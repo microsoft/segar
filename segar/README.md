@@ -22,9 +22,9 @@ distributional.
 This allows the experimenter to quantify a generalization task in terms of 
 the distance between distributions.
 
-![Putt Putt](assets/examples/puttputt_example.gif)
-![Billiards](assets/examples/billiards_example.gif)
-![Invisiball](assets/examples/invisiball_example.gif)
+![Putt Putt](../resources/readme-images/puttputt_example.gif)
+![Billiards](../resources/readme-images/billiards_example.gif)
+![Invisiball](../resources/readme-images/invisiball_example.gif)
 
 Project code documentation can be found [here](https://animated-train-17411965.pages.github.io/).
 

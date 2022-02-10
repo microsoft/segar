@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+samples/jax/experiments
+samples/jax/plots
+samples/jax/data
+
+# IDEs
+.idea/
+
+# Mac
+.DS_Store

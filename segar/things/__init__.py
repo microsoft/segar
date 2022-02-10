@@ -1,3 +1,7 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 from .objects import Object, Magnet, Charger, Bumper, Damper, Ball
 from .tiles import Tile, Hole, SandTile, MagmaTile, FireTile
 from .things import Entity, Thing

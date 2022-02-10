@@ -31,11 +31,11 @@ from segar.parameters import Gravity, MinVelocity
 
 sim = Simulator()  # Must initialize sim before creating things.
 
-with sim.auto_adopt():
-    o = Object(initial_factors={Charge: 0.1, Mass: 1.0, Position: [-0.5, 0.5]})
-    print(o.keys())
-    o2 = Object(initial_factors={Charge: 0.2, Mass: 2.0, Velocity: [1.0, 1.0]})
-    t = Tile(initial_factors={Friction: 1.0})
+o = Object(initial_factors={Charge: 0.1, Mass: 1.0, Position: [-0.5, 0.5]},
+           sim=sim)
+print(o.keys())
+o2 = Object(initial_factors={Charge: 0.2, Mass: 2.0, Velocity: [1.0, 1.0]}, sim=sim)
+t = Tile(initial_factors={Friction: 1.0}, sim=sim)
 print(t.keys())
 g = Gravity(1.0)  # Gravity parameter
 min_vel = MinVelocity(1e-5)  # Min velocity parameter, for allowing objects to "stop"

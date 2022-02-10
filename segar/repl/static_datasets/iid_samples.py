@@ -1,3 +1,7 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 """Datasets for drawing i.i.d. samples from trajectories.
 
 """
@@ -22,10 +26,12 @@ class IIDFromInit(Dataset):
         return self._inputs[idx], self._targets[idx]
 
 
-def create_iid_from_init(initializer: Initialization,
-                         input_observation: Observation,
-                         target_observation: Observation,
-                         n_observations: int = 10000) -> IIDFromInit:
+def create_iid_from_init(
+    initializer: Initialization,
+    input_observation: Observation,
+    target_observation: Observation,
+    n_observations: int = 10000,
+) -> IIDFromInit:
     sim = get_sim()
     inputs = []
     targets = []

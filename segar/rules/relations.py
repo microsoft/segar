@@ -1,21 +1,32 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 """A relation is treated like a special type of Rule that returns bool.
 
 """
 
-__all__ = ('Relation', 'overlaps', 'Or', 'And', 'IsEqual', 'IsOn',
-           'Contains', 'colliding')
+__all__ = (
+    "Relation",
+    "overlaps",
+    "Or",
+    "And",
+    "IsEqual",
+    "IsOn",
+    "Contains",
+    "colliding",
+)
 
 from typing import Callable, Tuple, Type, TypeVar, Union
 
-from segar import get_sim
 from segar.factors import Position, Shape, Velocity, Factor
 from segar.things import Object, Entity, Tile
 
 from .rules import match_pattern, Rule
 
 
-T = TypeVar('T')
-F = TypeVar('F', bound=Factor)
+T = TypeVar("T")
+F = TypeVar("F", bound=Factor)
 
 
 class Relation(Rule):
@@ -25,12 +36,11 @@ class Relation(Rule):
     return bools.
 
     """
+
     def __init__(self, rule_fn: Callable):
         super().__init__(rule_fn)
 
-    def __call__(self,
-                 *inputs: Union[Factor, Tuple[Factor, ...]]
-                 ) -> bool:
+    def __call__(self, *inputs: Union[Factor, Tuple[Factor, ...]]) -> bool:
         """
 
         :param inputs: Inputs to relation.
@@ -43,8 +53,9 @@ class Relation(Rule):
 
 
 @Relation
-def overlaps(o1_factors: Tuple[Position, Shape],
-             o2_factors: Tuple[Position, Shape]):
+def overlaps(
+    o1_factors: Tuple[Position, Shape], o2_factors: Tuple[Position, Shape]
+):
     """Whether there is an overlap given position and shape.
 
     :param o1_factors: First set of factors.
@@ -59,8 +70,10 @@ def overlaps(o1_factors: Tuple[Position, Shape],
 
 
 @Relation
-def colliding(o1_factors: Tuple[Position, Shape, Velocity],
-              o2_factors: Tuple[Position, Shape, Velocity]):
+def colliding(
+    o1_factors: Tuple[Position, Shape, Velocity],
+    o2_factors: Tuple[Position, Shape, Velocity],
+):
     """Whether there is a collision, given positions, shapes, and velocity.
 
     :param o1_factors: First set of factors.
@@ -77,6 +90,7 @@ class Or:
     """Generic OR relation. Checks if any relation holds in list.
 
     """
+
     def __init__(self, *relations):
         self.relations = relations
 
@@ -91,6 +105,7 @@ class And:
     """Generic AND relation. Checks if all relations hold in list.
 
     """
+
     def __init__(self, *relations):
         self.relations = relations
 
@@ -105,6 +120,7 @@ class IsEqual(Relation):
     """Checks if factor as a particular value.
 
     """
+
     def __init__(self, target_factor: Type[Factor], value: T):
         self.target = target_factor
         self.value = value
@@ -115,7 +131,7 @@ class IsEqual(Relation):
         super().__init__(is_equal)
 
     def __repr__(self) -> str:
-        return f'{self.target} == {self.value}'
+        return f"{self.target} == {self.value}"
 
 
 class IsOn(Relation):
@@ -127,35 +143,29 @@ class IsOn(Relation):
     things in the sim.
 
     """
+
     def __init__(self):
         def ison(obj: Object, tile: Entity) -> bool:
-            sim = self.sim
-            return sim.is_on(obj, tile)
-        super().__init__(ison)
+            return self.sim.is_on(obj, tile)
 
-    @property
-    def sim(self):
-        return get_sim()
+        super().__init__(ison)
 
 
 class Contains(Relation):
     """Checks if one object is contained in another tile.
 
     """
+
     def __init__(self):
         def contains(thing1: Object, thing2: Tile) -> bool:
-            sim = self.sim
-            is_on = sim.is_on(thing1, thing2)
+            is_on = self.sim.is_on(thing1, thing2)
             normal_vec = thing2[Position] - thing1[Position]
             shape1 = thing1[Shape]
             shape2 = thing2[Shape]
-            area_overlap = shape1.area_overlap(shape2,
-                                               normal_vector=normal_vec)
+            area_overlap = shape1.area_overlap(
+                shape2, normal_vector=normal_vec
+            )
             obj_area = shape1.area()
             return (area_overlap == obj_area) and is_on
 
         super().__init__(contains)
-
-    @property
-    def sim(self):
-        return get_sim()

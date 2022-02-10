@@ -1,11 +1,15 @@
-"""Common functions
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
+"""Utilities for SEGAR
 
 """
+from typing import Any
 
 
-def append_dict(d, update_d):
+def append_dict(d: dict[str, list], update_d: dict[str, Any]):
     """Appends new entries from a dictionary to an existing one.
-
     :param d: Dictionary to update.
     :param update_d: Dictionary to update with.
     :return: None
@@ -17,11 +21,11 @@ def append_dict(d, update_d):
             d[k] = [v]
 
 
-def average_dict(d):
-    """Averages the values of a dictionary of lists.
+def average_dict(d: dict[str, list]) -> dict[str, float]:
+    """Averages a dictionary of lists.
 
     :param d: Dictionary of lists.
-    :return: Dictionary of averages computed on each list.
+
     """
     d_ = {}
     for k, v in d.items():

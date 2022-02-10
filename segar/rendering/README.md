@@ -7,7 +7,7 @@ spaces.
 ### Rendering basics
 
 To set up a renderer, just create the corresponding rendering object.
-Currently, SEGAR supports color-based rendering, which assigns a color to each
+Currently, RPP supports color-based rendering, which assigns a color to each
  type of object or tile, and a pattern-based renderer, which uses a
  generative model conditioned on the underlying factors.
 
@@ -51,13 +51,13 @@ plt.imshow(image)
 
 
 
-    <matplotlib.image.AxesImage at 0x7f8ff2f67940>
+    <matplotlib.image.AxesImage at 0x7ff394269790>
 
 
 
 
     
-![png](README_files/README_2_1.png)
+![png](../../resources/readme-images/segar/rendering/README_2_1.png)
     
 
 
@@ -72,13 +72,13 @@ plt.imshow(image)
 
 
 
-    <matplotlib.image.AxesImage at 0x7f8fd02bedc0>
+    <matplotlib.image.AxesImage at 0x7ff3a94c4bb0>
 
 
 
 
     
-![png](README_files/README_3_1.png)
+![png](../../resources/readme-images/segar/rendering/README_3_1.png)
     
 
 
@@ -117,7 +117,7 @@ for i in range(5):
 
 
     
-![png](README_files/README_5_0.png)
+![png](../../resources/readme-images/segar/rendering/README_5_0.png)
     
 
 
@@ -129,7 +129,7 @@ of visual features from a fixed baseline.
 
 ### Obscuring factors in visual features.
 
-SEGAR renderers also are capable of obscuring visual features, such that they
+RPP renderers also are capable of obscuring visual features, such that they
 wont be visible to the agent.
 
 
@@ -155,7 +155,7 @@ for i in range(5):
 
 
     
-![png](README_files/README_7_0.png)
+![png](../../resources/readme-images/segar/rendering/README_7_0.png)
     
 
 

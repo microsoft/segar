@@ -1,11 +1,24 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 """Additional factors corresponding to global parameters used by the
     environment.
 
 """
 
-__all__ = ('Parameter', 'MinMass', 'MaxVelocity', 'Gravity',
-           'FloorFriction', 'WallDamping', 'Framerate', 'DensityScale',
-           'Resolution', 'DoesNotHaveFactor')
+__all__ = (
+    "Parameter",
+    "MinMass",
+    "MaxVelocity",
+    "Gravity",
+    "FloorFriction",
+    "WallDamping",
+    "Framerate",
+    "DensityScale",
+    "Resolution",
+    "DoesNotHaveFactor",
+)
 
 from typing import TypeVar
 
@@ -14,7 +27,7 @@ import cv2
 from segar.factors import NumericFactor
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Parameter(NumericFactor[T]):
@@ -25,7 +38,7 @@ class MinMass(Parameter[float], default=1e-1):
     pass
 
 
-class MaxVelocity(Parameter[float], default=10.):
+class MaxVelocity(Parameter[float], default=10.0):
     pass
 
 
@@ -33,7 +46,7 @@ class MinVelocity(Parameter[float], default=1e-4):
     pass
 
 
-class Gravity(Parameter[float], default=10.):
+class Gravity(Parameter[float], default=10.0):
     pass
 
 
