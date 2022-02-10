@@ -1,11 +1,12 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Boundaries and such.
 
 """
 
-__all__ = ['Wall', 'SquareWall']
+__all__ = ["Wall", "SquareWall"]
 
 from typing import Union
 
@@ -39,7 +40,6 @@ class Wall:
 
 
 class SquareWall(Wall):
-
     def __init__(self, boundaries, damping=None):
         """
 

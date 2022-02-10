@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Module for initialization components
 
@@ -8,7 +9,7 @@ objects and tiles for task are present.
 
 """
 
-__all__ = ('Initialization', 'ArenaInitialization')
+__all__ = ("Initialization", "ArenaInitialization")
 
 from copy import deepcopy
 from typing import Optional, Type, Union
@@ -24,6 +25,7 @@ class Initialization:
     """Abstract initialization class.
 
     """
+
     def __init__(self):
         self._sim = None
 
@@ -35,7 +37,7 @@ class Initialization:
         :param config: Dictionary of configurations.
         """
 
-        raise NotImplementedError('Configuration handler not implemented.')
+        raise NotImplementedError("Configuration handler not implemented.")
 
     @property
     def sim(self):
@@ -48,7 +50,7 @@ class Initialization:
 
     @property
     def initial_state(self) -> list[Entity]:
-        raise NotImplementedError('`initial_state` not implemented.')
+        raise NotImplementedError("`initial_state` not implemented.")
 
     def sample(self) -> None:
         """Samples the arena.
@@ -75,8 +77,12 @@ class ArenaInitialization(Initialization):
 
     """
 
-    def __init__(self, config: dict = None, enforce_distances: bool = True,
-                 min_distance: float = 0.1):
+    def __init__(
+        self,
+        config: dict = None,
+        enforce_distances: bool = True,
+        min_distance: float = 0.1,
+    ):
         """
 
         :param config: Configuration file.
@@ -92,22 +98,28 @@ class ArenaInitialization(Initialization):
 
         # These are read in by the config
         self._config = dict()
-        self._numbers: list[Union[Type[Entity], ThingFactory],
-                            Union[int, Noise]] = []
+        self._numbers: list[
+            Union[Type[Entity], ThingFactory], Union[int, Noise]
+        ] = []
         self._priors: list[Prior] = []
-        self._positions: list[Union[Type[Entity], ThingFactory],
-                              list[list[float, float]]]
+        self._positions: list[
+            Union[Type[Entity], ThingFactory], list[list[float, float]]
+        ]
         self._things: list[Entity] = []
         self._inits: list[Transition] = []
 
         self._read_config(**config)
 
-    def _read_config(self,
-                     priors: list[Prior] = None,
-                     numbers: tuple[Union[Type[Entity], ThingFactory],
-                                    Union[int, Noise]] = None,
-                     positions: list[Union[Type[Entity], ThingFactory],
-                                     list[list[float, float]]] = None) -> None:
+    def _read_config(
+        self,
+        priors: list[Prior] = None,
+        numbers: tuple[
+            Union[Type[Entity], ThingFactory], Union[int, Noise]
+        ] = None,
+        positions: list[
+            Union[Type[Entity], ThingFactory], list[list[float, float]]
+        ] = None,
+    ) -> None:
         """Reads the configurations, which should have information about
             priors, numbers of things, and positions.
 
@@ -117,7 +129,7 @@ class ArenaInitialization(Initialization):
             deterministic positions.
         """
         if numbers is None:
-            raise ValueError('Initialization must specify numbers of things.')
+            raise ValueError("Initialization must specify numbers of things.")
 
         priors = priors or []
         numbers = numbers or []
@@ -150,20 +162,23 @@ class ArenaInitialization(Initialization):
             prior.set_sim(self.sim)
 
         def bad_positions(pos1: Position, pos2: Position):
-            return (self._enforce_distances and
-                    (pos1 - pos2).norm() <= self._min_distance)
+            return (
+                self._enforce_distances
+                and (pos1 - pos2).norm() <= self._min_distance
+            )
 
         def check_all_positions(plist: list[Position], fail_on_check=False):
             for i, pos1 in enumerate(plist):
-                for pos2 in plist[i + 1:]:
+                for pos2 in plist[i + 1 :]:
                     if bad_positions(pos1, pos2):
                         if fail_on_check:
                             raise ValueError(
-                                f'Deterministic positions {pos1} and '
-                                f'{pos2} too close with current '
-                                f'distance enforcement ('
-                                f'{(pos1 - pos2).norm()} '
-                                f'<= {self._min_distance}).')
+                                f"Deterministic positions {pos1} and "
+                                f"{pos2} too close with current "
+                                f"distance enforcement ("
+                                f"{(pos1 - pos2).norm()} "
+                                f"<= {self._min_distance})."
+                            )
                         return False
             return True
 
@@ -194,20 +209,24 @@ class ArenaInitialization(Initialization):
                     things.append(cls())
 
             inits = self.sim.get_rule_outcomes(
-                self._priors, things_to_apply_on=things)
+                self._priors, things_to_apply_on=things
+            )
             for init in inits:
                 init()
 
-            positions = [thing[Position] for thing in things
-                         if Position in thing]
+            positions = [
+                thing[Position] for thing in things if Position in thing
+            ]
             positions_ok = check_all_positions(positions)
             if positions_ok:
                 break
 
         if not positions_ok:
-            raise RuntimeError(f'Could not ensure min distance in things '
-                               f'within {max_iterations} iterations. Last '
-                               f'positions attempted were {positions}.')
+            raise RuntimeError(
+                f"Could not ensure min distance in things "
+                f"within {max_iterations} iterations. Last "
+                f"positions attempted were {positions}."
+            )
 
         self._inits = inits
         self._things = things

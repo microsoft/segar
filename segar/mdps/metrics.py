@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Metrics for MDPs
 
@@ -40,9 +41,11 @@ def task_set_init_dist(tasks1: list, tasks2: list) -> float:
     thing_factor_sets = []
     for thing_list in task_things1 + task_things2:
         for thing in thing_list:
-            factors = [f for f in thing.keys()
-                       if issubclass(f, (NumericFactor, BooleanFactor,
-                                         VectorFactor))]
+            factors = [
+                f
+                for f in thing.keys()
+                if issubclass(f, (NumericFactor, BooleanFactor, VectorFactor))
+            ]
             if factors not in thing_factor_sets:
                 thing_factor_sets.append(factors)
     # We need to calculate the pairwise distances between all pairs of
@@ -53,28 +56,36 @@ def task_set_init_dist(tasks1: list, tasks2: list) -> float:
     pairwise_distances = np.zeros((n1, n2))
 
     def calculate_distance(things_1, things_2, factor_set) -> float:
-        things_1_ = [thing_ for thing_ in things_1 if all(
-            thing_.has_factor(factor) for factor in factor_set)]
-        things_2_ = [thing_ for thing_ in things_2 if all(
-            thing_.has_factor(factor) for factor in factor_set)]
+        things_1_ = [
+            thing_
+            for thing_ in things_1
+            if all(thing_.has_factor(factor) for factor in factor_set)
+        ]
+        things_2_ = [
+            thing_
+            for thing_ in things_2
+            if all(thing_.has_factor(factor) for factor in factor_set)
+        ]
 
         if len(things_1_) == 0 and len(things_2_) == 0:
-            return 0.
+            return 0.0
 
         if len(things_1_) == 0 or len(things_2_) == 0:
-            return 100.  # Large number for empty sets
+            return 100.0  # Large number for empty sets
 
-        s1 = np.concatenate([thing_.to_numpy(factor_set)[None, :]
-                             for thing_ in things_1_])
-        s2 = np.concatenate([thing_.to_numpy(factor_set)[None, :]
-                             for thing_ in things_2_])
+        s1 = np.concatenate(
+            [thing_.to_numpy(factor_set)[None, :] for thing_ in things_1_]
+        )
+        s2 = np.concatenate(
+            [thing_.to_numpy(factor_set)[None, :] for thing_ in things_2_]
+        )
 
         return wasserstein_distance(s1, s2)
 
     # Next loop through the types of things
     for i, things1 in enumerate(task_things1):
         for j, things2 in enumerate(task_things2):
-            distance = 0.
+            distance = 0.0
             for factor_set in thing_factor_sets:
                 d = calculate_distance(things1, things2, factor_set)
                 # Square distances as these are euclidean.

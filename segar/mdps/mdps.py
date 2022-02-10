@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Module for MDPs
 
@@ -8,7 +9,7 @@ composed of stopping conditions, reward functions, and action spaces.
 
 """
 
-__all__ = ('MDP',)
+__all__ = ("MDP",)
 
 import math
 import random
@@ -34,11 +35,16 @@ class MDP(gym.Env):
 
     """
 
-    def __init__(self, observation: Observation, task: Task,
-                 sub_steps: int = 1, max_steps_per_episode: int = 100,
-                 episodes_per_arena: int = 1,
-                 result_keys: Optional[dict] = None,
-                 sim: Optional[Simulator] = None):
+    def __init__(
+        self,
+        observation: Observation,
+        task: Task,
+        sub_steps: int = 1,
+        max_steps_per_episode: int = 100,
+        episodes_per_arena: int = 1,
+        result_keys: Optional[dict] = None,
+        sim: Optional[Simulator] = None,
+    ):
         """
 
         :param observation: Observation object. Contains the observation
@@ -140,8 +146,9 @@ class MDP(gym.Env):
         """
         # Just to be on the safe side.  Just aligns refs.
         self.set_component_sims()
-        reset_arena = (self.episodes_per_arena > 0 and
-                       (self.num_episodes % self.episodes_per_arena == 0))
+        reset_arena = self.episodes_per_arena > 0 and (
+            self.num_episodes % self.episodes_per_arena == 0
+        )
 
         if reset_arena:
             self.sim.reset()
@@ -162,8 +169,13 @@ class MDP(gym.Env):
         return obs
 
     @timeit
-    def render(self, mode: str = 'human', delay: int = 2, label: str = None,
-               agent_view: bool = False) -> np.ndarray:
+    def render(
+        self,
+        mode: str = "human",
+        delay: int = 2,
+        label: str = None,
+        agent_view: bool = False,
+    ) -> np.ndarray:
         """Render function for Gym functionality.
 
         :param mode: 'human' or 'rgb_array'. If 'human',
@@ -176,33 +188,35 @@ class MDP(gym.Env):
         """
 
         if agent_view:
-            if (hasattr(self._observation, 'render') and
-                    hasattr(self._observation, 'show')):
-                if mode == 'rgb_array':
+            if hasattr(self._observation, "render") and hasattr(
+                self._observation, "show"
+            ):
+                if mode == "rgb_array":
                     results = None
                 else:
                     results = self._task.results(self.state)
 
                 img = self._observation.render(results=results)
-                if hasattr(self._observation, 'add_text'):
+                if hasattr(self._observation, "add_text"):
                     if label is not None:
                         self._observation.add_text(label)
-                if mode == 'rgb_array':
+                if mode == "rgb_array":
                     return img
-                elif mode == 'human':
+                elif mode == "human":
                     self._observation.show(delay)
                     return img
             else:
-                raise AttributeError('Agent\'s observation space is not '
-                                     'pixel-based.')
+                raise AttributeError(
+                    "Agent's observation space is not " "pixel-based."
+                )
 
         else:
             img = self._renderer()
             if label is not None:
                 self._renderer.add_text(label)
-            if mode == 'rgb_array':
+            if mode == "rgb_array":
                 return img
-            elif mode == 'human':
+            elif mode == "human":
                 self._renderer.show(delay)
                 return img
 
@@ -222,27 +236,28 @@ class MDP(gym.Env):
         done = self.done(state)
 
         step_results = self._task.results(self.state)
-        step_results['reward'] = rew
+        step_results["reward"] = rew
 
         for k in self.result_keys:
             if k not in state.keys():
-                raise KeyError(f'User asked for result {k} but this wasn\'t '
-                               f'found in the states {state.keys()}.')
+                raise KeyError(
+                    f"User asked for result {k} but this wasn't "
+                    f"found in the states {state.keys()}."
+                )
             step_results[k] = state[k]
 
         self.num_sub_steps += 1
         return rew, done, step_results
 
     @timeit
-    def step(self, action: np.ndarray
-             ) -> tuple[np.ndarray, float, bool, dict]:
+    def step(self, action: np.ndarray) -> tuple[np.ndarray, float, bool, dict]:
         """One gym env step
 
         :param action: Action taken by the agent.
         :return: observations, reward, done, and results
         """
         if np.isinf(action).any() or np.isnan(action).any():
-            raise ValueError(f'Got bad action from policy {action}.')
+            raise ValueError(f"Got bad action from policy {action}.")
         self.apply_action(action)
 
         results = dict()
@@ -259,7 +274,7 @@ class MDP(gym.Env):
         self.num_steps += 1
         obs = self.observation(self.state)
 
-        assert (math.isfinite(rew))
+        assert math.isfinite(rew)
         return obs, rew, done, results
 
     def get_custom_metrics(self) -> dict:

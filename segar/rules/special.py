@@ -1,26 +1,51 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Special case rules.
 
 """
 
-__all__ = ('move', 'stop_condition', 'kill_condition', 'apply_burn',
-           'apply_friction', 'consume', 'accelerate')
+__all__ = (
+    "move",
+    "stop_condition",
+    "kill_condition",
+    "apply_burn",
+    "apply_friction",
+    "consume",
+    "accelerate",
+)
 
 from typing import Tuple
 
 from segar.parameters import MinMass, Gravity, MinVelocity
-from segar.factors import (Position, Velocity, Acceleration, Mobile, Alive,
-                           Mass, Visible, Friction, Heat, Done, Consumes)
+from segar.factors import (
+    Position,
+    Velocity,
+    Acceleration,
+    Mobile,
+    Alive,
+    Mass,
+    Visible,
+    Friction,
+    Heat,
+    Done,
+    Consumes,
+)
 from .relations import IsOn, Contains
-from .transitions import (Aggregate, SetFactor, Differential,
-                          TransitionFunction, conditional_transition)
+from .transitions import (
+    Aggregate,
+    SetFactor,
+    Differential,
+    TransitionFunction,
+    conditional_transition,
+)
 
 
 @TransitionFunction
-def move(x: Position, v: Velocity, min_vel: MinVelocity
-         ) -> Differential[Position]:
+def move(
+    x: Position, v: Velocity, min_vel: MinVelocity
+) -> Differential[Position]:
     """Moves a thing that has velocity.
 
     :param x: Position to change.
@@ -48,8 +73,9 @@ def accelerate(v: Velocity, a: Acceleration) -> Differential[Velocity]:
 
 
 @TransitionFunction
-def stop_condition(o_factors: Tuple[Mobile, Alive, Velocity, Acceleration]
-                   ) -> Tuple[SetFactor[Velocity], SetFactor[Acceleration]]:
+def stop_condition(
+    o_factors: Tuple[Mobile, Alive, Velocity, Acceleration]
+) -> Tuple[SetFactor[Velocity], SetFactor[Acceleration]]:
     """Halts an object conditioned on other factors.
 
     :param o_factors: Whether the object is mobile or alive, it's velocity
@@ -58,20 +84,27 @@ def stop_condition(o_factors: Tuple[Mobile, Alive, Velocity, Acceleration]
     """
     mobile, alive, velocity, acceleration = o_factors
     if (not mobile) or (not alive):
-        return (SetFactor[Velocity](velocity, [0., 0.]),
-                SetFactor[Acceleration](acceleration, [0., 0.]))
+        return (
+            SetFactor[Velocity](velocity, [0.0, 0.0]),
+            SetFactor[Acceleration](acceleration, [0.0, 0.0]),
+        )
 
 
 @TransitionFunction
 def kill_condition(
-        m: Mass,
-        v: Velocity,
-        vis: Visible,
-        a: Acceleration,
-        alive: Alive,
-        min_mass: MinMass,
-        ) -> Tuple[SetFactor[Mass], SetFactor[Velocity], SetFactor[Alive],
-                   SetFactor[Acceleration], SetFactor[Visible]]:
+    m: Mass,
+    v: Velocity,
+    vis: Visible,
+    a: Acceleration,
+    alive: Alive,
+    min_mass: MinMass,
+) -> Tuple[
+    SetFactor[Mass],
+    SetFactor[Velocity],
+    SetFactor[Alive],
+    SetFactor[Acceleration],
+    SetFactor[Visible],
+]:
     """Kills and stops object if mass is too small
 
     :param m: The mass.
@@ -84,18 +117,21 @@ def kill_condition(
     """
 
     if m < min_mass:
-        return (SetFactor[Mass](m, 0.),
-                SetFactor[Velocity](v, [0., 0.]),
-                SetFactor[Alive](alive, False),
-                SetFactor[Acceleration](a, [0., 0.]),
-                SetFactor[Visible](vis, False))
+        return (
+            SetFactor[Mass](m, 0.0),
+            SetFactor[Velocity](v, [0.0, 0.0]),
+            SetFactor[Alive](alive, False),
+            SetFactor[Acceleration](a, [0.0, 0.0]),
+            SetFactor[Visible](vis, False),
+        )
 
 
 @conditional_transition(relation=IsOn())
 def apply_friction(
-        o1_factors: Tuple[Mass, Velocity, Acceleration],
-        o2_factors: Tuple[Friction],
-        gravity: Gravity) -> Aggregate[Acceleration]:
+    o1_factors: Tuple[Mass, Velocity, Acceleration],
+    o2_factors: Tuple[Friction],
+    gravity: Gravity,
+) -> Aggregate[Acceleration]:
     """Applies friction to an object conditioned on it is on something with
         friction.
 
@@ -106,7 +142,7 @@ def apply_friction(
     """
 
     mass, velocity, acceleration = o1_factors
-    mu, = o2_factors
+    (mu,) = o2_factors
     if velocity.norm() >= 1e-6:
 
         vel_sign = velocity.sign()
@@ -119,9 +155,9 @@ def apply_friction(
 
 
 @conditional_transition(relation=IsOn())
-def apply_burn(o1_factors: Tuple[Mass, Mobile],
-               o2_factors: Tuple[Heat],
-               ) -> SetFactor[Mass]:
+def apply_burn(
+    o1_factors: Tuple[Mass, Mobile], o2_factors: Tuple[Heat],
+) -> SetFactor[Mass]:
     """Reduces the mass of something conditioned it is on something with heat.
 
     :param o1_factors: First set of factors.
@@ -129,18 +165,16 @@ def apply_burn(o1_factors: Tuple[Mass, Mobile],
     :return: Change of mass due to heat.
     """
     mass, mobile = o1_factors
-    heat, = o2_factors
+    (heat,) = o2_factors
     if mobile:
-        new_mass = Mass(mass * -(heat * 0.1 - 1.))
+        new_mass = Mass(mass * -(heat * 0.1 - 1.0))
         return SetFactor[Mass](mass, new_mass)
 
 
 @conditional_transition(relation=Contains())
-def consume(o1_factors: Tuple[Mobile, Done, Visible],
-            o2_factors: Tuple[Consumes]
-            ) -> Tuple[SetFactor[Done],
-                       SetFactor[Visible],
-                       SetFactor[Mobile]]:
+def consume(
+    o1_factors: Tuple[Mobile, Done, Visible], o2_factors: Tuple[Consumes]
+) -> Tuple[SetFactor[Done], SetFactor[Visible], SetFactor[Mobile]]:
     """Consumes an object, conditioned on it is contained inside something
         with Consumes factor.
 
@@ -154,6 +188,8 @@ def consume(o1_factors: Tuple[Mobile, Done, Visible],
     mobile, done, visible = o1_factors
 
     if mobile:
-        return (SetFactor[Done](done, True),
-                SetFactor[Visible](visible, False),
-                SetFactor[Velocity](mobile, False))
+        return (
+            SetFactor[Done](done, True),
+            SetFactor[Visible](visible, False),
+            SetFactor[Velocity](mobile, False),
+        )

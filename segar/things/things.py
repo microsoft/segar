@@ -1,33 +1,51 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """A thing is the base object in SEGAR.
 
 """
 
-__all__ = ('Entity', 'Thing')
+__all__ = ("Entity", "Thing")
 
 from copy import copy
 from typing import Any, Dict, Optional, Type, TypeVar
 
 import numpy as np
 
-from segar.factors import (BaseShape, Circle, Factor, FactorContainer, ID,
-                           Label, Order, Position, Shape, Size, Text, Visible)
+from segar.factors import (
+    BaseShape,
+    Circle,
+    Factor,
+    FactorContainer,
+    ID,
+    Label,
+    Order,
+    Position,
+    Shape,
+    Size,
+    Text,
+    Visible,
+)
 from segar.types import ThingID
 
 
-T = TypeVar('T', bound=Type[Factor])
+T = TypeVar("T", bound=Type[Factor])
 
 
 class Entity(FactorContainer, default={}):
     """Abstract collection of factors that live in the simulator.
 
     """
+
     _factor_types = None
 
-    def __init__(self, initial_factors: Dict[Type[Factor], Any],
-                 unique_id: Optional[ThingID] = None, sim=None):
+    def __init__(
+        self,
+        initial_factors: Dict[Type[Factor], Any],
+        unique_id: Optional[ThingID] = None,
+        sim=None,
+    ):
         """
 
         :param initial_factors: Dictionary of initial factor values.
@@ -36,8 +54,9 @@ class Entity(FactorContainer, default={}):
         """
 
         if not isinstance(initial_factors, dict):
-            raise ValueError('Argument `initial_factors` must be a '
-                             'dictionary.')
+            raise ValueError(
+                "Argument `initial_factors` must be a " "dictionary."
+            )
 
         if ID not in initial_factors.keys() or initial_factors[ID] is None:
             initial_factors[ID] = unique_id
@@ -45,8 +64,9 @@ class Entity(FactorContainer, default={}):
         thing_factors = {}
         for k, v in initial_factors.items():
             if not issubclass(k, Factor):
-                raise TypeError(f'Initial factors must have {Factor} subclass '
-                                f'keys.')
+                raise TypeError(
+                    f"Initial factors must have {Factor} subclass " f"keys."
+                )
 
             if k == ID and v is None:
                 if ID in self.default:
@@ -73,12 +93,12 @@ class Entity(FactorContainer, default={}):
     @property
     def state(self) -> Dict[Type[Factor], Factor]:
         state = self.value.copy()
-        state['cl'] = self.__class__.__name__
+        state["cl"] = self.__class__.__name__
 
         return state
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}(id={self[ID]})'
+        return f"{self.__class__.__name__}(id={self[ID]})"
 
 
 class Thing(Entity):
@@ -88,9 +108,12 @@ class Thing(Entity):
 
     _factor_types = (Position, Visible, Order, Shape, Size, Label, Text, ID)
 
-    def __init__(self,
-                 initial_factors: Dict[Type[Factor], Any] = None,
-                 unique_id: Optional[ThingID] = None, sim=None):
+    def __init__(
+        self,
+        initial_factors: Dict[Type[Factor], Any] = None,
+        unique_id: Optional[ThingID] = None,
+        sim=None,
+    ):
         """
 
         :param initial_factors: Dictionary of initial factor values.
@@ -106,9 +129,11 @@ class Thing(Entity):
             if Size in initial_factors.keys():
                 size = initial_factors[Size]
                 if shape.size is not size:
-                    raise KeyError('If Shape is provided, it must have the '
-                                   'same Size factor as that provided to the '
-                                   'Thing.')
+                    raise KeyError(
+                        "If Shape is provided, it must have the "
+                        "same Size factor as that provided to the "
+                        "Thing."
+                    )
             else:
                 size = shape.size
             assert size is shape.size
@@ -139,10 +164,12 @@ class Thing(Entity):
         # subclassed by Thing
         for k, v in initial_factors.items():
             if k not in self._factor_types:
-                raise KeyError(f'Class {self.__class__.__name__} does not '
-                               f'support factor type {k}. Allowed: '
-                               f'{self._factor_types}. For un-constrained '
-                               f'factor containers, use `Entity`.')
+                raise KeyError(
+                    f"Class {self.__class__.__name__} does not "
+                    f"support factor type {k}. Allowed: "
+                    f"{self._factor_types}. For un-constrained "
+                    f"factor containers, use `Entity`."
+                )
 
         for factor_type in self._factor_types:
             if factor_type not in initial_factors.keys():
@@ -186,5 +213,7 @@ class Thing(Entity):
     def __setitem__(self, factor_type: Type[Factor], value):
         if factor_type in self._factor_types:
             return super().__setitem__(factor_type, value)
-        raise KeyError(f'{self.__class__.__name__} does not have factor '
-                       f'`{factor_type}`. Available: {self._factor_types}')
+        raise KeyError(
+            f"{self.__class__.__name__} does not have factor "
+            f"`{factor_type}`. Available: {self._factor_types}"
+        )

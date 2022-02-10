@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 
 from collections import deque
@@ -33,7 +34,7 @@ class SequentialTaskWrapper:
         save_path="sim.state",
     ):
         if seed is not None:
-            print('Setting env seed to %d' % seed)
+            print("Setting env seed to %d" % seed)
             np.random.seed(seed)
             random.seed(seed)
         self._max_steps = max_steps
@@ -42,17 +43,21 @@ class SequentialTaskWrapper:
         self.mdp_list = []
         for _ in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
-            task = PuttPutt(action_range=action_range,
-                            initialization=initialization)
-            sim = Simulator(state_buffer_length=50,
-                            wall_damping=wall_damping,
-                            friction=friction,
-                            safe_mode=False,
-                            save_path=save_path)
+            task = PuttPutt(
+                action_range=action_range, initialization=initialization
+            )
+            sim = Simulator(
+                state_buffer_length=50,
+                wall_damping=wall_damping,
+                friction=friction,
+                safe_mode=False,
+                save_path=save_path,
+            )
             task.set_sim(sim)
             task.sample()
             mdp = FrameStackWrapper(
-                ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack)
+                ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack
+            )
             self.task_list.append(task)
             self.mdp_list.append(mdp)
 
@@ -62,7 +67,8 @@ class SequentialTaskWrapper:
         self.sobs = AllStateObservation(
             n_things=20,
             unique_ids=["golfball", "goal"],
-            factors=[Charge, Magnetism, Position, Friction])
+            factors=[Charge, Magnetism, Position, Friction],
+        )
 
     @property
     def action_space(self):
@@ -92,11 +98,14 @@ class SequentialTaskWrapper:
         except Exception as e:
             # repeat again in hopes the crash doesn't get registered
             next_obs, rew, done, info = self.current_env.step(action)
-            print('Ignoring simulator exception:')
+            print("Ignoring simulator exception:")
             print(e)
         self.current_step += 1
-        success = int(done and (self.current_step < self._max_steps)
-                      and self.sim.things["golfball"].Alive.value)
+        success = int(
+            done
+            and (self.current_step < self._max_steps)
+            and self.sim.things["golfball"].Alive.value
+        )
         done = done or (self.current_step > self._max_steps)
         if done:
             next_obs = self.reset()
@@ -107,9 +116,9 @@ class SequentialTaskWrapper:
 
     def _pick_env(self, task_id=None):
         if task_id is None:
-            self.task_id = np.random.randint(low=0,
-                                             high=self.n_envs,
-                                             size=(1, )).item()
+            self.task_id = np.random.randint(
+                low=0, high=self.n_envs, size=(1,)
+            ).item()
         else:
             self.task_id = task_id
         return self.mdp_list[self.task_id]
@@ -168,7 +177,8 @@ class FrameStackWrapper:
             high=255,
             shape=np.concatenate(
                 [wrapped_obs_shape[:2], [wrapped_obs_shape[2] * n_frames]],
-                axis=0),
+                axis=0,
+            ),
             dtype=np.uint8,
         )
 

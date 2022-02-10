@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Task component of the MDP
 
@@ -9,7 +10,7 @@ semantics of the MDP.
 
 """
 
-__all__ = ('Task',)
+__all__ = ("Task",)
 
 from typing import Optional, Type
 
@@ -29,9 +30,15 @@ class Task:
     Embodies actions, rewards, and stopping conditions.
 
     """
-    def __init__(self, action_range: tuple[float, float],
-                 action_shape: tuple, action_type: type,
-                 baseline_action: np.ndarray, initialization: Initialization):
+
+    def __init__(
+        self,
+        action_range: tuple[float, float],
+        action_shape: tuple,
+        action_type: type,
+        baseline_action: np.ndarray,
+        initialization: Initialization,
+    ):
         """
 
         :param action_range: Range of legal actions.
@@ -46,7 +53,8 @@ class Task:
             action_range[0],
             action_range[1],
             shape=action_shape,
-            dtype=action_type)
+            dtype=action_type,
+        )
 
         self._initialization = initialization
         self._baseline_action = baseline_action
