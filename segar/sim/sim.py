@@ -1215,7 +1215,10 @@ class Simulator:
         while s < 100:
             overlap = False
             shaped_things = self.things_with_factor(Shape, Position)
-            for thing in shaped_things.values():
+            # To randomize overlap fixes in case of cycles.
+            query_things = list(shaped_things.values())[:]
+            random.shuffle(query_things)
+            for thing in query_things:
                 wall_overlap = False
                 object_overlap = False
                 for wall in self._walls.values():
