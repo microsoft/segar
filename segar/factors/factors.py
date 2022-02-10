@@ -1,5 +1,7 @@
 from __future__ import annotations
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 
 """Factors of variation and FactorContainers.
