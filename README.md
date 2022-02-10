@@ -24,9 +24,9 @@ distributional.
 This allows an experimenter to set and quantify generalization difficulty in terms of 
 a distance between training and test task distributions.
 
-![Putt Putt](segar/assets/examples/puttputt_example.gif)
-![Billiards](segar/assets/examples/billiards_example.gif)
-![Invisiball](segar/assets/examples/invisiball_example.gif)
+![Putt Putt](resources/readme-images/puttputt_example.gif)
+![Billiards](resources/readme-images/billiards_example.gif)
+![Invisiball](resources/readme-images/invisiball_example.gif)
 
 Details on code and tutorials can be found [here](https://github.com/microsoft/roboputtputt/tree/main/segar).
 

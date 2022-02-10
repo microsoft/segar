@@ -1,13 +1,15 @@
 from __future__ import annotations
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 
 """Vector-like factors.
 
 """
 
-__all__ = ('VectorFactor', 'Position', 'Velocity', 'Acceleration')
+__all__ = ("VectorFactor", "Position", "Velocity", "Acceleration")
 
 from numbers import Number
 from typing import TypeVar, Union
@@ -18,10 +20,10 @@ from scipy.linalg import norm
 from segar.factors.factors import Factor
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
-class VectorFactor(Factor[np.ndarray], default=[0., 0.]):
+class VectorFactor(Factor[np.ndarray], default=[0.0, 0.0]):
 
     __array_priority__ = 1  # For numpy array functionality
 
@@ -51,11 +53,12 @@ class VectorFactor(Factor[np.ndarray], default=[0., 0.]):
     def __sub__(self, other: Union[VectorFactor, T, Number]) -> VectorFactor:
         return self.__class__(self.value - Factor._get_value(other))
 
-    def __truediv__(self, other: Union[VectorFactor, T, Number]
-                    ) -> VectorFactor:
+    def __truediv__(
+        self, other: Union[VectorFactor, T, Number]
+    ) -> VectorFactor:
         other_value = Factor._get_value(other)
         if norm(other_value) == 0:
-            raise ValueError(f'Dividing by zero: {self} / {other}.')
+            raise ValueError(f"Dividing by zero: {self} / {other}.")
         return self.__class__(self.value / other_value)
 
     def __iadd__(self, other: Union[VectorFactor, T, Number]) -> VectorFactor:
@@ -80,18 +83,23 @@ class VectorFactor(Factor[np.ndarray], default=[0., 0.]):
         dtype = self.value.dtype
         value_ = Factor._get_value(value)
         if np.isinf(value_).any():
-            raise ValueError(f'Attempting to set factor {self} to infinite '
-                             f'value {value}.')
+            raise ValueError(
+                f"Attempting to set factor {self} to infinite "
+                f"value {value}."
+            )
         if np.isnan(value_).any():
-            raise ValueError(f'Attempting to set factor {self} to NaN '
-                             f'value {value}.')
+            raise ValueError(
+                f"Attempting to set factor {self} to NaN " f"value {value}."
+            )
         super().set(value, allow_in_place=allow_in_place)
         if self.value.dtype != dtype:
-            raise TypeError(f'dtype changed from {dtype} to '
-                            f'{self.value.dtype}. This is likely due to '
-                            f'binary operations on Factors and numpy arrays. '
-                            f'Use the `value` property when performing such '
-                            f'operations.')
+            raise TypeError(
+                f"dtype changed from {dtype} to "
+                f"{self.value.dtype}. This is likely due to "
+                f"binary operations on Factors and numpy arrays. "
+                f"Use the `value` property when performing such "
+                f"operations."
+            )
 
     def __getitem__(self, item: int):
         return self.value[item]
@@ -125,13 +133,13 @@ class VectorFactor(Factor[np.ndarray], default=[0., 0.]):
         return np.sqrt(self.value.sum())
 
 
-class Position(VectorFactor, default=[0., 0.]):
+class Position(VectorFactor, default=[0.0, 0.0]):
     pass
 
 
-class Velocity(VectorFactor, default=[0., 0.]):
+class Velocity(VectorFactor, default=[0.0, 0.0]):
     pass
 
 
-class Acceleration(VectorFactor, default=[0., 0.]):
+class Acceleration(VectorFactor, default=[0.0, 0.0]):
     pass

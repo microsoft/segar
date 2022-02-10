@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Simple encoders.
 
@@ -13,7 +14,7 @@ import torch.nn.functional as nnF
 import torch.nn as nn
 
 
-logger = logging.getLogger('segar.repl.models')
+logger = logging.getLogger("segar.repl.models")
 
 
 def loss_xent(logits, labels, ignore_index=-1):
@@ -22,8 +23,9 @@ def loss_xent(logits, labels, ignore_index=-1):
     return loss
 
 
-def loss_regression(features: torch.Tensor, targets: torch.Tensor
-                    ) -> torch.Tensor:
+def loss_regression(
+    features: torch.Tensor, targets: torch.Tensor
+) -> torch.Tensor:
     mse = nn.functional.mse_loss
     loss = mse(features, targets)
     return loss
@@ -63,8 +65,15 @@ class Flatten(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, nc=3, nf=64, input_size=64, norm_type=None,
-                 pool_out=False, **encoder_args):
+    def __init__(
+        self,
+        nc=3,
+        nf=64,
+        input_size=64,
+        norm_type=None,
+        pool_out=False,
+        **encoder_args
+    ):
         super(Encoder, self).__init__()
         self.nc = nc
         self.nf = nf
@@ -79,37 +88,37 @@ class Encoder(nn.Module):
     @property
     def n_features(self):
         if self._n_features is None:
-            raise RuntimeError('n_features not set')
+            raise RuntimeError("n_features not set")
         return self._n_features
 
     @property
     def n_locs(self):
         if self._n_locs is None:
-            raise RuntimeError('n_locs not set')
+            raise RuntimeError("n_locs not set")
         return self._n_locs
 
     @property
     def module(self):
         return self
 
-    def init_weights(self, init_scale=1.):
-        '''
+    def init_weights(self, init_scale=1.0):
+        """
         Run custom weight init for modules...
-        '''
+        """
         for layer in self.layer_list:
             if isinstance(layer, ConvBlock):
                 layer.init_weights(init_scale)
 
     def _forward_acts(self, x, detach_at=None, log=False):
-        '''
+        """
         Return activations from all layers.
-        '''
+        """
         # run forward pass through all layers
         layer_acts = []
         layer_in = x
         for i, layer in enumerate(self.layer_list):
             if log:
-                logger.debug('Input size to layer: {}'.format(layer_in.size()))
+                logger.debug("Input size to layer: {}".format(layer_in.size()))
             layer_out = layer(layer_in)
             if detach_at == i:
                 layer_out = layer_out.detach()
@@ -117,51 +126,59 @@ class Encoder(nn.Module):
             layer_in = layer_out
 
         if self.pool_out:
-            layer_acts.append(nnF.avg_pool2d(layer_out,
-                                             layer_out.size(2), 1, 0))
+            layer_acts.append(
+                nnF.avg_pool2d(layer_out, layer_out.size(2), 1, 0)
+            )
 
         # remove input from the returned list of activations
         return layer_acts
 
     def _config_modules(self, x):
-        '''
+        """
         Configure the modules for extracting fake rkhs embeddings for infomax.
-        '''
+        """
         enc_acts = self._forward_acts(x, log=True)
         self.act_sizes = [a.size()[1:] for a in enc_acts]
-        logger.info('Activation sizes for network: {}'.format(self.act_sizes))
+        logger.info("Activation sizes for network: {}".format(self.act_sizes))
         self._n_features = self.act_sizes[-1][0]
         self._n_locs = (self.act_sizes[-1][1], self.act_sizes[-1][2])
 
     def forward(self, x, **kwargs):
-        '''
+        """
         Compute activations and Fake RKHS embeddings for the batch.
-        '''
+        """
         # compute activations in all layers for x
         outs = self._forward_acts(x, **kwargs)
         return outs
 
 
 class ConvBlock(nn.Module):
-    def __init__(self, n_in, n_out, n_kern, n_stride, n_pad, norm_type=None,
-                 bias=None, leaky=False):
+    def __init__(
+        self,
+        n_in,
+        n_out,
+        n_kern,
+        n_stride,
+        n_pad,
+        norm_type=None,
+        bias=None,
+        leaky=False,
+    ):
         super(ConvBlock, self).__init__()
 
         self.norm_type = norm_type
         if bias is None:
-            bias = (norm_type != 'batch')
+            bias = norm_type != "batch"
 
         self.conv = nn.Conv2d(n_in, n_out, n_kern, n_stride, n_pad, bias=bias)
 
         if norm_type is None:
             self.norm = None
-        elif norm_type == 'batch':
+        elif norm_type == "batch":
             self.norm = nn.BatchNorm2d(n_out)
-        elif norm_type == 'layer':
+        elif norm_type == "layer":
             self.norm = nn.Sequential(
-                Permute(0, 2, 3, 1),
-                nn.LayerNorm(n_out),
-                Permute(0, 3, 1, 2)
+                Permute(0, 2, 3, 1), nn.LayerNorm(n_out), Permute(0, 3, 1, 2)
             )
         else:
             raise NotImplementedError(norm_type)
@@ -171,7 +188,7 @@ class ConvBlock(nn.Module):
         else:
             self.relu = nn.ReLU(inplace=False)
 
-    def init_weights(self, init_scale=1.):
+    def init_weights(self, init_scale=1.0):
         # initialize first conv in res branch
         # -- rescale the default init for nn.Conv2d layers
         nn.init.kaiming_uniform_(self.conv.weight, a=math.sqrt(5))
@@ -194,13 +211,16 @@ class ConvnetEncoder(Encoder):
         layers = []
 
         if self.input_size == 64:
-            layers.append(ConvBlock(nc, nf, 7, 2, 1, norm_type=None,
-                                    bias=False))
+            layers.append(
+                ConvBlock(nc, nf, 7, 2, 1, norm_type=None, bias=False)
+            )
             layers.append(ConvBlock(nf, nf * 2, 4, 2, 1, norm_type=norm_type))
-            layers.append(ConvBlock(nf * 2, nf * 4, 4, 2, 1,
-                                    norm_type=norm_type))
-            layers.append(ConvBlock(nf * 4, n_out, 4, 1, 0,
-                                    norm_type=norm_type))
+            layers.append(
+                ConvBlock(nf * 2, nf * 4, 4, 2, 1, norm_type=norm_type)
+            )
+            layers.append(
+                ConvBlock(nf * 4, n_out, 4, 1, 0, norm_type=norm_type)
+            )
         else:
             raise NotImplementedError(self.input_size)
 
@@ -231,7 +251,7 @@ class SimpleMLP(nn.Module):
             self.block_forward = nn.Sequential(
                 Flatten(),
                 nn.Dropout(p=p),
-                nn.Linear(n_input, n_out, bias=True)
+                nn.Linear(n_input, n_out, bias=True),
             )
         else:
             # use simple MLP classifier
@@ -242,7 +262,7 @@ class SimpleMLP(nn.Module):
                 nn.BatchNorm1d(n_hidden),
                 nn.ReLU(inplace=True),
                 nn.Dropout(p=p),
-                nn.Linear(n_hidden, n_out, bias=False)
+                nn.Linear(n_hidden, n_out, bias=False),
             )
 
     def forward(self, x):
@@ -252,15 +272,16 @@ class SimpleMLP(nn.Module):
 
 class MLPClassifier(SimpleMLP):
     def get_accuracies(self, features, labels):
-        accuracies = dict((k, 100. * get_accuracy(lgt, labels))
-                          for k, lgt in features.items())
+        accuracies = dict(
+            (k, 100.0 * get_accuracy(lgt, labels))
+            for k, lgt in features.items()
+        )
         return accuracies
 
 
 class MLPRegressor(SimpleMLP):
     def __init__(self, n_input, n_outs, n_hidden=128, p=0.1):
-        super().__init__(n_input, n_outs, n_hidden=n_hidden,
-                         p=p)
+        super().__init__(n_input, n_outs, n_hidden=n_hidden, p=p)
         self.loss_func = torch.nn.MSELoss()
 
     def error(self, x, targets):
@@ -278,8 +299,9 @@ class ConvnetClassifier(ConvnetEncoder):
         super(ConvnetClassifier, self).__init__(**kwargs)
 
         n_input = self.n_features * self.n_locs[0] * self.n_locs[1]
-        self.mlp = MLPClassifier(n_input, n_classes, n_hidden=n_hidden_class,
-                                 p=dropout)
+        self.mlp = MLPClassifier(
+            n_input, n_classes, n_hidden=n_hidden_class, p=dropout
+        )
 
     def get_accuracies(self, *args, **kwargs):
         return self.mlp.get_accuracies(*args, **kwargs)
@@ -292,12 +314,14 @@ class ConvnetClassifier(ConvnetEncoder):
 
 
 class ConvnetRegressor(ConvnetEncoder):
-    def __init__(self, n_outs, n_hidden_class=128, dropout=0.1,
-                 **encoder_args):
+    def __init__(
+        self, n_outs, n_hidden_class=128, dropout=0.1, **encoder_args
+    ):
         super().__init__(**encoder_args)
         n_input = self.n_features * self.n_locs[0] * self.n_locs[1]
-        self.mlp = SimpleMLP(n_input, n_outs, n_hidden=n_hidden_class,
-                             p=dropout)
+        self.mlp = SimpleMLP(
+            n_input, n_outs, n_hidden=n_hidden_class, p=dropout
+        )
         self.loss_func = torch.nn.MSELoss()
 
     def error(self, x, targets):
@@ -313,8 +337,17 @@ class ConvnetRegressor(ConvnetEncoder):
 
 
 class LocCondConvnetClassifier(ConvnetClassifier):
-    _model_keys = ('nc', 'nf', 'input_size', 'norm_type', 'n_out', 'pool_out',
-                   'n_hidden_class', 'dropout', 'n_hidden_loc')
+    _model_keys = (
+        "nc",
+        "nf",
+        "input_size",
+        "norm_type",
+        "n_out",
+        "pool_out",
+        "n_hidden_class",
+        "dropout",
+        "n_hidden_loc",
+    )
 
     def __init__(self, n_hidden_loc=512, **kwargs):
         super(LocCondConvnetClassifier, self).__init__(**kwargs)
@@ -324,8 +357,9 @@ class LocCondConvnetClassifier(ConvnetClassifier):
         self.bn = nn.BatchNorm1d(n_input)
 
     def forward(self, x, locs, labels):
-        features = (super(ConvnetClassifier, self)
-                    .forward(x)[-1].flatten(start_dim=1))
+        features = (
+            super(ConvnetClassifier, self).forward(x)[-1].flatten(start_dim=1)
+        )
         loc_features = self.relu(self.bn(self.loc_encoder.forward(locs)))
         features += loc_features
         lgt = self.mlp(features)

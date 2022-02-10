@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 
 # TODO fix and update this.
@@ -9,11 +10,15 @@ from segar.rendering.rendering import Renderer
 
 
 class OpticalFloRenderer(Renderer):
-
     def __init__(self):
         self.optical_flo = OpticalFlo(
-            res, boundaries, _DEFAULT_MAX_VEL, self.dt,
-            self.coordinates_to_pix, self.absolute_to_pix, scaling=2
+            res,
+            boundaries,
+            _DEFAULT_MAX_VEL,
+            self.dt,
+            self.coordinates_to_pix,
+            self.absolute_to_pix,
+            scaling=2,
         )
 
     def render_optical_flo(self):
@@ -21,8 +26,16 @@ class OpticalFloRenderer(Renderer):
 
 
 class OpticalFlo:
-    def __init__(self, res, arena_boundaries, max_vel, dt,
-                 coordinate2pix_func, absolute2pix_func, scaling=1):
+    def __init__(
+        self,
+        res,
+        arena_boundaries,
+        max_vel,
+        dt,
+        coordinate2pix_func,
+        absolute2pix_func,
+        scaling=1,
+    ):
         self.old_ball_pos = None
         # half_extent = max(arena_boundaries) - min(arena_boundaries) / 2
         # self.half_diagonal = norm((half_extent, half_extent))
@@ -67,8 +80,13 @@ class OpticalFlo:
         else:
             diff = ball.pos - self.old_ball_pos
             rgb = self.vector2color(diff)
-            cv2.circle(self.img, self.coordinate2pix_func(ball.pos),
-                       self.absolute2pix_func(ball.size), rgb, -1)
+            cv2.circle(
+                self.img,
+                self.coordinate2pix_func(ball.pos),
+                self.absolute2pix_func(ball.size),
+                rgb,
+                -1,
+            )
         self.old_ball_pos = np.copy(ball.pos)
 
         return self.img

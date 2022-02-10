@@ -1,10 +1,11 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Priors
 
 """
-__all__ = ('Prior',)
+__all__ = ("Prior",)
 
 from typing import Optional, Type, TypeVar, Union
 from segar.factors import Factor, Noise, Deterministic
@@ -13,7 +14,7 @@ from .transitions import TransitionFunction, SetFactor
 from .relations import Relation
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Prior(TransitionFunction):
@@ -24,10 +25,14 @@ class Prior(TransitionFunction):
 
     """
 
-    def __init__(self, target_factor: Type[Factor], value: Union[T, Factor],
-                 factor_type: Optional[Type[Factor]] = None,
-                 entity_type: Optional[Type[Entity]] = None,
-                 relation: Optional[Relation] = None):
+    def __init__(
+        self,
+        target_factor: Type[Factor],
+        value: Union[T, Factor],
+        factor_type: Optional[Type[Factor]] = None,
+        entity_type: Optional[Type[Entity]] = None,
+        relation: Optional[Relation] = None,
+    ):
         """
 
         :param target_factor: Type of factor this prior targets.
@@ -51,10 +56,12 @@ class Prior(TransitionFunction):
                 source_ = self.source
             return SetFactor[target_factor](f, source_)
 
-        super().__init__(prior,
-                         factor_type=factor_type,
-                         entity_type=entity_type,
-                         relation=relation)
+        super().__init__(
+            prior,
+            factor_type=factor_type,
+            entity_type=entity_type,
+            relation=relation,
+        )
 
     def copy_for_sim(self, sim):
         rule_copy = type(self)(self.target, self.source)
@@ -70,11 +77,11 @@ class Prior(TransitionFunction):
             return Deterministic(self.source)
 
     def __repr__(self) -> str:
-        r = f'{self.target} <- {self.source}'
+        r = f"{self.target} <- {self.source}"
         if self.factor_type:
-            r += f' (if has {self.target})'
+            r += f" (if has {self.target})"
         if self.entity_type:
-            r += f' (if is {self.entity_type})'
+            r += f" (if is {self.entity_type})"
         if self._relation:
-            r += f' (if {self._relation})'
+            r += f" (if {self._relation})"
         return r

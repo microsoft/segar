@@ -57,7 +57,7 @@ plt.imshow(image)
 
 
     
-![png](README_files/README_2_1.png)
+![png](../../resources/readme-images/segar/rendering/README_2_1.png)
     
 
 
@@ -78,7 +78,7 @@ plt.imshow(image)
 
 
     
-![png](README_files/README_3_1.png)
+![png](../../resources/readme-images/segar/rendering/README_3_1.png)
     
 
 
@@ -117,7 +117,7 @@ for i in range(5):
 
 
     
-![png](README_files/README_5_0.png)
+![png](../../resources/readme-images/segar/rendering/README_5_0.png)
     
 
 
@@ -155,7 +155,7 @@ for i in range(5):
 
 
     
-![png](README_files/README_7_0.png)
+![png](../../resources/readme-images/segar/rendering/README_7_0.png)
     
 
 
