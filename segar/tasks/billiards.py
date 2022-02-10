@@ -89,7 +89,7 @@ class CueBall(
 
 
 billiards_default_config = {
-    "numbers": [(CueBall, 1),],
+    "numbers": [(CueBall, 1), ],
     "priors": [
         Prior(
             Size,
