@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Constructors for MDP objects using pickleable dictionaries.
 
@@ -10,17 +11,35 @@ import logging
 from typing import Union
 
 from segar.sim import Simulator
-from segar.mdps import MDP, RGBObservation, ObjectStateObservation, \
-    MultimodalObservation
-from segar.tasks import PuttPuttInitialization, PuttPutt, \
-    Invisiball, BilliardsInitialization, Billiards
+from segar.mdps import (
+    MDP,
+    RGBObservation,
+    ObjectStateObservation,
+    MultimodalObservation,
+)
+from segar.tasks import (
+    PuttPuttInitialization,
+    PuttPutt,
+    Invisiball,
+    BilliardsInitialization,
+    Billiards,
+)
 
 
-logger = logging.getLogger('segar')
+logger = logging.getLogger("segar")
 
-obj_types = Union[MDP, Simulator, RGBObservation, ObjectStateObservation,
-                  MultimodalObservation, PuttPuttInitialization, PuttPutt,
-                  Invisiball, BilliardsInitialization, Billiards]
+obj_types = Union[
+    MDP,
+    Simulator,
+    RGBObservation,
+    ObjectStateObservation,
+    MultimodalObservation,
+    PuttPuttInitialization,
+    PuttPutt,
+    Invisiball,
+    BilliardsInitialization,
+    Billiards,
+]
 
 
 def class_constructor(c: str = None, **kwargs) -> obj_types:
@@ -33,32 +52,34 @@ def class_constructor(c: str = None, **kwargs) -> obj_types:
     try:
         C = eval(c)
     except NameError:
-        raise NameError(f'Class `{c}` not defined within scope.')
+        raise NameError(f"Class `{c}` not defined within scope.")
 
-    logger.debug(f'Constructing object of class `{c}`')
+    logger.debug(f"Constructing object of class `{c}`")
 
     args = []
-    if 'subs' in kwargs.keys():
-        subs = kwargs.pop('subs')
+    if "subs" in kwargs.keys():
+        subs = kwargs.pop("subs")
         for sub in subs:
-            logger.debug(f'`{c}` is composed of class `{sub}`')
+            logger.debug(f"`{c}` is composed of class `{sub}`")
             c_ = class_constructor(**sub)
             args.append(c_)
 
     try:
         out = C(*args, **kwargs)
     except Exception as e:
-        logger.error(f'Construction of {c} failed.')
+        logger.error(f"Construction of {c} failed.")
         raise e
-    logger.debug(f'Construction of `{c}` was successful')
+    logger.debug(f"Construction of `{c}` was successful")
     return out
 
 
-def mdp_constructor(task_config: dict = None,
-                    initialization_config: dict = None,
-                    mdp_config: dict = None,
-                    observation_config: dict = None,
-                    sim_config: dict = None):
+def mdp_constructor(
+    task_config: dict = None,
+    initialization_config: dict = None,
+    mdp_config: dict = None,
+    observation_config: dict = None,
+    sim_config: dict = None,
+):
     """Constructs the MDP using configs for each sub-component.
 
     :return: MDP object.
@@ -73,18 +94,23 @@ def mdp_constructor(task_config: dict = None,
     class_constructor(**sim_config)
     initialization = class_constructor(**initialization_config)
     observation = class_constructor(**observation_config)
-    task_config['initialization'] = initialization
+    task_config["initialization"] = initialization
     task = class_constructor(**task_config)
 
     mdp = MDP(observation, task, **mdp_config)
 
-    logger.debug('Construction of mdp successful.')
+    logger.debug("Construction of mdp successful.")
 
     return mdp
 
 
-def from_config(task: type, init: type, obs: type,
-                sim: type = Simulator, config: dict = None):
+def from_config(
+    task: type,
+    init: type,
+    obs: type,
+    sim: type = Simulator,
+    config: dict = None,
+):
     """Construct MDP from types and configuration.
 
     :param task: Task class.

@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Module for training and loading Linear AE visual features.
 
@@ -7,7 +8,7 @@ The features trained available on the repo were constructed using:
 
 
 """
-__all__ = ('LinearAEGenerator',)
+__all__ = ("LinearAEGenerator",)
 
 import glob
 import os
@@ -22,15 +23,29 @@ import torch.multiprocessing
 from torch.utils.data import Dataset, DataLoader
 import wandb
 
-from segar.factors import (Heat, Friction, Charge, Magnetism, Density,
-                           StoredEnergy, Mass, Alive)
+from segar.factors import (
+    Heat,
+    Friction,
+    Charge,
+    Magnetism,
+    Density,
+    StoredEnergy,
+    Mass,
+    Alive,
+)
 from segar.logging import set_logger
 from segar.rendering.generators.generator import Generator
-from segar.repl.boilerplate import (make_optimizer, data_iterator, updater,
-                                    Trainer, set_device, get_device)
+from segar.repl.boilerplate import (
+    make_optimizer,
+    data_iterator,
+    updater,
+    Trainer,
+    set_device,
+    get_device,
+)
 
 
-torch.multiprocessing.set_sharing_strategy('file_system')
+torch.multiprocessing.set_sharing_strategy("file_system")
 logger = set_logger(debug=True)
 
 
@@ -42,25 +57,32 @@ class RandomUniformFeatures(Dataset):
         return 2 ** self.n_features
 
     def __getitem__(self, idx: int) -> np.ndarray:
-        bits = np.unpackbits(np.array([idx], dtype='>i8').view(np.uint8))[
-               -self.n_features:]
+        bits = np.unpackbits(np.array([idx], dtype=">i8").view(np.uint8))[
+            -self.n_features :
+        ]
         bits = bits.astype(np.float64)
         mag = np.random.uniform(low=-1.0, high=1.0, size=bits.shape)
         return bits * mag
 
 
-def make_data_loaders(n_features: int, batch_size: int = 64,
-                      n_workers: int = 0) -> DataLoader:
+def make_data_loaders(
+    n_features: int, batch_size: int = 64, n_workers: int = 0
+) -> DataLoader:
     train_dataset = RandomUniformFeatures(n_features)
-    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-                              shuffle=True, pin_memory=True, drop_last=True,
-                              num_workers=n_workers, sampler=None)
+    train_loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        pin_memory=True,
+        drop_last=True,
+        num_workers=n_workers,
+        sampler=None,
+    )
     return train_loader
 
 
 @data_iterator
-def data_iter(device: Union[str, int], inputs: np.ndarray
-              ) -> torch.Tensor:
+def data_iter(device: Union[str, int], inputs: np.ndarray) -> torch.Tensor:
     n_repeat = random.randint(3, 10) * 2
     features = inputs[:, :, None, None].repeat(1, 1, n_repeat, n_repeat)
     features = features.to(device).float()
@@ -69,26 +91,35 @@ def data_iter(device: Union[str, int], inputs: np.ndarray
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self, n_inputs: int, n_features: int, kernel_size: int = 5,
-                 stride: int = 1, l2_regularization: float = 0.01):
+    def __init__(
+        self,
+        n_inputs: int,
+        n_features: int,
+        kernel_size: int = 5,
+        stride: int = 1,
+        l2_regularization: float = 0.01,
+    ):
         super().__init__()
         self.n_inputs = n_inputs
         self.n_features = n_features
         self.l2_reg = l2_regularization
 
         self.convt = torch.nn.ConvTranspose2d(
-            n_features, n_inputs, kernel_size, stride, 1)
+            n_features, n_inputs, kernel_size, stride, 1
+        )
         self.conv = torch.nn.Conv2d(
-            n_inputs, n_features, kernel_size, stride, 1)
+            n_inputs, n_features, kernel_size, stride, 1
+        )
 
         self.mse = nn.functional.mse_loss
 
-    def losses(self, x: torch.Tensor, features: torch.Tensor,
-               out: torch.Tensor) -> torch.Tensor:
+    def losses(
+        self, x: torch.Tensor, features: torch.Tensor, out: torch.Tensor
+    ) -> torch.Tensor:
 
         loss_recon = self.mse(x, out)
 
-        l2_reg = torch.tensor(0.)
+        l2_reg = torch.tensor(0.0)
         for param in self.parameters():
             l2_reg += torch.norm(param)
         loss_reg = self.l2_reg * l2_reg
@@ -115,18 +146,19 @@ class AutoEncoder(nn.Module):
         out = self.conv(features)
         return features, out
 
-    def init_weights(self, init_scale: float = 1.) -> None:
-        '''
+    def init_weights(self, init_scale: float = 1.0) -> None:
+        """
         Run custom weight init for modules...
-        '''
+        """
         for layer in [self.convt, self.conv]:
             nn.init.kaiming_uniform_(layer.weight, a=np.sqrt(5))
             layer.weight.data.mul_(init_scale)
 
 
 @updater
-def update(model: torch.nn.Module, inputs: torch.Tensor
-           ) -> tuple[torch.Tensor, dict, dict[str, torch.Tensor]]:
+def update(
+    model: torch.nn.Module, inputs: torch.Tensor
+) -> tuple[torch.Tensor, dict, dict[str, torch.Tensor]]:
     x = inputs
     features, out = model(x)
     loss = model.losses(x, features, out)
@@ -141,34 +173,62 @@ def test(model: torch.nn.Module, inputs: torch.Tensor) -> dict:
     loss = model.losses(x, features, out)
     errors = model.get_errors(x, out)
     results = dict(error=loss)
-    factors = (Heat, Friction, Charge, Magnetism, Density, StoredEnergy,
-               Mass, Alive)
+    factors = (
+        Heat,
+        Friction,
+        Charge,
+        Magnetism,
+        Density,
+        StoredEnergy,
+        Mass,
+        Alive,
+    )
     for i, factor in enumerate(factors):
         results[factor.__name__] = errors[i + 1].item()
 
     return results
 
 
-def visualize(inputs: tuple[torch.tensor, torch.tensor],
-              features: dict[str, torch.Tensor]) -> None:
-    images = wandb.Image((features['vis_features'] + .5) * 255)
+def visualize(
+    inputs: tuple[torch.tensor, torch.tensor],
+    features: dict[str, torch.Tensor],
+) -> None:
+    images = wandb.Image((features["vis_features"] + 0.5) * 255)
     wandb.log(dict(examples=images))
 
 
 class LinearAEGenerator(Generator):
-    def __init__(self, stride: int = 3, grayscale: bool = False,
-                 kernel_size: int = 5, n_rand_factors: int = 3,
-                 model_path: str = None, out_path: str = None,
-                 dim_x: int = 64, dim_y: int = 64, seed: int = 0,
-                 training_epochs: int = 500):
+    def __init__(
+        self,
+        stride: int = 3,
+        grayscale: bool = False,
+        kernel_size: int = 5,
+        n_rand_factors: int = 3,
+        model_path: str = None,
+        out_path: str = None,
+        dim_x: int = 64,
+        dim_y: int = 64,
+        seed: int = 0,
+        training_epochs: int = 500,
+    ):
 
         n_factors = len(self._factors) + n_rand_factors + 1
-        super().__init__(dim_x, dim_y, n_factors, grayscale=grayscale,
-                         n_rand_factors=n_rand_factors, stride=stride,
-                         model_path=model_path)
+        super().__init__(
+            dim_x,
+            dim_y,
+            n_factors,
+            grayscale=grayscale,
+            n_rand_factors=n_rand_factors,
+            stride=stride,
+            model_path=model_path,
+        )
 
-        model = AutoEncoder(self.n_channels, self.n_factors,
-                            kernel_size=kernel_size, stride=stride)
+        model = AutoEncoder(
+            self.n_channels,
+            self.n_factors,
+            kernel_size=kernel_size,
+            stride=stride,
+        )
         model.init_weights(1.0)
         self.model = model.to(get_device())
         if self.model_path is not None:
@@ -177,7 +237,7 @@ class LinearAEGenerator(Generator):
             self.train(training_epochs)
             if out_path is not None:
                 if os.path.isdir(out_path):
-                    out_path = os.path.join(out_path, f'weights_{seed}.pt')
+                    out_path = os.path.join(out_path, f"weights_{seed}.pt")
                 torch.save(self.model.state_dict(), out_path)
 
     def train(self, training_epochs: int) -> None:
@@ -185,14 +245,21 @@ class LinearAEGenerator(Generator):
         opt = make_optimizer(self.model, learning_rate=1e-5)
         # Note we do not have a separate test set as the train set is drawn
         # at runtime from the underlying distribution.
-        trainer = Trainer(train_loader, self.model, opt,
-                          data_iter, update, test, vis_func=visualize,
-                          max_epochs=training_epochs)
+        trainer = Trainer(
+            train_loader,
+            self.model,
+            opt,
+            data_iter,
+            update,
+            test,
+            vis_func=visualize,
+            max_epochs=training_epochs,
+        )
         trainer()
 
-    def gen_visual_features(self, factor_vec: torch.tensor,
-                            dim_x: int = None, dim_y: int = None
-                            ) -> Union[np.ndarray, None]:
+    def gen_visual_features(
+        self, factor_vec: torch.tensor, dim_x: int = None, dim_y: int = None
+    ) -> Union[np.ndarray, None]:
 
         dim_x, dim_y = self.get_rendering_dims(dim_x, dim_y)
 
@@ -207,12 +274,12 @@ class LinearAEGenerator(Generator):
         vis_features = vis_features[0].transpose(1, 2, 0)
 
         # Set to pixel values.  Features have tanh output range.
-        vis_features = (255.0 * (vis_features + 1.) / 2.).astype('uint8')
+        vis_features = (255.0 * (vis_features + 1.0) / 2.0).astype("uint8")
         return vis_features
 
     @staticmethod
     def get_paths(dir_path: str) -> list[str]:
-        model_paths = glob.glob(os.path.join(dir_path, '*.pt'))
+        model_paths = glob.glob(os.path.join(dir_path, "*.pt"))
         return model_paths
 
 
@@ -225,24 +292,30 @@ FLAGS = flags.FLAGS
 
 
 def main(argv):
-    logger.info(f'Running with arguments {argv}.')
-    set_device('cpu')
-    wandb.init(project='segar_ae_features')
+    logger.info(f"Running with arguments {argv}.")
+    set_device("cpu")
+    wandb.init(project="segar_ae_features")
     seed = FLAGS.seed
     for n in range(FLAGS.n_models):
         set_seeds(seed)
-        LinearAEGenerator(out_path=FLAGS.out_path,
-                          model_path=FLAGS.pretrained_weights,
-                          seed=seed)
+        LinearAEGenerator(
+            out_path=FLAGS.out_path,
+            model_path=FLAGS.pretrained_weights,
+            seed=seed,
+        )
         seed += 1
 
 
-if __name__ == '__main__':
-    flags.DEFINE_string('pretrained_weights', None,
-                        'Optional weights to load.',
-                        short_name='p')
-    flags.DEFINE_string('out_path', None, 'Optional out path for trained '
-                                          'weights.', short_name='o')
-    flags.DEFINE_integer('seed', 0, 'Random seed.')
-    flags.DEFINE_integer('n_models', 1, 'Number of models to generate')
+if __name__ == "__main__":
+    flags.DEFINE_string(
+        "pretrained_weights", None, "Optional weights to load.", short_name="p"
+    )
+    flags.DEFINE_string(
+        "out_path",
+        None,
+        "Optional out path for trained " "weights.",
+        short_name="o",
+    )
+    flags.DEFINE_integer("seed", 0, "Random seed.")
+    flags.DEFINE_integer("n_models", 1, "Number of models to generate")
     app.run(main)

@@ -1,11 +1,12 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """For rendering into pixel-based observations.
 
 """
 
-__all__ = ('Renderer', 'Visual', 'PolyVisual', 'CircleVisual', 'WallVisual')
+__all__ = ("Renderer", "Visual", "PolyVisual", "CircleVisual", "WallVisual")
 
 from typing import Any, Optional, Union
 
@@ -28,10 +29,16 @@ class Visual:
     """Visual object for rendering things.
 
     """
-    def __init__(self, thing: Thing, center: tuple[float, float],
-                 img: np.ndarray, alpha: np.ndarray,
-                 label: Optional[str] = None,
-                 show_label: bool = False):
+
+    def __init__(
+        self,
+        thing: Thing,
+        center: tuple[float, float],
+        img: np.ndarray,
+        alpha: np.ndarray,
+        label: Optional[str] = None,
+        show_label: bool = False,
+    ):
         """
 
         :param thing: Thing to be rendered.
@@ -54,13 +61,22 @@ class Visual:
             self.label_img = np.ones_like(img)
             # Add some text (useful for identifying the ball, which the
             # agent can control)
-            text_size, _ = cv2.getTextSize(label, _TEXT_FACE, _TEXT_SCALE,
-                                           _TEXT_THICKNESS)
-            text_origin = (int((self.width - text_size[0]) / 2),
-                           int((self.height + text_size[1]) / 2))
+            text_size, _ = cv2.getTextSize(
+                label, _TEXT_FACE, _TEXT_SCALE, _TEXT_THICKNESS
+            )
+            text_origin = (
+                int((self.width - text_size[0]) / 2),
+                int((self.height + text_size[1]) / 2),
+            )
             cv2.putText(
-                self.label_img, label, text_origin, _TEXT_FACE, _TEXT_SCALE,
-                np.zeros(self.channels), _TEXT_THICKNESS, cv2.LINE_AA
+                self.label_img,
+                label,
+                text_origin,
+                _TEXT_FACE,
+                _TEXT_SCALE,
+                np.zeros(self.channels),
+                _TEXT_THICKNESS,
+                cv2.LINE_AA,
             )
         else:
             self.label_img = None
@@ -79,9 +95,11 @@ class Visual:
         """
         return self.thing.Size.value
 
-    def resize(self,
-               size: tuple[float, float],
-               center: Optional[tuple[float, float]] = None) -> None:
+    def resize(
+        self,
+        size: tuple[float, float],
+        center: Optional[tuple[float, float]] = None,
+    ) -> None:
         """Resizes the thing according to floor scaling.
 
         :param size: Tuple size to resize to.
@@ -89,9 +107,9 @@ class Visual:
         """
         width, height = size
         if (
-                width == self.width and
-                height == self.height and
-                center == self.center
+            width == self.width
+            and height == self.height
+            and center == self.center
         ):
             return
         if center is not None:
@@ -101,12 +119,14 @@ class Visual:
         self.img = cv2.resize(self.img, (width, height))
         if self.label_img is not None:
             self.label_img = cv2.resize(self.label_img, (width, height))
-        self.alpha = (cv2.resize(self.alpha, (width, height))
-                      .reshape((width, height, 1)))
+        self.alpha = cv2.resize(self.alpha, (width, height)).reshape(
+            (width, height, 1)
+        )
         self.reverse_alpha = 1 - self.alpha
 
-    def render(self, position: tuple[float, float], visual_map: np.ndarray
-               ) -> None:
+    def render(
+        self, position: tuple[float, float], visual_map: np.ndarray
+    ) -> None:
         """Renders the visual and affordance maps.
 
         :param position: The position on the map where the visual should be
@@ -131,18 +151,25 @@ class Visual:
         _sy_max = _sy_min + (_ty_max - _ty_min)
 
         # make sure at least some part of the visual is within the map
-        if (_tx_min >= map_size[0] or _tx_max < 0 or _ty_min >= map_size[1]
-                or _ty_max < 0):
+        if (
+            _tx_min >= map_size[0]
+            or _tx_max < 0
+            or _ty_min >= map_size[1]
+            or _ty_max < 0
+        ):
             return
 
         # update visuals
-        visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] *= \
-            self.reverse_alpha[_sy_min:_sy_max, _sx_min:_sx_max]
-        visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] += \
-            self.img[_sy_min:_sy_max, _sx_min:_sx_max]
+        visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] *= self.reverse_alpha[
+            _sy_min:_sy_max, _sx_min:_sx_max
+        ]
+        visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] += self.img[
+            _sy_min:_sy_max, _sx_min:_sx_max
+        ]
         if self.label_img is not None:
-            visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] *= \
-                self.label_img[_sy_min:_sy_max, _sx_min:_sx_max]
+            visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] *= self.label_img[
+                _sy_min:_sy_max, _sx_min:_sx_max
+            ]
 
 
 class WallVisual:
@@ -152,6 +179,7 @@ class WallVisual:
     such as maze environments.
 
     """
+
     def resize(self, *args, **kwargs):
         pass
 
@@ -159,18 +187,25 @@ class WallVisual:
         pass
 
     def get_obj_size(self) -> float:
-        return 0.
+        return 0.0
 
     def get_position(self) -> tuple[float, float]:
-        return 0., 0.
+        return 0.0, 0.0
 
 
 class CircleVisual(Visual):
-    def __init__(self, thing: Thing, radius: float,
-                 color: tuple[int, int, int] = None,
-                 img: np.ndarray = None, outline: bool = False,
-                 label: Optional[str] = None, dtype: str = "uint8",
-                 channels: int = 3, show_label: bool = False):
+    def __init__(
+        self,
+        thing: Thing,
+        radius: float,
+        color: tuple[int, int, int] = None,
+        img: np.ndarray = None,
+        outline: bool = False,
+        label: Optional[str] = None,
+        dtype: str = "uint8",
+        channels: int = 3,
+        show_label: bool = False,
+    ):
         """Initializes a circle visual shape.
 
         :param radius: Circle radius, in pixels.
@@ -187,12 +222,20 @@ class CircleVisual(Visual):
         try:
             img = img * alpha
         except ValueError:
-            raise ValueError(f'Object may be larger than arena: '
-                             f'{alpha.shape} vs {img.shape}')
+            raise ValueError(
+                f"Object may be larger than arena: "
+                f"{alpha.shape} vs {img.shape}"
+            )
         if outline:
             cv2.circle(img, (radius, radius), radius, 0, 1, 8, 0)
-        super().__init__(thing, (radius, radius), img, alpha, label=label,
-                         show_label=show_label)
+        super().__init__(
+            thing,
+            (radius, radius),
+            img,
+            alpha,
+            label=label,
+            show_label=show_label,
+        )
 
     def get_obj_size(self) -> float:
         return self.thing.Shape.value.radius
@@ -203,10 +246,17 @@ class CircleVisual(Visual):
 
 
 class PolyVisual(Visual):
-    def __init__(self, thing: Thing, points: np.ndarray,
-                 img: np.ndarray = None, color: tuple[int, int, int] = None,
-                 label: Optional[str] = None, dtype: str = "uint8",
-                 channels: int = 3, show_label: bool = False) -> None:
+    def __init__(
+        self,
+        thing: Thing,
+        points: np.ndarray,
+        img: np.ndarray = None,
+        color: tuple[int, int, int] = None,
+        label: Optional[str] = None,
+        dtype: str = "uint8",
+        channels: int = 3,
+        show_label: bool = False,
+    ) -> None:
         """Initializes a polyline visual shape.
 
         :param points: the corners of the polyline
@@ -228,8 +278,14 @@ class PolyVisual(Visual):
         alpha = np.zeros((height, width, 1), dtype="uint8")
         cv2.fillPoly(alpha, [points], color=1)
         img = img * alpha
-        super().__init__(thing, (width // 2, height // 2), img,
-                         alpha, label=label, show_label=show_label)
+        super().__init__(
+            thing,
+            (width // 2, height // 2),
+            img,
+            alpha,
+            label=label,
+            show_label=show_label,
+        )
 
     def render(self, position: tuple[float, float], *args) -> None:
         return super().render(position, *args)
@@ -239,12 +295,17 @@ class Renderer:
     """Abstract renderer class.
 
     """
-    def __init__(self, n_channels: int, img_type: type = np.float16,
-                 res: Union[int, Resolution] = Resolution(),
-                 dim_x: Optional[int] = None,
-                 dim_y: Optional[int] = None,
-                 filter_factors: Optional[list[Factor]] = None,
-                 annotation: bool = False):
+
+    def __init__(
+        self,
+        n_channels: int,
+        img_type: type = np.float16,
+        res: Union[int, Resolution] = Resolution(),
+        dim_x: Optional[int] = None,
+        dim_y: Optional[int] = None,
+        filter_factors: Optional[list[Factor]] = None,
+        annotation: bool = False,
+    ):
         """
 
         :param n_channels: Number of channels for output space.
@@ -265,18 +326,24 @@ class Renderer:
             dim_y = self.dim_y * 2
         else:
             dim_y = self.dim_y
-        self._floor = np.zeros((self.dim_x, self.dim_y, self.n_channels),
-                               dtype=img_type)
-        self.img = np.zeros((self.dim_x, dim_y, self.n_channels),
-                            dtype=img_type)
+        self._floor = np.zeros(
+            (self.dim_x, self.dim_y, self.n_channels), dtype=img_type
+        )
+        self.img = np.zeros(
+            (self.dim_x, dim_y, self.n_channels), dtype=img_type
+        )
         self.obj_visuals = []
         self.tile_visuals = []
         self._filter_factors = filter_factors or []
         self.annotation = annotation
 
-    def add_text(self, txt: str,
-                 pos: tuple[int, int] = (10, 40), size: float = 0.5,
-                 color: tuple[int, int, int] = (255, 255, 255)) -> None:
+    def add_text(
+        self,
+        txt: str,
+        pos: tuple[int, int] = (10, 40),
+        size: float = 0.5,
+        color: tuple[int, int, int] = (255, 255, 255),
+    ) -> None:
         """Adds text to current image observation.
 
         Results in a change to the image observation.
@@ -295,8 +362,15 @@ class Renderer:
         fontColor = color
         lineType = 2
 
-        cv2.putText(self.img, txt, bottomLeftCornerOfText, font, fontScale,
-                    fontColor, lineType)
+        cv2.putText(
+            self.img,
+            txt,
+            bottomLeftCornerOfText,
+            font,
+            fontScale,
+            fontColor,
+            lineType,
+        )
 
     @property
     def sim(self) -> Simulator:
@@ -373,7 +447,8 @@ class Renderer:
         obj_vis.resize(self.absolute_to_pix(obj_vis.get_obj_size()))
         obj_vis.render(
             self.coordinates_to_pix(obj_vis.get_position()),
-            self.img[:, :self.dim_y])
+            self.img[:, : self.dim_y],
+        )
 
     def reset(self, sim: Simulator = None) -> None:
         """Resets the renderer.
@@ -396,8 +471,9 @@ class Renderer:
         for tile_vis in self.tile_visuals[::-1]:
             self.render_tile(tile_vis)
 
-    def coordinates_to_pix(self, coords: Union[np.ndarray, tuple[float, float]]
-                           ) -> tuple[float, float]:
+    def coordinates_to_pix(
+        self, coords: Union[np.ndarray, tuple[float, float]]
+    ) -> tuple[float, float]:
         """Transforms a pair of global coordinates to pixel coordinates.
 
         :param coords: Global coordinates (x,y).
@@ -408,8 +484,14 @@ class Renderer:
         x, y = coords
 
         def rescale(val):
-            return int(np.around((val - self.sim.boundaries[0]) * self.res /
-                                 self.sim.arena_size, 0))
+            return int(
+                np.around(
+                    (val - self.sim.boundaries[0])
+                    * self.res
+                    / self.sim.arena_size,
+                    0,
+                )
+            )
 
         x_scaled = rescale(x)
         y_scaled = self.res - rescale(y)
@@ -438,12 +520,16 @@ class Renderer:
         cv2.imshow("frame", self.img[:, :, ::-1])
         cv2.waitKey(duration)
 
-    def add_res_annotation(self, arr: np.ndarray, results: dict[str, Any],
-                           pos: tuple[int, int] = (10, 40), size: float = 0.5,
-                           color: tuple[int, int, int] = (255, 255, 255)
-                           ) -> None:
+    def add_res_annotation(
+        self,
+        arr: np.ndarray,
+        results: dict[str, Any],
+        pos: tuple[int, int] = (10, 40),
+        size: float = 0.5,
+        color: tuple[int, int, int] = (255, 255, 255),
+    ) -> None:
 
-        annotation_arr = np.zeros_like(arr[:, self.dim_y:])
+        annotation_arr = np.zeros_like(arr[:, self.dim_y :])
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = size
@@ -451,11 +537,11 @@ class Renderer:
         for k, v in results.items():
             if isinstance(v, float):
                 v = round(v, 2)
-            txt = f'{k} = {v}'
+            txt = f"{k} = {v}"
             cv2.putText(annotation_arr, txt, pos, font, font_scale, color, 2)
             pos = (pos[0], pos[1] + 20)  # Move cursor
 
-        self.img[:, self.dim_y:] = annotation_arr
+        self.img[:, self.dim_y :] = annotation_arr
 
     def __call__(self, results: dict[str, Any] = None) -> np.ndarray:
         """Draw current observation (arena background + ball)
@@ -466,7 +552,7 @@ class Renderer:
         :return: Rendered image of the environment.
         """
 
-        self.img[:, :self.dim_y] = self.floor[:]
+        self.img[:, : self.dim_y] = self.floor[:]
 
         for obj_vis in self.obj_visuals:
             self.render_object(obj_vis)

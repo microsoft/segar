@@ -91,7 +91,7 @@ imshow(image)
 
 
     
-![png](README_files/README_4_1.png)
+![png](../../resources/readme-images/segar/mdps/README_4_1.png)
     
 
 
@@ -115,7 +115,7 @@ imshow(image)
 
 
     
-![png](README_files/README_6_1.png)
+![png](../../resources/readme-images/segar/mdps/README_6_1.png)
     
 
 
@@ -192,7 +192,7 @@ imshow(image)
 
 
     
-![png](README_files/README_12_1.png)
+![png](../../resources/readme-images/segar/mdps/README_12_1.png)
     
 
 
@@ -395,7 +395,7 @@ imshow(image)
 
 
     
-![png](README_files/README_22_1.png)
+![png](../../resources/readme-images/segar/mdps/README_22_1.png)
     
 
 
@@ -409,7 +409,6 @@ to use the MDP, which puts everything together. The MDP is built from the
 gym3 environment, so it is usable as such. Here we will simply construct the
  MDP and demonstrate some of its features.
 
-
 ```python
 from IPython.display import Image
 
@@ -421,9 +420,11 @@ mdp.reset()
 
 trajectory = []
 
+
 def render_observation():
     obs = rgb_obs.render()
     trajectory.append(obs.copy())
+
 
 render_observation()
 
@@ -434,15 +435,15 @@ while not done:
     action = np.array((0., 0.))  # There's no "agent" so do nothing.
     render_observation()
 
-save_gif(trajectory, out_path='_ipynb_assets/trajectory_sample.gif')
-Image(open('_ipynb_assets/trajectory_sample.gif','rb').read())
+save_gif(trajectory, out_path='../../resources/readme-images/segar/mdps/trajectory_sample.gif')
+Image(open('../../resources/readme-images/segar/mdps/trajectory_sample.gif', 'rb').read())
 ```
 
 
 
 
     
-![png](README_files/README_24_0.png)
+![png](../../resources/readme-images/segar/mdps/README_24_0.png)
     
 
 

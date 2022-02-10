@@ -1,5 +1,4 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 """For defining parameterizations for variations in the pixel observation
@@ -9,7 +8,7 @@ __license__ = "MIT"
 
 import os
 
-from segar.assets import ASSET_DIR
+from segar import ASSET_DIR
 from segar.rendering.generators import (
     InceptionClusterGenerator, LinearAEGenerator)
 

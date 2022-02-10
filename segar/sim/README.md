@@ -114,7 +114,7 @@ imshow(image)
 
 
     
-![png](README_files/README_9_1.png)
+![png](../../resources/readme-images/segar/sim/README_9_1.png)
     
 
 
@@ -268,7 +268,7 @@ imshow(image)
 
 
     
-![png](README_files/README_11_2.png)
+![png](../../resources/readme-images/segar/sim/README_11_2.png)
     
 
 
@@ -296,7 +296,7 @@ imshow(image)
 
 
     
-![png](README_files/README_13_1.png)
+![png](../../resources/readme-images/segar/sim/README_13_1.png)
     
 
 
@@ -318,7 +318,7 @@ imshow(image)
 
 
     
-![png](README_files/README_14_1.png)
+![png](../../resources/readme-images/segar/sim/README_14_1.png)
     
 
 
@@ -359,7 +359,7 @@ imshow(image)
 
 
     
-![png](README_files/README_16_2.png)
+![png](../../resources/readme-images/segar/sim/README_16_2.png)
     
 
 
@@ -388,13 +388,12 @@ imshow(image)
 
 
     
-![png](README_files/README_18_1.png)
+![png](../../resources/readme-images/segar/sim/README_18_1.png)
     
 
 
 Now let's get things really moving. There are some convenient functions in
 the tools module for generating and viewing trajectories.
-
 
 ```python
 from IPython.display import Image
@@ -404,15 +403,15 @@ from rpp.tools.sample_trajectories import rollout_sim_only, save_gif
 renderer.reset(sim)
 trajectories, imgs = rollout_sim_only(sim, renderer=renderer)
 
-save_gif(imgs, out_path='_ipynb_assets/trajectory_sample.gif')
-Image(open('_ipynb_assets/trajectory_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/sim/trajectory_sample.gif')
+Image(open('../../resources/readme-images/segar/sim/trajectory_sample.gif', 'rb').read())
 ```
 
 
 
 
     
-![png](README_files/README_20_0.png)
+![png](../../resources/readme-images/segar/sim/README_20_0.png)
     
 
 
@@ -436,20 +435,19 @@ pp.pprint(sim.rules)
 
 The rules can be added and removed from the sim. Let's remove Lorentz law, which controls how objects move according to charge and magnetism:
 
-
 ```python
 sim.remove_rule('lorentz_law')
 trajectories, imgs = rollout_sim_only(sim, renderer=renderer)
 
-save_gif(imgs, out_path='_ipynb_assets/trajectory_sample2.gif')
-Image(open('_ipynb_assets/trajectory_sample2.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/sim/trajectory_sample2.gif')
+Image(open('../../resources/readme-images/segar/sim/trajectory_sample2.gif', 'rb').read())
 ```
 
 
 
 
     
-![png](README_files/README_24_0.png)
+![png](../../resources/readme-images/segar/sim/README_24_0.png)
     
 
 

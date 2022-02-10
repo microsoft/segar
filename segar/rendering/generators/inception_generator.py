@@ -1,6 +1,8 @@
 from __future__ import annotations
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Generator from Inception model.
 
@@ -24,26 +26,29 @@ from scipy.linalg import norm
 import torch
 from tqdm import tqdm
 
-from segar.assets import ASSET_DIR
+from segar import ASSET_DIR
 from segar.factors import Factor
 from segar.metrics import wasserstein_distance
 from segar.rendering.generators.generator import Generator
 
 
-INCEPTION_DIR = os.path.join(ASSET_DIR, 'inception_linear')
+INCEPTION_DIR = os.path.join(ASSET_DIR, "inception_linear")
 INCEPTION_WEIGHTS = os.path.join(INCEPTION_DIR, "weights.npy")
 
 _inception_paths = dict(
-    baseline=os.path.join(INCEPTION_DIR, 'baseline', 'models'),
-    close=os.path.join(INCEPTION_DIR, 'close', 'models'),
-    far=os.path.join(INCEPTION_DIR, 'far', 'models')
+    baseline=os.path.join(INCEPTION_DIR, "baseline", "models"),
+    close=os.path.join(INCEPTION_DIR, "close", "models"),
+    far=os.path.join(INCEPTION_DIR, "far", "models"),
 )
 
 
 def generate_aligned_generative_models(
-        n_models: int = 100, close_range: Tuple[float, float] = (1e-7, 0.25),
-        far_range: Tuple[float, float] = (1.0, 100),
-        out_path: str = None, model_name: str = 'inception_linear'):
+    n_models: int = 100,
+    close_range: Tuple[float, float] = (1e-7, 0.25),
+    far_range: Tuple[float, float] = (1.0, 100),
+    out_path: str = None,
+    model_name: str = "inception_linear",
+):
     """Generates a bunch of generative models leveraging variation in
     kmeans solutions.
 
@@ -64,7 +69,7 @@ def generate_aligned_generative_models(
     """
     models = []
 
-    if model_name == 'inception_linear':
+    if model_name == "inception_linear":
         C = InceptionClusterGenerator
 
     for i in range(n_models):
@@ -81,27 +86,27 @@ def generate_aligned_generative_models(
     s_idx = np.argsort(distances).tolist()
 
     def save(dir_path, idxs):
-        if os.path.exists(f'{dir_path}/models/'):
-            shutil.rmtree(f'{dir_path}/models/')
-        if os.path.exists(f'{dir_path}/figures/'):
-            shutil.rmtree(f'{dir_path}/figures/')
+        if os.path.exists(f"{dir_path}/models/"):
+            shutil.rmtree(f"{dir_path}/models/")
+        if os.path.exists(f"{dir_path}/figures/"):
+            shutil.rmtree(f"{dir_path}/figures/")
 
-        os.makedirs(f'{dir_path}/models/')
-        os.makedirs(f'{dir_path}/figures/')
+        os.makedirs(f"{dir_path}/models/")
+        os.makedirs(f"{dir_path}/figures/")
 
         for i, idx in enumerate(idxs):
             model = models[idx]
             dist = distances[idx]
-            p_model = f'{dir_path}/models/{model_name}_{i}_{dist:.2f}.npy'
-            p_image = f'{dir_path}/figures/{model_name}_{i}_{dist:.2f}.png'
+            p_model = f"{dir_path}/models/{model_name}_{i}_{dist:.2f}.npy"
+            p_image = f"{dir_path}/figures/{model_name}_{i}_{dist:.2f}.png"
 
             model.save(p_model)
             model.show_patterns(p_image)
 
     if out_path is not None:
-        baseline_path = os.path.join(out_path, 'baseline')
-        close_path = os.path.join(out_path, 'close')
-        far_path = os.path.join(out_path, 'far')
+        baseline_path = os.path.join(out_path, "baseline")
+        close_path = os.path.join(out_path, "close")
+        far_path = os.path.join(out_path, "far")
 
         os.makedirs(baseline_path, exist_ok=True)
         os.makedirs(close_path, exist_ok=True)
@@ -109,11 +114,15 @@ def generate_aligned_generative_models(
 
         baseline_idx = [i for i in s_idx if distances[i] < close_range[0]]
 
-        close_idx = [i for i in s_idx
-                     if close_range[0] <= distances[i] <= close_range[1]]
+        close_idx = [
+            i
+            for i in s_idx
+            if close_range[0] <= distances[i] <= close_range[1]
+        ]
 
-        far_idx = [i for i in s_idx
-                   if far_range[0] <= distances[i] <= far_range[1]]
+        far_idx = [
+            i for i in s_idx if far_range[0] <= distances[i] <= far_range[1]
+        ]
 
         save(baseline_path, baseline_idx)
         save(close_path, close_idx)
@@ -128,15 +137,29 @@ class InceptionClusterGenerator(Generator):
 
     """
 
-    def __init__(self, grayscale: bool = False, n_clusters: int = None,
-                 dim_x: int = 64, dim_y: int = 64, stride: int = 1,
-                 n_rand_factors: int = 3, cluster_sampling: str = "sequential",
-                 model_path: Optional[str] = None, seed: int = 0):
+    def __init__(
+        self,
+        grayscale: bool = False,
+        n_clusters: int = None,
+        dim_x: int = 64,
+        dim_y: int = 64,
+        stride: int = 1,
+        n_rand_factors: int = 3,
+        cluster_sampling: str = "sequential",
+        model_path: Optional[str] = None,
+        seed: int = 0,
+    ):
 
         n_factors = len(self._factors) + n_rand_factors + 1
-        super().__init__(dim_x, dim_y, n_factors, grayscale=grayscale,
-                         n_rand_factors=n_rand_factors, stride=stride,
-                         model_path=model_path)
+        super().__init__(
+            dim_x,
+            dim_y,
+            n_factors,
+            grayscale=grayscale,
+            n_rand_factors=n_rand_factors,
+            stride=stride,
+            model_path=model_path,
+        )
         n_clusters = n_clusters or self.n_factors
 
         feature_file = INCEPTION_WEIGHTS
@@ -163,7 +186,8 @@ class InceptionClusterGenerator(Generator):
         # Construct a transpose convolutional layer for generation using
         # weights.
         self.convt = torch.nn.ConvTranspose2d(
-            self.n_features, self.n_channels, 3, stride, 1)
+            self.n_features, self.n_channels, 3, stride, 1
+        )
         self.convt.weight.data = torch.tensor(w)
 
         if self.model_path is None:
@@ -189,8 +213,8 @@ class InceptionClusterGenerator(Generator):
         these weights are used for initialing models before training in the
         above codebase.
         """
-        zip_path = os.path.join(INCEPTION_DIR, 'state_dict.zip')
-        model_path = os.path.join(INCEPTION_DIR, 'inception_weights.pt')
+        zip_path = os.path.join(INCEPTION_DIR, "state_dict.zip")
+        model_path = os.path.join(INCEPTION_DIR, "inception_weights.pt")
         weights_path = INCEPTION_WEIGHTS
 
         # Begin copy from https://github.com/huyvnphan/PyTorch_CIFAR10/data.py
@@ -220,16 +244,16 @@ class InceptionClusterGenerator(Generator):
 
         # End copy
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            source = zip_ref.open('state_dicts/inception_v3.pt')
-            with open(model_path, 'wb') as target:
+            source = zip_ref.open("state_dicts/inception_v3.pt")
+            with open(model_path, "wb") as target:
                 shutil.copyfileobj(source, target)
 
         model_weights = torch.load(model_path)
-        weights = model_weights['Conv2d_1a_3x3.conv.weight'].detach().numpy()
+        weights = model_weights["Conv2d_1a_3x3.conv.weight"].detach().numpy()
         np.save(weights_path, weights)
 
     @classmethod
-    def config_handler(cls, dist: str = 'baseline') -> str:
+    def config_handler(cls, dist: str = "baseline") -> str:
         """Handler for passing configurations for Inception-generated visual
             features.
 
@@ -240,8 +264,10 @@ class InceptionClusterGenerator(Generator):
         try:
             p = _inception_paths[dist]
         except KeyError:
-            raise KeyError(f'Distribution {dist} not compatible '
-                           f'configuration with {cls.__name__}.')
+            raise KeyError(
+                f"Distribution {dist} not compatible "
+                f"configuration with {cls.__name__}."
+            )
 
         return p
 
@@ -271,12 +297,17 @@ class InceptionClusterGenerator(Generator):
 
         affordance_vec = torch.zeros(self.n_clusters)
         affordance_vec[0] = 1.0
-        return self.gen_visual_features(affordance_vec, dim_x=dim_x,
-                                        dim_y=dim_y)
+        return self.gen_visual_features(
+            affordance_vec, dim_x=dim_x, dim_y=dim_y
+        )
 
-    def gen_visual_features(self, factor_vec: torch.tensor,
-                            mag_scale: float = 1.0, dim_x: int = None,
-                            dim_y: int = None) -> Union[np.ndarray, None]:
+    def gen_visual_features(
+        self,
+        factor_vec: torch.tensor,
+        mag_scale: float = 1.0,
+        dim_x: int = None,
+        dim_y: int = None,
+    ) -> Union[np.ndarray, None]:
         """Generates a visual feature according to an affordance vector.
 
         :param factor_vec: (torch.tensor) Vector of affordances.
@@ -308,8 +339,9 @@ class InceptionClusterGenerator(Generator):
                 # Randomly select cluster members.
                 weights = torch.zeros(self.n_features)
                 weights[c_idxs] = 1.0
-                f_idxs = torch.multinomial(weights, dim_x * dim_y,
-                                           replacement=True)
+                f_idxs = torch.multinomial(
+                    weights, dim_x * dim_y, replacement=True
+                )
             elif self.cluster_sampling == "sequential":
                 # Randomly start at one of the cluster members, then sample
                 # sequentially.
@@ -337,9 +369,9 @@ class InceptionClusterGenerator(Generator):
 
         """
 
-        factor_list = [0.]  # First index is background
+        factor_list = [0.0]  # First index is background
         for factor_type in self._factors:
-            factor = factor_dict.get(factor_type, 0.)
+            factor = factor_dict.get(factor_type, 0.0)
             if isinstance(factor, Factor):
                 factor = factor.value
             factor_list.append(factor)
@@ -347,14 +379,19 @@ class InceptionClusterGenerator(Generator):
         factor_array = np.array(factor_list)
 
         if self.n_rand_factors > 0:
-            random_factors = np.clip(np.random.normal(0., 1., size=(
-                self.n_rand_factors,)), -1, 1)
+            random_factors = np.clip(
+                np.random.normal(0.0, 1.0, size=(self.n_rand_factors,)), -1, 1
+            )
             factor_array = np.append(factor_array, random_factors)
 
         pattern = self.gen_visual_features(torch.tensor(factor_array).float())
         if pattern is not None:
-            pattern = np.zeros((self.dim_y, self.dim_x, self.n_channels),
-                               dtype=np.uint8) + pattern
+            pattern = (
+                np.zeros(
+                    (self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8
+                )
+                + pattern
+            )
         return pattern
 
     def show_patterns(self, outpath: str = None):
@@ -372,7 +409,8 @@ class InceptionClusterGenerator(Generator):
             img_grid = (
                 array.reshape(nrows, ncols, height, width, channels)
                 .swapaxes(1, 2)
-                .reshape(height * nrows, width * ncols, channels))
+                .reshape(height * nrows, width * ncols, channels)
+            )
             return img_grid
 
         imgs = []
@@ -384,7 +422,7 @@ class InceptionClusterGenerator(Generator):
                 imgs.append(self.gen_visual_features(arr))
 
         img_arr = image_grid(np.array(imgs), ncols=self.n_factors)
-        plt.figure(figsize=(20., 20.))
+        plt.figure(figsize=(20.0, 20.0))
         plt.imshow(img_arr)
         if outpath is None:
             plt.show()
@@ -403,7 +441,7 @@ class InceptionClusterGenerator(Generator):
         assert self.n_clusters == other.n_clusters
         assert self.n_features == other.n_features
 
-        d = 0.
+        d = 0.0
         for c in range(self.n_clusters):
             idx1 = np.where(self._km_labels == c)[0].tolist()
             idx2 = np.where(other._km_labels == c)[0].tolist()
@@ -428,48 +466,74 @@ class InceptionClusterGenerator(Generator):
         assert self.n_features == other.n_features
         cost = -contingency_matrix(self._km_labels, other._km_labels)
         _, col_ind = linear_sum_assignment(cost)
-        self._km_labels = np.array([col_ind[i] for i in
-                                    self._km_labels.tolist()])
+        self._km_labels = np.array(
+            [col_ind[i] for i in self._km_labels.tolist()]
+        )
 
     @staticmethod
     def get_paths(dir_path: str) -> list[str]:
-        model_paths = glob.glob(os.path.join(dir_path, '*.npy'))
+        model_paths = glob.glob(os.path.join(dir_path, "*.npy"))
         return model_paths
 
 
-_MODELS = ('inception_linear', )
+_MODELS = ("inception_linear",)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     def parse_args():
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            description='Create some generative models for rendering the '
-                        'pixel observation space.')
+            description="Create some generative models for rendering the "
+            "pixel observation space.",
+        )
 
-        parser.add_argument('model', type=str, choices=_MODELS,
-                            help='Which generative model to use.')
+        parser.add_argument(
+            "model",
+            type=str,
+            choices=_MODELS,
+            help="Which generative model to use.",
+        )
 
-        parser.add_argument('out_path', type=str,
-                            help='Path to directory where model parameters '
-                                 'and figures will be saved.')
-        parser.add_argument('--n_models', type=int, default=100,
-                            help='Number of models to generate.')
-        parser.add_argument('--close_range', type=float, default=(1e-16, 0.5),
-                            metavar=('low', 'high'), nargs=2,
-                            help='Range of distances where models are '
-                                 'considered close to each other.')
-        parser.add_argument('--far_range', type=float, default=(0.5, 100.),
-                            metavar=('low', 'high'), nargs=2,
-                            help='Range of distances where models are '
-                                 'considered far to each other.')
+        parser.add_argument(
+            "out_path",
+            type=str,
+            help="Path to directory where model parameters "
+            "and figures will be saved.",
+        )
+        parser.add_argument(
+            "--n_models",
+            type=int,
+            default=100,
+            help="Number of models to generate.",
+        )
+        parser.add_argument(
+            "--close_range",
+            type=float,
+            default=(1e-16, 0.5),
+            metavar=("low", "high"),
+            nargs=2,
+            help="Range of distances where models are "
+            "considered close to each other.",
+        )
+        parser.add_argument(
+            "--far_range",
+            type=float,
+            default=(0.5, 100.0),
+            metavar=("low", "high"),
+            nargs=2,
+            help="Range of distances where models are "
+            "considered far to each other.",
+        )
 
         return parser.parse_args()
 
     args = parse_args()
 
-    generate_aligned_generative_models(n_models=args.n_models,
-                                       out_path=args.out_path,
-                                       close_range=args.close_range,
-                                       far_range=args.far_range,
-                                       model_name=args.model)
+    generate_aligned_generative_models(
+        n_models=args.n_models,
+        out_path=args.out_path,
+        close_range=args.close_range,
+        far_range=args.far_range,
+        model_name=args.model,
+    )

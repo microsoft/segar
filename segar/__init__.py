@@ -3,6 +3,7 @@ __copyright__ = (
 )
 __license__ = "MIT"
 
+import os
 import pickle
 import time
 from typing import Callable
@@ -10,6 +11,10 @@ import warnings
 from gym import register
 
 _SIM = None
+
+ASSET_DIR = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "..", "resources"
+)
 
 
 def get_sim():

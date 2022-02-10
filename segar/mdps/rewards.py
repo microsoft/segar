@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Module for reward functions
 
@@ -8,7 +9,7 @@ __license__ = "MIT"
 from segar.factors import Alive
 
 
-def dead_reward_fn(object_state: dict, reward: float = -100.) -> float:
+def dead_reward_fn(object_state: dict, reward: float = -100.0) -> float:
     """Reward for when an object is dead.
 
     :param object_state: state dictionary for an object.
@@ -19,7 +20,7 @@ def dead_reward_fn(object_state: dict, reward: float = -100.) -> float:
     if is_dead:
         rew = reward
     else:
-        rew = 0.
+        rew = 0.0
 
     return rew
 

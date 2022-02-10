@@ -1,5 +1,6 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Affordance map rendering
 
@@ -36,7 +37,6 @@ class AffordanceRenderer:
         # == being, this works but it slows my machine to a grind. Use
         # at your own discretion
         for layer_idx in range(self.img.shape[0]):
-            cv2.imshow(f"affordance {layer_idx}",
-                       self.img[layer_idx, :, :, 0])
+            cv2.imshow(f"affordance {layer_idx}", self.img[layer_idx, :, :, 0])
 
         cv2.waitKey(duration)

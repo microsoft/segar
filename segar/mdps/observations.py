@@ -1,14 +1,23 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
 __license__ = "MIT"
 """Module for observation space components
 
 """
 
-__all__ = ('Observation', 'ObjectStateObservation', 'TileStateObservation',
-           'AllObjectsStateObservation', 'AllTilesStateObservation',
-           'AllStateObservation', 'RGBObservation', 'MultimodalObservation',
-           'make_stacked_observation', 'StateObservation')
+__all__ = (
+    "Observation",
+    "ObjectStateObservation",
+    "TileStateObservation",
+    "AllObjectsStateObservation",
+    "AllTilesStateObservation",
+    "AllStateObservation",
+    "RGBObservation",
+    "MultimodalObservation",
+    "make_stacked_observation",
+    "StateObservation",
+)
 
 from typing import Any, Optional, Type, Union
 
@@ -16,10 +25,24 @@ from gym.spaces import Box, Tuple
 import numpy as np
 
 from segar import get_sim
-from segar.factors import (Factor, Charge, Mass, Magnetism, StoredEnergy,
-                           Position, Velocity, Acceleration, Done, Alive,
-                           Friction, Heat, FACTORS, VectorFactor,
-                           BooleanFactor, NumericFactor)
+from segar.factors import (
+    Factor,
+    Charge,
+    Mass,
+    Magnetism,
+    StoredEnergy,
+    Position,
+    Velocity,
+    Acceleration,
+    Done,
+    Alive,
+    Friction,
+    Heat,
+    FACTORS,
+    VectorFactor,
+    BooleanFactor,
+    NumericFactor,
+)
 from segar.parameters import Resolution, DoesNotHaveFactor
 from segar.rendering.rgb_rendering import RGBTextureRenderer
 from segar.sim import Simulator
@@ -30,6 +53,7 @@ class Observation:
     """Observation object.
 
     """
+
     def __init__(self, filter_factors: list[Type[Factor]] = None):
         """
 
@@ -66,7 +90,7 @@ class Observation:
 
         """
         if self._observation_space is None:
-            raise AttributeError('Observation space for object must be set.')
+            raise AttributeError("Observation space for object must be set.")
         return self._observation_space
 
     @property
@@ -89,10 +113,15 @@ class RGBObservation(Observation):
     Uses a renderer to generate RGB observations from the state space.
 
     """
-    def __init__(self, resolution: Union[Resolution, int] = Resolution(),
-                 renderer=None, config: dict = None,
-                 filter_factors: list[Type[Factor]] = None,
-                 annotation: bool = False):
+
+    def __init__(
+        self,
+        resolution: Union[Resolution, int] = Resolution(),
+        renderer=None,
+        config: dict = None,
+        filter_factors: list[Type[Factor]] = None,
+        annotation: bool = False,
+    ):
         """
 
         :param resolution: Resolution of the pixel space.
@@ -105,7 +134,8 @@ class RGBObservation(Observation):
             resolution = resolution.value
 
         self._renderer = renderer or RGBTextureRenderer(
-            3, res=resolution, config=config, annotation=annotation)
+            3, res=resolution, config=config, annotation=annotation
+        )
         self.img_shape = (resolution, resolution, 3)
 
         super().__init__(filter_factors=filter_factors)
@@ -113,9 +143,7 @@ class RGBObservation(Observation):
 
     def _make_observation_space(self) -> None:
         self._observation_space = Box(
-            0, 255,
-            shape=self.img_shape,
-            dtype=np.uint8
+            0, 255, shape=self.img_shape, dtype=np.uint8
         )
 
     def render(self, results: dict[str, Any] = None):
@@ -155,9 +183,12 @@ class StateObservation(Observation):
 
     """
 
-    def __init__(self, unique_id: ThingID,
-                 factors: Optional[list[Type[Factor]]] = None,
-                 filter_factors: Optional[list[Type[Factor]]] = None):
+    def __init__(
+        self,
+        unique_id: ThingID,
+        factors: Optional[list[Type[Factor]]] = None,
+        filter_factors: Optional[list[Type[Factor]]] = None,
+    ):
         """
 
         :param unique_id: Unique id of the object to return states for.
@@ -182,22 +213,23 @@ class StateObservation(Observation):
         if filter_factors is not None:
             extra_factors = set(filter_factors) - set(self.factors)
             if len(extra_factors) > 0:
-                raise ValueError(f'This observation space cannot filter '
-                                 f'factors {extra_factors}. Only'
-                                 f' {self.factors} allowed.')
+                raise ValueError(
+                    f"This observation space cannot filter "
+                    f"factors {extra_factors}. Only"
+                    f" {self.factors} allowed."
+                )
 
         super().__init__(filter_factors=filter_factors)
         self.unique_id = unique_id
 
     def _make_observation_space(self) -> None:
         self._observation_space = Box(
-            -100, 100,
-            shape=(self.len,),
-            dtype=np.float32
+            -100, 100, shape=(self.len,), dtype=np.float32
         )
 
-    def make_observation_from_state(self, state: dict[Type[Factor], Factor]
-                                    ) -> np.ndarray:
+    def make_observation_from_state(
+        self, state: dict[Type[Factor], Factor]
+    ) -> np.ndarray:
         obs = []
         for factor in self.factors:
             if factor in self._filter_factors:
@@ -215,8 +247,9 @@ class StateObservation(Observation):
                 obs.append(value)
             elif issubclass(factor, VectorFactor):
                 if value is None:
-                    value = np.array([DoesNotHaveFactor().value,
-                                      DoesNotHaveFactor().value])
+                    value = np.array(
+                        [DoesNotHaveFactor().value, DoesNotHaveFactor().value]
+                    )
                 obs += value.tolist()
             elif issubclass(factor, BooleanFactor):
                 if value is None:
@@ -226,12 +259,14 @@ class StateObservation(Observation):
         return np.array(obs)
 
     def __call__(self, states: dict):
-        thing_states = states['things']
+        thing_states = states["things"]
         try:
             state = thing_states[self.unique_id]
         except KeyError:
-            raise KeyError(f'{self.unique_id} not found in states, '
-                           f'found {list(thing_states.keys())}.')
+            raise KeyError(
+                f"{self.unique_id} not found in states, "
+                f"found {list(thing_states.keys())}."
+            )
         return self.make_observation_from_state(state)
 
 
@@ -243,13 +278,25 @@ class ObjectStateObservation(StateObservation):
 
     """
 
-    def __init__(self, unique_id: ThingID,
-                 filter_factors: Optional[list[Type[Factor]]] = None):
-        factors = [Charge, Mass, Magnetism, StoredEnergy, Position, Velocity,
-                   Acceleration, Alive, Done]
-        super().__init__(unique_id,
-                         factors=factors,
-                         filter_factors=filter_factors)
+    def __init__(
+        self,
+        unique_id: ThingID,
+        filter_factors: Optional[list[Type[Factor]]] = None,
+    ):
+        factors = [
+            Charge,
+            Mass,
+            Magnetism,
+            StoredEnergy,
+            Position,
+            Velocity,
+            Acceleration,
+            Alive,
+            Done,
+        ]
+        super().__init__(
+            unique_id, factors=factors, filter_factors=filter_factors
+        )
 
 
 class TileStateObservation(StateObservation):
@@ -259,12 +306,15 @@ class TileStateObservation(StateObservation):
 
     """
 
-    def __init__(self, unique_id: ThingID,
-                 filter_factors: Optional[list[Type[Factor]]] = None):
+    def __init__(
+        self,
+        unique_id: ThingID,
+        filter_factors: Optional[list[Type[Factor]]] = None,
+    ):
         factors = [Heat, Friction, Position]
-        super().__init__(unique_id,
-                         factors=factors,
-                         filter_factors=filter_factors)
+        super().__init__(
+            unique_id, factors=factors, filter_factors=filter_factors
+        )
 
 
 class AllStateObservation(StateObservation):
@@ -275,10 +325,15 @@ class AllStateObservation(StateObservation):
     but task-specific ids can be provided to allow for fixed positioning.
 
     """
-    def __init__(self, n_things: int = 20, unique_ids: list[ThingID] = None,
-                 factors: Optional[list[Type[Factor]]] = None,
-                 required_factors: Optional[list[Type[Factor]]] = None,
-                 filter_factors: list[Type[Factor]] = None):
+
+    def __init__(
+        self,
+        n_things: int = 20,
+        unique_ids: list[ThingID] = None,
+        factors: Optional[list[Type[Factor]]] = None,
+        required_factors: Optional[list[Type[Factor]]] = None,
+        filter_factors: list[Type[Factor]] = None,
+    ):
         """
 
         :param n_things: Max number of objects.
@@ -293,31 +348,37 @@ class AllStateObservation(StateObservation):
         self.n_things = n_things
         self.required_factors = required_factors
         self.unique_ids = unique_ids or []
-        super().__init__(unique_id=None,
-                         factors=factors,
-                         filter_factors=filter_factors)
+        super().__init__(
+            unique_id=None, factors=factors, filter_factors=filter_factors
+        )
 
     def __call__(self, states: dict) -> np.ndarray:
         if self.required_factors is not None:
-            thing_states = dict((k, s) for k, s in states['things'].items()
-                                if all(f in s for f in self.required_factors))
+            thing_states = dict(
+                (k, s)
+                for k, s in states["things"].items()
+                if all(f in s for f in self.required_factors)
+            )
         else:
-            thing_states = states['things']
+            thing_states = states["things"]
 
         if len(thing_states.keys()) > self.n_things:
-            raise ValueError(f'Too many things in sim '
-                             f'{len(thing_states.keys())} for this observation'
-                             f' space ({self.n_things} max).')
+            raise ValueError(
+                f"Too many things in sim "
+                f"{len(thing_states.keys())} for this observation"
+                f" space ({self.n_things} max)."
+            )
 
-        observations = np.zeros((self.n_things, self.len)).astype(
-            np.float32)
+        observations = np.zeros((self.n_things, self.len)).astype(np.float32)
 
         def update_obs(key_, idx):
             try:
                 state = thing_states[key_]
             except KeyError:
-                raise KeyError(f'{key_} not found in thing states, '
-                               f'found {list(thing_states.keys())}.')
+                raise KeyError(
+                    f"{key_} not found in thing states, "
+                    f"found {list(thing_states.keys())}."
+                )
 
             obs = self.make_observation_from_state(state)
             observations[idx] = obs
@@ -343,15 +404,30 @@ class AllObjectsStateObservation(AllStateObservation):
 
     """
 
-    def __init__(self, n_things: int = 20, unique_ids: list[ThingID] = None,
-                 filter_factors: Optional[list[Type[Factor]]] = None):
-        factors = [Charge, Mass, Magnetism, StoredEnergy, Position, Velocity,
-                   Acceleration, Alive, Done]
-        super().__init__(n_things=n_things,
-                         unique_ids=unique_ids,
-                         factors=factors,
-                         required_factors=factors,
-                         filter_factors=filter_factors)
+    def __init__(
+        self,
+        n_things: int = 20,
+        unique_ids: list[ThingID] = None,
+        filter_factors: Optional[list[Type[Factor]]] = None,
+    ):
+        factors = [
+            Charge,
+            Mass,
+            Magnetism,
+            StoredEnergy,
+            Position,
+            Velocity,
+            Acceleration,
+            Alive,
+            Done,
+        ]
+        super().__init__(
+            n_things=n_things,
+            unique_ids=unique_ids,
+            factors=factors,
+            required_factors=factors,
+            filter_factors=filter_factors,
+        )
 
 
 class AllTilesStateObservation(AllStateObservation):
@@ -361,14 +437,20 @@ class AllTilesStateObservation(AllStateObservation):
 
     """
 
-    def __init__(self, n_things: int = 20, unique_ids: list[ThingID] = None,
-                 filter_factors: Optional[list[Type[Factor]]] = None):
+    def __init__(
+        self,
+        n_things: int = 20,
+        unique_ids: list[ThingID] = None,
+        filter_factors: Optional[list[Type[Factor]]] = None,
+    ):
         factors = [Heat, Friction, Position]
-        super().__init__(n_things=n_things,
-                         unique_ids=unique_ids,
-                         factors=factors,
-                         required_factors=factors,
-                         filter_factors=filter_factors)
+        super().__init__(
+            n_things=n_things,
+            unique_ids=unique_ids,
+            factors=factors,
+            required_factors=factors,
+            filter_factors=filter_factors,
+        )
 
 
 class MultimodalObservation(Observation):
@@ -404,9 +486,9 @@ class MultimodalObservation(Observation):
         """
 
         for observation in self._observations:
-            if hasattr(observation, 'render'):
+            if hasattr(observation, "render"):
                 return observation.render(*args, **kwargs)
-        raise AttributeError('No renderable observation available.')
+        raise AttributeError("No renderable observation available.")
 
     def show(self, *args, **kwargs):
         """In case we're using multimodal with one of the modes being
@@ -417,9 +499,9 @@ class MultimodalObservation(Observation):
         :return: None
         """
         for observation in self._observations:
-            if hasattr(observation, 'show'):
+            if hasattr(observation, "show"):
                 return observation.show(*args, **kwargs)
-        raise AttributeError('No showable observation available.')
+        raise AttributeError("No showable observation available.")
 
     def add_text(self, *args, **kwargs):
         """In case we're using multimodal with one of the modes being
@@ -430,9 +512,9 @@ class MultimodalObservation(Observation):
         :return: None
         """
         for observation in self._observations:
-            if hasattr(observation, 'add_text'):
+            if hasattr(observation, "add_text"):
                 return observation.add_text(*args, **kwargs)
-        raise AttributeError('No showable observation available.')
+        raise AttributeError("No showable observation available.")
 
     def sample(self) -> None:
         for observation in self._observations:
@@ -446,8 +528,9 @@ class MultimodalObservation(Observation):
         return tuple(obs(state_dict) for obs in self._observations)
 
 
-def make_stacked_observation(observation_class: Type[Observation],
-                             n_stack: int):
+def make_stacked_observation(
+    observation_class: Type[Observation], n_stack: int
+):
     """Makes a stacked version of `observation_class`.
 
     Note: this stacks according to the sim state buffer. This buffer must be
@@ -460,10 +543,12 @@ def make_stacked_observation(observation_class: Type[Observation],
     assert issubclass(observation_class, Observation), observation_class
 
     if isinstance(observation_class, MultimodalObservation):
-        raise NotImplementedError('Stacking not supported (yet) of multimodal '
-                                  'observations, create a multimodal '
-                                  'observation from stacked observations '
-                                  'instead.')
+        raise NotImplementedError(
+            "Stacking not supported (yet) of multimodal "
+            "observations, create a multimodal "
+            "observation from stacked observations "
+            "instead."
+        )
 
     class StackedC(observation_class):
         def __init__(self, *args, **kwargs):

@@ -5,9 +5,33 @@ import numpy as np
 import segar
 from segar.factors import Position
 
-env1 = gym.make("segar-empty-hard-rgb-v0", num_envs=1, num_levels=2, framestack=1, resolution=64, max_steps=200, seed=123)
-env2 = gym.make("segar-tilesx1-hard-rgb-v0", num_envs=1, num_levels=2, framestack=1, resolution=64, max_steps=200, seed=123)
-env3 = gym.make("segar-objectsx1-hard-rgb-v0", num_envs=1, num_levels=2, framestack=1, resolution=64, max_steps=200, seed=123)
+env1 = gym.make(
+    "Segar-empty-hard-rgb-v0",
+    num_envs=1,
+    num_levels=2,
+    framestack=1,
+    resolution=64,
+    max_steps=200,
+    seed=123,
+)
+env2 = gym.make(
+    "Segar-tilesx1-hard-rgb-v0",
+    num_envs=1,
+    num_levels=2,
+    framestack=1,
+    resolution=64,
+    max_steps=200,
+    seed=123,
+)
+env3 = gym.make(
+    "Segar-objectsx1-hard-rgb-v0",
+    num_envs=1,
+    num_levels=2,
+    framestack=1,
+    resolution=64,
+    max_steps=200,
+    seed=123,
+)
 
 SCALE_FACTOR = 4
 coords = []
@@ -26,7 +50,10 @@ while 1:
         img_buf[:, :64, :] = obs1
         img_buf[:, 65 : 65 + 64, :] = obs2
         img_buf[:, 65 * 2 :, :] = obs3
-        cv2.imshow("image", cv2.resize(img_buf, (0, 0), fx=SCALE_FACTOR, fy=SCALE_FACTOR))
+        cv2.imshow(
+            "image",
+            cv2.resize(img_buf, (0, 0), fx=SCALE_FACTOR, fy=SCALE_FACTOR),
+        )
         # k = cv2.waitKey(-1) & 0xFF
         cv2.waitKey(10)
 
