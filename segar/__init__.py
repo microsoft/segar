@@ -84,9 +84,10 @@ for task in task_names:
                         max_episode_steps=100,
                     )
                 elif task != "empty":
-                    env_name = f"Segar-{task}x{n_entities}-{difficulty}" \
-                               f"-{observation}-v0"
-
+                    env_name = (
+                        f"Segar-{task}x{n_entities}-{difficulty}-"
+                        f"{observation}-v0"
+                    )
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
