@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
+    author='R Devon Hjelm, Bogdan Mazoure, Florian Golemo, Mihai Jalobeanu, '
+           'and Felipe Frujeri',
     name='segar',
     install_requires=[
         "absl-py",

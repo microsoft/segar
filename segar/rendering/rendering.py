@@ -1,4 +1,3 @@
-__author__ = "R Devon Hjelm, Florian Golemo"
 __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
                 "Institute"
 __license__ = "MIT"

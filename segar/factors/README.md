@@ -81,7 +81,7 @@ except ValueError as e:
 
 ```
 
-    Error message: Factor in-place operations are protected.
+    Error message: In-place operations protected.
 
 
 But in-place operations can be allowed:
@@ -93,7 +93,7 @@ with fc.in_place():
 print(fc[Charge])
 ```
 
-    Charge(0.8)
+    Charge(0.7)
 
 
 ### Random factor generation
@@ -111,20 +111,38 @@ g2D = GaussianNoise2D([0., 0.1], [0.1, 0.2])  # 2D normal distribution
 print(u1.sample(), g1.sample(), g2D.sample())
 ```
 
-    Factor(0.2933396462141178) Factor(-0.17201698297461065) Factor([0.13358935 0.15078861])
+    Factor(0.7174490241465336) Factor(-0.0519678877226635) Factor([ 0.30422966 -0.48938501])
 
 
 SEGAR allows the researcher to compare distributions (via the Wasserstein distance), ultimately to measure how different different sets of tasks are (say between train and test in a generalization experiment).
 
 
 ```python
-print(u1.distance(u1), u1.distance(u2), u1.distance(g1), g1.distance(g1), g1.distance(g2))
+print(u1.w2_distance(u1), u1.w2_distance(u2), u1.w2_distance(g1), g1.w2_distance(g1), g1.w2_distance(g2))
 ```
 
-    0.0011885052012289158 0.05644332784973156 0.5370324519869282 0.0 0.02715728752538099
+    0.000995363069815011 0.0586407279494164 0.53618311310831 0.0 0.02715728752538099
 
 
 Note that the distance of `u1` with itself is not measured as zero. This is because we are using a sample-based approximation for the Wasserstein-2 in most cases. More accurate measurement of the W2 can be accomplished by increasing the number of samples used. This increases computational cost; however, as these measures are only intended to be used to compare tasks, this can be done separate of running agents for analysis and results.
+
+There are a number of distributional methods available for each of these noise factors, such as cdfs, pdfs, etc. One can even access the corresponding scipy distribution objects for other distributional analysis:
+
+
+```python
+print(u1.scipy_dist)
+```
+
+    <scipy.stats._distn_infrastructure.rv_frozen object at 0x7fa568f7d220>
+
+
+
+```python
+print(u1.cdf(u1.sample().value))
+```
+
+    0.38958346068677663
+
 
 
 ```python

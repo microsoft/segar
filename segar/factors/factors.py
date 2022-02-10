@@ -1,5 +1,4 @@
 from __future__ import annotations
-__author__ = "R Devon Hjelm"
 __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
                 "Institute"
 __license__ = "MIT"
@@ -278,8 +277,11 @@ class FactorContainer(Factor[dict], default={}):
         if not (isinstance(value, Factor) and key.t == value.t):
             if key in self.value:
                 allow_in_place = self.value[key]._allow_in_place
-                self.value[key] = key(value)
-                self.value[key]._allow_in_place = allow_in_place
+                if allow_in_place:
+                    self.value[key] = key(value)
+                    self.value[key]._allow_in_place = allow_in_place
+                else:
+                    raise ValueError('In-place operations protected.')
             else:
                 self.value[key] = key(value)
         else:
