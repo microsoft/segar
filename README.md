@@ -1,3 +1,8 @@
+[![Flake8](https://github.com/microsoft/segar/actions/workflows/flake8.yml/badge.svg?branch=main)](https://github.com/microsoft/segar/actions/workflows/flake8.yml)
+[![CodeQL](https://github.com/microsoft/segar/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/microsoft/segar/actions/workflows/codeql-analysis.yml)
+[![.github/workflows/sphinx.yml](https://github.com/microsoft/segar/actions/workflows/sphinx.yml/badge.svg)](https://github.com/microsoft/segar/actions/workflows/sphinx.yml)
+[![Test environments](https://github.com/microsoft/segar/actions/workflows/test_environments.yml/badge.svg)](https://github.com/microsoft/segar/actions/workflows/test_environments.yml)
+
 # Overview
 **The Sandbox Environment for Generalizable Agent Research** (SEGAR) is a suite of research tools for studying *Interactive 
 Representation Learning* (IRepL). IRepL is the study of the interplay between an agent's 
