@@ -1,19 +1,36 @@
 from __future__ import annotations
 
-__all__ = ('Rule', 'inspect_signature', 'match_pattern')
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
+"""Generic rules.
+
+"""
+__all__ = ("Rule", "inspect_signature", "match_pattern")
 
 from types import GenericAlias
-from typing import (_GenericAlias, Callable, Optional, Type, TypeVar, Union,
-                    get_args, get_origin, get_type_hints)
+from typing import (
+    _GenericAlias,
+    Callable,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
+from segar import get_sim
 from segar.factors import Factor
 from segar.parameters import Parameter
 from segar.things import Entity
 from segar.things.boundaries import Wall
 
 
-F = TypeVar('F', bound=Factor)
-T = TypeVar('T', bound=Type[Factor])
+F = TypeVar("F", bound=Factor)
+T = TypeVar("T", bound=Type[Factor])
 
 
 def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
@@ -37,15 +54,16 @@ def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
     # or GenericAlias
     parameters = []
     for k, pattern in hints.items():
-        if k == 'return':
+        if k == "return":
             returns = pattern
         elif isinstance(pattern, (_GenericAlias, GenericAlias)):
             origin = get_origin(pattern)
             args = get_args(pattern)
             for arg in args:
                 if not issubclass(arg, Factor):
-                    raise ValueError('Unknown pattern type within tuple, '
-                                     'must be Factor.')
+                    raise ValueError(
+                        "Unknown pattern type within tuple, " "must be Factor."
+                    )
             if origin == tuple:
                 input_patterns.append(args)
                 has_entity = True
@@ -70,11 +88,14 @@ def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
             elif issubclass(pattern, Wall):
                 pass
             else:
-                raise TypeError(f'Pattern {pattern} of type '
-                                f'{type(pattern)} not recognized.')
+                raise TypeError(
+                    f"Pattern {pattern} of type "
+                    f"{type(pattern)} not recognized."
+                )
 
-    if (returns is not None
-            and isinstance(returns, (_GenericAlias, GenericAlias))):
+    if returns is not None and isinstance(
+        returns, (_GenericAlias, GenericAlias)
+    ):
         origin = get_origin(returns)
         return_factor_types = get_args(returns)
         if origin == tuple:
@@ -93,20 +114,23 @@ def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
         returns=returns,
         return_factor_types=return_factor_types,
         hints=hints,
-        parameters=parameters
+        parameters=parameters,
     )
 
     if has_entity and has_factors:
-        raise TypeError(f'Rule signature ({sig}) cannot have both factors and '
-                        'containers.')
+        raise TypeError(
+            f"Rule signature ({sig}) cannot have both factors and "
+            "containers."
+        )
 
     return sig
 
 
-def match_pattern(rule: Rule,
-                  *inputs: Union[tuple, list, Factor, Entity, Parameter],
-                  loose_match: bool = False
-                  ) -> Union[None, list[Union[Factor, Entity, Parameter]]]:
+def match_pattern(
+    rule: Rule,
+    *inputs: Union[tuple, list, Factor, Entity, Parameter],
+    loose_match: bool = False,
+) -> Union[None, list[Union[Factor, Entity, Parameter]]]:
     """Attempts to match a set of inputs to a pattern provided.
 
     If the pattern matches, return a list of args, else return None
@@ -121,8 +145,9 @@ def match_pattern(rule: Rule,
     args = []
 
     inputs = list(inputs)
-    patterns: list[Type[Parameter], Type[Factor], Type[Entity], tuple] = \
-        rule.signature_info['input_patterns'].copy()
+    patterns: list[
+        Type[Parameter], Type[Factor], Type[Entity], tuple
+    ] = rule.signature_info["input_patterns"].copy()
     factor_type = rule.factor_type
     entity_type = rule.entity_type
 
@@ -226,7 +251,7 @@ def match_pattern(rule: Rule,
             else:
                 return None
         else:
-            raise ValueError(f'Unknown pattern type {pat}.')
+            raise ValueError(f"Unknown pattern type {pat}.")
 
     if (len(inputs) > 0 and not loose_match) or len(patterns) > 0:
         return None
@@ -244,9 +269,13 @@ class Rule:
     """Generic Rule class.
 
     """
-    def __init__(self, rule_fn: Callable,
-                 factor_type: Optional[Type[Factor]] = None,
-                 entity_type: Optional[Type[Entity]] = None):
+
+    def __init__(
+        self,
+        rule_fn: Callable,
+        factor_type: Optional[Type[Factor]] = None,
+        entity_type: Optional[Type[Entity]] = None,
+    ):
         """Wraps a function into a Rule.
 
         :param rule_fn: Function to wrap.
@@ -259,6 +288,22 @@ class Rule:
         self.factor_type = factor_type
         self.entity_type = entity_type
         self._signature_info = inspect_signature(self.rule_fn)
+        self._sim = None
+
+    @property
+    def sim(self):
+        if self._sim is None:
+            return get_sim()
+        return self._sim
+
+    def set_sim(self, sim):
+        self._sim = sim
+
+    def copy_for_sim(self, sim):
+        rule_copy = type(self)(self._rule_fn)
+        rule_copy.__dict__.update(self.__dict__)
+        rule_copy._sim = sim
+        return rule_copy
 
     @property
     def rule_fn(self) -> Callable:
@@ -279,26 +324,26 @@ class Rule:
         """Extra parameters in rule.
 
         """
-        return self.signature_info['parameters']
+        return self.signature_info["parameters"]
 
     @property
     def n_objects(self) -> int:
         """Number of objects needed to match rule.
 
         """
-        return self.signature_info['n_objects']
+        return self.signature_info["n_objects"]
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError
 
     def __repr__(self) -> str:
-        returns = self.signature_info['returns']
-        input_pattern = self.signature_info['input_patterns']
-        r = f'{returns} <- {self.rule_fn.__name__}({input_pattern})'
+        returns = self.signature_info["returns"]
+        input_pattern = self.signature_info["input_patterns"]
+        r = f"{returns} <- {self.rule_fn.__name__}({input_pattern})"
         if self.factor_type:
-            r += f' (if has {self.factor_type})'
+            r += f" (if has {self.factor_type})"
         if self.entity_type:
-            r += f' (if is {self.entity_type})'
+            r += f" (if is {self.entity_type})"
         return r
 
     @property

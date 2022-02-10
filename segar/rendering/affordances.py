@@ -1,3 +1,7 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 """Affordance map rendering
 
 TODO: fix and update this.
@@ -7,6 +11,8 @@ TODO: fix and update this.
 import cv2
 
 # flake8: noqa
+
+#  TODO: This needs to be updated
 
 
 class AffordanceRenderer:
@@ -31,7 +37,6 @@ class AffordanceRenderer:
         # == being, this works but it slows my machine to a grind. Use
         # at your own discretion
         for layer_idx in range(self.img.shape[0]):
-            cv2.imshow(f"affordance {layer_idx}",
-                       self.img[layer_idx, :, :, 0])
+            cv2.imshow(f"affordance {layer_idx}", self.img[layer_idx, :, :, 0])
 
         cv2.waitKey(duration)

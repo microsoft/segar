@@ -24,6 +24,10 @@ sim = Simulator()
 observations = RGBObservation(resolution=256, config=vis_config)
 ```
 
+    /Users/rdevonhjelm/Library/Mobile Documents/com~apple~CloudDocs/Code/segar/segar/__init__.py:26: UserWarning: Overwriting sim. This can have unexpected consequences if using old sim objects somewhere.
+      warnings.warn("Overwriting sim. This can have unexpected "
+
+
 ### PuttPutt
 
 Next, let's make the PuttPutt initialization and task. There are some
@@ -42,7 +46,6 @@ puttputt = PuttPutt(initialization=initialization)
 
 Now build the MDP, initialize, and generate some trajectories.
 
-
 ```python
 from IPython.display import Image, display
 
@@ -52,15 +55,15 @@ mdp = MDP(observations, puttputt)
 
 imgs, trajectories = rollout(mdp)
 
-save_gif(imgs, out_path='_ipynb_assets/puttputt_sample.gif')
-Image(open('_ipynb_assets/puttputt_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/puttputt_sample.gif')
+Image(open('../../resources/readme-images/segar/tasks/puttputt_sample.gif', 'rb').read())
 ```
 
 
 
 
     
-![png](README_files/README_5_0.png)
+![png](../../resources/readme-images/segar/tasks/README_5_0.png)
     
 
 
@@ -70,7 +73,6 @@ configuation from a preset, we can define our own, for instance if we want
 the golf ball and goal in different locations. The
 [initialization module](https://github.com/microsoft/roboputtputt/blob/main/segar/mdps/initializations.py)
 has a convenient typing for arena locations:
-
 
 ```python
 from copy import deepcopy
@@ -100,68 +102,64 @@ puttputt_right = PuttPutt(initialization=initialization_right)
 mdp_right = MDP(observations, puttputt_right)
 
 for i in range(3):
-    imgs, trajectories = rollout(mdp_left)
-    out_path = f'_ipynb_assets/puttputt_left_{i}.gif'
-    save_gif(imgs, out_path=out_path)
-    display(Image(open(out_path,'rb').read()))
+ imgs, trajectories = rollout(mdp_left)
+ out_path = f'../../resources/readme-images/segar/tasks/puttputt_left_{i}.gif'
+ save_gif(imgs, out_path=out_path)
+ display(Image(open(out_path, 'rb').read()))
 ```
 
-    [Position <- RandomMiddleLocation, Position <- RandomBottomLocation (if is GolfBall), Position <- RandomTopLocation (if is GoalTile), Shape <- RandomConvexHull(p=[[ 0.18844976  0.31998147]
-     [-0.12208152  0.30363257]
-     [-0.18293807  0.23211979]
-     [-0.31083628 -0.13760387]
-     [-0.23995363 -0.17179132]
-     [-0.05624227 -0.23135864]
-     [ 0.06629878 -0.26333952]
-     [ 0.294984   -0.23934778]
-     [ 0.3473446  -0.12076677]
-     [ 0.28321598  0.15499731]]) (if is Tile), Shape <- Circle(r=0.15) (if is GoalTile), Size <- GaussianNoise (if is Object), Size <- GaussianNoise (if is Tile), Mass <- 1.0, Mobile <- True, Charge <- GaussianMixtureNoise (if is Charger), Magnetism <- GaussianMixtureNoise (if is Magnet), Friction <- UniformNoise (if is SandTile)]
+    [Position <- RandomMiddleLocation, Position <- RandomBottomLocation (if is GolfBall), Position <- RandomTopLocation (if is GoalTile), Shape <- RandomConvexHull(p=[[-0.43854748 -0.11083382]
+     [-0.10935095 -0.32398892]
+     [ 0.27303159 -0.20386181]
+     [ 0.39069412  0.13890194]
+     [ 0.26679991  0.29669249]
+     [ 0.02285002  0.39478185]
+     [-0.05108903  0.33422628]]) (if is Tile), Shape <- Circle(r=0.15) (if is GoalTile), Size <- GaussianNoise (if is Object), Size <- GaussianNoise (if is Tile), Mass <- 1.0, Mobile <- True, Charge <- GaussianMixtureNoise (if is Charger), Magnetism <- GaussianMixtureNoise (if is Magnet), Friction <- UniformNoise (if is SandTile)]
 
 
 
     
-![png](README_files/README_7_1.png)
+![png](../../resources/readme-images/segar/tasks/README_7_1.png)
     
 
 
 
     
-![png](README_files/README_7_2.png)
+![png](../../resources/readme-images/segar/tasks/README_7_2.png)
     
 
 
 
     
-![png](README_files/README_7_3.png)
+![png](../../resources/readme-images/segar/tasks/README_7_3.png)
     
 
 
 All on the left. Now for the right.
 
-
 ```python
 for i in range(3):
-    imgs, trajectories = rollout(mdp_right)
-    out_path = f'_ipynb_assets/puttputt_right_{i}.gif'
-    save_gif(imgs, out_path=out_path)
-    display(Image(open(out_path,'rb').read()))
+ imgs, trajectories = rollout(mdp_right)
+ out_path = f'../../resources/readme-images/segar/tasks/puttputt_right_{i}.gif'
+ save_gif(imgs, out_path=out_path)
+ display(Image(open(out_path, 'rb').read()))
 ```
 
 
     
-![png](README_files/README_9_0.png)
+![png](../../resources/readme-images/segar/tasks/README_9_0.png)
     
 
 
 
     
-![png](README_files/README_9_1.png)
+![png](../../resources/readme-images/segar/tasks/README_9_1.png)
     
 
 
 
     
-![png](README_files/README_9_2.png)
+![png](../../resources/readme-images/segar/tasks/README_9_2.png)
     
 
 
@@ -171,7 +169,6 @@ Invisiball is a variant of PuttPutt, but with two differences:
 * The golf ball is only visible for the first frame.
 * There are always Charger objects. This is because we need to guarantee
 some long-range forces are in play.
-
 
 ```python
 from segar.tasks.puttputt import Invisiball
@@ -186,15 +183,15 @@ mdp = MDP(observations, invisiball)
 
 imgs, trajectories = rollout(mdp)
 
-save_gif(imgs, out_path='_ipynb_assets/invisiball_sample.gif')
-Image(open('_ipynb_assets/invisiball_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/invisiball_sample.gif')
+Image(open('../../resources/readme-images/segar/tasks/invisiball_sample.gif', 'rb').read())
 ```
 
 
 
 
     
-![png](README_files/README_11_0.png)
+![png](../../resources/readme-images/segar/tasks/README_11_0.png)
     
 
 
@@ -203,7 +200,6 @@ Image(open('_ipynb_assets/invisiball_sample.gif','rb').read())
 
 Billiards is what you would expect: control the cue ball, get the balls into
  the holes, avoid scratching.
-
 
 ```python
 from segar.tasks.billiards import Billiards, BilliardsInitialization
@@ -220,8 +216,8 @@ mdp = MDP(observations, billiards)
 
 imgs, trajectories = rollout(mdp)
 
-save_gif(imgs, out_path='_ipynb_assets/billiards_sample.gif')
-Image(open('_ipynb_assets/billiards_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/billiards_sample.gif')
+Image(open('../../resources/readme-images/segar/tasks/billiards_sample.gif', 'rb').read())
 ```
 
     {'numbers': [(CueBall, 1)], 'priors': [Size <- GaussianNoise (if is CueBall), Size <- 0.2 (if is Ball), Mass <- 1.0 (if is Ball), Size <- 0.3 (if is Hole), Position <- RandomBottomLocation (if is CueBall)]}
@@ -231,7 +227,7 @@ Image(open('_ipynb_assets/billiards_sample.gif','rb').read())
 
 
     
-![png](README_files/README_13_1.png)
+![png](../../resources/readme-images/segar/tasks/README_13_1.png)
     
 
 

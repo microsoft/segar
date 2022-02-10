@@ -1,19 +1,39 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 """Rules for collisions
 
 """
 
-__all__ = ('overlap_time', 'object_collision', 'overlaps_wall',
-           'overlap_time_wall', 'fix_overlap_wall', 'fix_overlap_objects',
-           'wall_collision')
+__all__ = (
+    "overlap_time",
+    "object_collision",
+    "overlaps_wall",
+    "overlap_time_wall",
+    "fix_overlap_wall",
+    "fix_overlap_objects",
+    "wall_collision",
+)
 
 from typing import Tuple
 import warnings
 
 import numpy as np
 
-from segar.factors import (Position, Velocity, Shape, Done, Alive,
-                           StoredEnergy, Mobile, Mass, InfiniteEnergy, Circle,
-                           ConvexHullShape)
+from segar.factors import (
+    Position,
+    Velocity,
+    Shape,
+    Done,
+    Alive,
+    StoredEnergy,
+    Mobile,
+    Mass,
+    InfiniteEnergy,
+    Circle,
+    ConvexHullShape,
+)
 from segar.things.boundaries import Wall, SquareWall
 from segar.things import Object, Thing
 from segar.types import Time
@@ -35,22 +55,27 @@ def overlap_time(obj1: Object, obj2: Object) -> Time:
     shape2 = obj2[Shape]
 
     if obj1[Done] or not obj1[Alive] or obj2[Done] or not obj2[Alive]:
-        return Time(0.)
+        return Time(0.0)
 
     if relative_vel.norm() == 0:
-        return Time(0.)
+        return Time(0.0)
 
     unit_vel = relative_vel.unit_vector()
-    dist = shape1.fix_overlap(shape2, normal_vec.value,
-                              unit_vector=unit_vel.value)
+    dist = shape1.fix_overlap(
+        shape2, normal_vec.value, unit_vector=unit_vel.value
+    )
     return Time(dist / relative_vel.norm())
 
 
 @TransitionFunction
-def object_collision(o1: Object, o2: Object
-                     ) -> Tuple[SetFactor[Velocity], SetFactor[Velocity],
-                                SetFactor[StoredEnergy],
-                                SetFactor[StoredEnergy]]:
+def object_collision(
+    o1: Object, o2: Object
+) -> Tuple[
+    SetFactor[Velocity],
+    SetFactor[Velocity],
+    SetFactor[StoredEnergy],
+    SetFactor[StoredEnergy],
+]:
     """Computes collision rules.
 
     :param o1: First object.
@@ -61,12 +86,12 @@ def object_collision(o1: Object, o2: Object
     atol: float = 1e-6
     warn_on_fail: bool = False
 
-    x1, v1, m1, mobile1, e1, ieng1 = o1.get_factors(Position, Velocity, Mass,
-                                                    Mobile, StoredEnergy,
-                                                    InfiniteEnergy)
-    x2, v2, m2, mobile2, e2, ieng2 = o2.get_factors(Position, Velocity, Mass,
-                                                    Mobile, StoredEnergy,
-                                                    InfiniteEnergy)
+    x1, v1, m1, mobile1, e1, ieng1 = o1.get_factors(
+        Position, Velocity, Mass, Mobile, StoredEnergy, InfiniteEnergy
+    )
+    x2, v2, m2, mobile2, e2, ieng2 = o2.get_factors(
+        Position, Velocity, Mass, Mobile, StoredEnergy, InfiniteEnergy
+    )
 
     v1_: Velocity = v1 * (1 + e2)
     v2_: Velocity = v2 * (1 + e1)
@@ -85,10 +110,10 @@ def object_collision(o1: Object, o2: Object
     v2t = v2_.dot(unit_tang)
 
     if not mobile1:
-        m1 = 100000000.
+        m1 = 100000000.0
 
     if not mobile2:
-        m2 = 100000000.
+        m2 = 100000000.0
 
     v1nf = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2)
     v2nf = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2)
@@ -97,26 +122,34 @@ def object_collision(o1: Object, o2: Object
     v2f = unit_norm * v2nf + unit_tang * v2t
 
     # Check conservation of momentum
-    check = np.allclose((v1f * m1 + v2f * m2).value,
-                        (v1_ * m1 + v2_ * m2).value, atol=atol)
+    check = np.allclose(
+        (v1f * m1 + v2f * m2).value, (v1_ * m1 + v2_ * m2).value, atol=atol
+    )
 
     if not check:
-        fail_str = (f'Failed check on conservation of momentum: '
-                    f'{(v1f * m1 + v2f * m2 - v1_ * m1 - v2_) * m2}')
+        fail_str = (
+            f"Failed check on conservation of momentum: "
+            f"{(v1f * m1 + v2f * m2 - v1_ * m1 - v2_) * m2}"
+        )
         if warn_on_fail:
             warnings.warn(fail_str, RuntimeWarning)
         else:
             raise RuntimeError(fail_str)
 
     # Check conservation of energy
-    check = np.allclose((m1 * v1f.norm() ** 2 + m2 * v2f.norm() ** 2),
-                        (m1 * v1_.norm() ** 2 + m2 * v2_.norm() ** 2),
-                        atol=atol)
+    check = np.allclose(
+        (m1 * v1f.norm() ** 2 + m2 * v2f.norm() ** 2),
+        (m1 * v1_.norm() ** 2 + m2 * v2_.norm() ** 2),
+        atol=atol,
+    )
 
     if not check:
-        fail_str = ('Failed check on conservation of energy: {}'
-                    .format(m1 * v1f.norm() ** 2 + m2 * v2f.norm() ** 2 -
-                            m1 * v1_.norm() ** 2 + m2 * v2_.norm() ** 2))
+        fail_str = "Failed check on conservation of energy: {}".format(
+            m1 * v1f.norm() ** 2
+            + m2 * v2f.norm() ** 2
+            - m1 * v1_.norm() ** 2
+            + m2 * v2_.norm() ** 2
+        )
 
         if warn_on_fail:
             warnings.warn(fail_str, RuntimeWarning)
@@ -124,8 +157,11 @@ def object_collision(o1: Object, o2: Object
             raise RuntimeError(fail_str)
 
     return (
-        SetFactor[Velocity](v1, v1f), SetFactor[Velocity](v2, v2f),
-        SetFactor[StoredEnergy](e1, e1f), SetFactor[StoredEnergy](e2, e2f))
+        SetFactor[Velocity](v1, v1f),
+        SetFactor[Velocity](v2, v2f),
+        SetFactor[StoredEnergy](e1, e1f),
+        SetFactor[StoredEnergy](e2, e2f),
+    )
 
 
 @Relation
@@ -140,16 +176,17 @@ def overlaps_wall(thing: Thing, wall: Wall) -> bool:
 
     if isinstance(wall, SquareWall):
         return (
-            wall.overlaps_right_boundary(thing, thresh=thresh) or
-            wall.overlaps_left_boundary(thing, thresh=thresh) or
-            wall.overlaps_top_boundary(thing, thresh=thresh) or
-            wall.overlaps_bottom_boundary(thing, thresh=thresh)
+            wall.overlaps_right_boundary(thing, thresh=thresh)
+            or wall.overlaps_left_boundary(thing, thresh=thresh)
+            or wall.overlaps_top_boundary(thing, thresh=thresh)
+            or wall.overlaps_bottom_boundary(thing, thresh=thresh)
         )
     raise NotImplementedError(type(wall))
 
 
-def overlap_time_wall(obj: Object, wall: SquareWall, thresh: float = 1e-7
-                      ) -> Time:
+def overlap_time_wall(
+    obj: Object, wall: SquareWall, thresh: float = 1e-7
+) -> Time:
     """Time to reverse an overlap with wall, given shape, position,
         and velocity of object.
 
@@ -164,7 +201,7 @@ def overlap_time_wall(obj: Object, wall: SquareWall, thresh: float = 1e-7
     x = obj[Position]
     b = wall.boundaries
 
-    d = 0.
+    d = 0.0
     if isinstance(shape, Circle):
         # find hypotenuse of the right angle defined by the unit
         # vector and overlap, p, with wall.
@@ -193,13 +230,12 @@ def overlap_time_wall(obj: Object, wall: SquareWall, thresh: float = 1e-7
     if d > 0:
         d += thresh
 
-    assert d >= 0.
+    assert d >= 0.0
     return Time(d / v.norm())
 
 
 @TransitionFunction
-def wall_collision(obj: Object, wall: SquareWall
-                   ) -> SetFactor[Velocity]:
+def wall_collision(obj: Object, wall: SquareWall) -> SetFactor[Velocity]:
     """Gives the overlap fix distance for an object in the opposite
         direction of a given unit vector.
 
@@ -248,8 +284,9 @@ def wall_collision(obj: Object, wall: SquareWall
     return SetFactor[Velocity](v, vf)
 
 
-def fix_overlap_wall(obj: Thing, wall: SquareWall, thresh: float = 1e-5
-                     ) -> None:
+def fix_overlap_wall(
+    obj: Thing, wall: SquareWall, thresh: float = 1e-5
+) -> None:
     """Fixes any overlaps with wall.
 
     Useful in initialization when objects may overlap just due to position
@@ -266,12 +303,12 @@ def fix_overlap_wall(obj: Thing, wall: SquareWall, thresh: float = 1e-5
     # Stationary object
     if isinstance(shape, Circle):
         r = shape.radius
-        xf = np.array((
-            np.clip(x[0], b[0] + r + thresh,
-                    b[1] - r - thresh),
-            np.clip(x[1], b[0] + r + thresh,
-                    b[1] - r - thresh),
-        ))
+        xf = np.array(
+            (
+                np.clip(x[0], b[0] + r + thresh, b[1] - r - thresh),
+                np.clip(x[1], b[0] + r + thresh, b[1] - r - thresh),
+            )
+        )
     elif isinstance(shape, ConvexHullShape):
         points = shape.points
         min_x = points[0][0]
@@ -288,12 +325,12 @@ def fix_overlap_wall(obj: Thing, wall: SquareWall, thresh: float = 1e-5
             if p[0] > max_x:
                 max_x = p[0]
 
-        xf = np.array((
-            np.clip(x[0], b[0] - min_x + thresh,
-                    b[1] + max_x - thresh),
-            np.clip(x[1], b[0] - min_y + thresh,
-                    b[1] + max_y - thresh),
-        ))
+        xf = np.array(
+            (
+                np.clip(x[0], b[0] - min_x + thresh, b[1] + max_x - thresh),
+                np.clip(x[1], b[0] - min_y + thresh, b[1] + max_y - thresh),
+            )
+        )
 
     else:
         raise NotImplementedError(shape)

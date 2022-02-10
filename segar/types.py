@@ -1,8 +1,12 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 """Reusable types.
 
 """
 
-__all__ = ('ThingID', 'Time')
+__all__ = ("ThingID", "Time")
 
 from typing import Union
 

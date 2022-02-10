@@ -1,8 +1,23 @@
 from __future__ import annotations
 
-__all__ = ('Differential', 'SetFactor', 'Aggregate', 'DidNotMatch',
-           'DidNotPass', 'Transition', 'TransitionFunction',
-           'conditional_transition')
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
+"""Transition functions and applications.
+
+"""
+
+__all__ = (
+    "Differential",
+    "SetFactor",
+    "Aggregate",
+    "DidNotMatch",
+    "DidNotPass",
+    "Transition",
+    "TransitionFunction",
+    "conditional_transition",
+)
 
 from typing import Any, Callable, Generic, Optional, Type, TypeVar, Union
 
@@ -17,8 +32,8 @@ from .relations import And, IsEqual, Relation, Or
 from .rules import match_pattern, Rule
 
 
-F = TypeVar('F', bound=Factor)
-T = TypeVar('T', bound=Type[Factor])
+F = TypeVar("F", bound=Factor)
+T = TypeVar("T", bound=Type[Factor])
 
 
 class TransitionFunction(Rule):
@@ -27,11 +42,13 @@ class TransitionFunction(Rule):
 
     """
 
-    def __init__(self,
-                 rule_fn: Callable,
-                 relation: Optional[Relation] = None,
-                 factor_type: Optional[Type[Factor]] = None,
-                 entity_type: Optional[Type[Entity]] = None):
+    def __init__(
+        self,
+        rule_fn: Callable,
+        relation: Optional[Relation] = None,
+        factor_type: Optional[Type[Factor]] = None,
+        entity_type: Optional[Type[Entity]] = None,
+    ):
         """Wraps a function into a Rule.
 
         :param rule_fn: Function to wrap.
@@ -44,8 +61,9 @@ class TransitionFunction(Rule):
         """
 
         self._relation = relation
-        super().__init__(rule_fn, factor_type=factor_type,
-                         entity_type=entity_type)
+        super().__init__(
+            rule_fn, factor_type=factor_type, entity_type=entity_type
+        )
 
     @property
     def priority(self) -> int:
@@ -69,9 +87,9 @@ class TransitionFunction(Rule):
         else:
             return self._relation(*args)
 
-    def __call__(self,
-                 *inputs: Union[Factor, tuple[Factor, ...], Parameter]
-                 ) -> Union[Transition, DidNotMatch, DidNotPass]:
+    def __call__(
+        self, *inputs: Union[Factor, tuple[Factor, ...], Parameter]
+    ) -> Union[Transition, DidNotMatch, DidNotPass]:
         """Apply a transition function.
 
         :param inputs: Inputs to apply on.
@@ -156,16 +174,23 @@ def get_relation_priority(relation: Relation) -> int:
     return priority
 
 
-def conditional_transition(relation: Relation = None,
-                           factor_type: Optional[Type[Factor]] = None,
-                           entity_type: Optional[Type[Entity]] = None):
+def conditional_transition(
+    relation: Relation = None,
+    factor_type: Optional[Type[Factor]] = None,
+    entity_type: Optional[Type[Entity]] = None,
+):
     """A wrapper function to conveniently add conditions to rules.
 
     """
+
     class ConditionalTransitionFunction(TransitionFunction):
         def __init__(self, rule_fn: Callable):
-            super().__init__(rule_fn, factor_type=factor_type,
-                             entity_type=entity_type, relation=relation)
+            super().__init__(
+                rule_fn,
+                factor_type=factor_type,
+                entity_type=entity_type,
+                relation=relation,
+            )
 
     return ConditionalTransitionFunction
 
@@ -176,6 +201,7 @@ class Transition(Generic[F]):
     Creating this object alone does not change the factor: calling it will.
 
     """
+
     def __init__(self, factor: F, value: Union[F.t, F]):
         """
 
@@ -224,12 +250,14 @@ class Transition(Generic[F]):
                 elif other.priority > self.priority:
                     return other
                 else:
-                    msg = (f'Conflict resolution not possible withfactor'
-                           f' {self.factor} with transitions {self} ('
-                           f'priority {self.priority}) and {other} (priority'
-                           f' {other.priority}). This is a fail because '
-                           f'otherwise transition function may not be '
-                           f'deterministic. Change rules if this happens.')
+                    msg = (
+                        f"Conflict resolution not possible withfactor"
+                        f" {self.factor} with transitions {self} ("
+                        f"priority {self.priority}) and {other} (priority"
+                        f" {other.priority}). This is a fail because "
+                        f"otherwise transition function may not be "
+                        f"deterministic. Change rules if this happens."
+                    )
                     raise ValueError(msg)
             else:
                 return self
@@ -261,42 +289,48 @@ class Differential(Transition, Generic[F]):
     """Adds to previous value scaled by time.
 
     """
+
     def __repr__(self) -> str:
-        return f'{self.factor} += Δt {self.value}'
+        return f"{self.factor} += Δt {self.value}"
 
     def __call__(self, dt: Time) -> F:
         if not self.applied:
-            self.factor.set(self.factor.value + self.value * dt,
-                            allow_in_place=True)
+            self.factor.set(
+                self.factor.value + self.value * dt, allow_in_place=True
+            )
             return self.factor
         else:
-            raise ValueError('Transition can only be applied once.')
+            raise ValueError("Transition can only be applied once.")
 
 
 class Aggregate(Transition, Generic[F]):
     """Aggregates but doesn't use previous value.
 
     """
+
     def __repr__(self) -> str:
-        return f'{self.factor} += {self.value}'
+        return f"{self.factor} += {self.value}"
 
     def __call__(self) -> F:
         if not self.applied:
             try:
                 self.factor.set(self.value, allow_in_place=True)
             except (TypeError, ValueError) as e:
-                raise RuntimeError(f'Transition setting on factor '
-                                   f'{self.factor} failed with rule '
-                                   f'{self.rule}.') from e
+                raise RuntimeError(
+                    f"Transition setting on factor "
+                    f"{self.factor} failed with rule "
+                    f"{self.rule}."
+                ) from e
             return self.factor
         else:
-            raise ValueError('Transition can only be applied once.')
+            raise ValueError("Transition can only be applied once.")
 
 
 class SetFactor(Transition, Generic[F]):
     """Sets value of factor.
 
     """
+
     def __init__(self, factor: F, value: Union[F.t, F]):
         self._priority = None
         super().__init__(factor, value)
@@ -309,19 +343,21 @@ class SetFactor(Transition, Generic[F]):
         return self._priority
 
     def __repr__(self) -> str:
-        return f'{self.factor.__class__.__name__} <- {self.value}'
+        return f"{self.factor.__class__.__name__} <- {self.value}"
 
     def __call__(self) -> F:
         if not self.applied:
             try:
                 self.factor.set(self.value, allow_in_place=True)
             except (TypeError, ValueError) as e:
-                raise RuntimeError(f'Transition setting on factor '
-                                   f'{self.factor} failed with rule '
-                                   f'{self.rule}.') from e
+                raise RuntimeError(
+                    f"Transition setting on factor "
+                    f"{self.factor} failed with rule "
+                    f"{self.rule}."
+                ) from e
             return self.factor
         else:
-            raise ValueError('Transition can only be applied once.')
+            raise ValueError("Transition can only be applied once.")
 
 
 class DidNotPass:
@@ -329,21 +365,23 @@ class DidNotPass:
         pass.
 
     """
+
     def __init__(self, rule_condition: Rule, inputs: tuple):
         self.rule_condition = rule_condition
         self.inputs = inputs
 
     def __repr__(self):
-        return f'DidNotPass({self.rule_condition}, {self.inputs})'
+        return f"DidNotPass({self.rule_condition}, {self.inputs})"
 
 
 class DidNotMatch:
     """Placeholder failure of application that means the inputs did not match.
 
     """
+
     def __init__(self, rule: Rule, inputs: tuple):
         self.rule = rule
         self.inputs = inputs
 
     def __repr__(self):
-        return f'DidNotMatch({self.rule}, {self.inputs})'
+        return f"DidNotMatch({self.rule}, {self.inputs})"

@@ -1,7 +1,17 @@
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+)
+__license__ = "MIT"
 import unittest
 
-from segar.factors import (factors, number_factors, arrays, bools, noise,
-                           properties)
+from segar.factors import (
+    factors,
+    number_factors,
+    arrays,
+    bools,
+    noise,
+    properties,
+)
 from segar.factors import Factor
 
 
@@ -9,19 +19,19 @@ _ALL_MODS = (factors, number_factors, arrays, bools, noise, properties)
 
 
 class TestFactor(unittest.TestCase):
-
     def _test_creation_from_mod(self, mod):
         for name in mod.__all__:
-            if name in ['DEFAULTS', 'FACTORS']:
+            if name in ["DEFAULTS", "FACTORS", "Deterministic"]:
                 continue
             cls = getattr(mod, name)
             if issubclass(cls, Factor):
                 try:
-                    print(f'Testing creations Factor {cls}.')
+                    print(f"Testing creations Factor {cls}.")
                     c = cls()
                 except Exception:
-                    raise AssertionError(f'Creation failed on factor `'
-                                         f'{name}`.')
+                    raise AssertionError(
+                        f"Creation failed on factor `" f"{name}`."
+                    )
 
                 if cls not in (Factor, number_factors.NumericFactor):
                     if c.value is not None:
@@ -37,7 +47,7 @@ class TestFactor(unittest.TestCase):
 
     def test_creation_abstracts(self):
         for t in (float, str, bool, int, type(None), list, dict, tuple):
-            print(f'Testing abstract creations of {Factor[t]}.')
+            print(f"Testing abstract creations of {Factor[t]}.")
             self._test_abstract_factor_creation(t)
 
     def test_protected(self):
@@ -80,21 +90,21 @@ class TestFactor(unittest.TestCase):
 
     def test_noise(self):
         for n in noise.__all__:
-            if n == 'Noise':
+            if n in ("Noise", "Deterministic"):
                 continue
-            print(f'Testing noise {n}.')
+            print(f"Testing noise {n}.")
             n_cls = getattr(noise, n)
 
-            if hasattr(n_cls, '_test_init'):
+            if hasattr(n_cls, "_test_init"):
                 noise_dist = n_cls._test_init()
             else:
                 noise_dist = n_cls()
 
             f = noise_dist.sample()
-            if n != 'Choice':
+            if n != "Choice":
                 self.assertEqual(f.t, type(f.value))
             else:
-                self.assertIn(f, ('foo', 'bar'))
+                self.assertIn(f, ("foo", "bar"))
 
         u = noise.GaussianNoise()
         c = number_factors.Charge(u.sample())
@@ -108,5 +118,5 @@ def test():
     unittest.main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

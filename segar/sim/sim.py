@@ -1,10 +1,14 @@
+from __future__ import annotations
+
+__copyright__ = (
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
+)
+__license__ = "MIT"
 """Simulator
 
 """
 
-from __future__ import annotations
-
-__all__ = ('Simulator',)
+__all__ = ("Simulator",)
 
 from collections import deque
 from copy import deepcopy
@@ -18,24 +22,75 @@ import warnings
 import numpy as np
 
 from segar import set_sim, timeit
-from segar.factors import (Factor, Floor, Friction, Charge, ID, InfiniteEnergy,
-                           Label, Magnetism, Mass, Order, Position, Shape,
-                           StoredEnergy, Text, Velocity, FACTORS,
-                           FACTOR_DEFAULTS)
-from segar.things import (Bumper, Charger, Damper, Entity, FireTile, Hole,
-                          MagmaTile, Magnet, Object, SandTile, Tile)
-from segar.rules import (colliding, overlaps, DidNotMatch,
-                         DidNotPass, Differential, Rule, Transition,
-                         TransitionFunction, move, lorentz_law,
-                         apply_friction, apply_burn, stop_condition,
-                         kill_condition, consume, accelerate)
-from segar.rules.collisions import (overlap_time, object_collision,
-                                    overlap_time_wall, wall_collision,
-                                    overlaps_wall, fix_overlap_wall,
-                                    fix_overlap_objects)
+from segar.factors import (
+    Factor,
+    Floor,
+    Friction,
+    Charge,
+    ID,
+    InfiniteEnergy,
+    Label,
+    Magnetism,
+    Mass,
+    Order,
+    Position,
+    Shape,
+    StoredEnergy,
+    Text,
+    Velocity,
+    FACTORS,
+    FACTOR_DEFAULTS,
+)
+from segar.things import (
+    Bumper,
+    Charger,
+    Damper,
+    Entity,
+    FireTile,
+    Hole,
+    MagmaTile,
+    Magnet,
+    Object,
+    SandTile,
+    Tile,
+)
+from segar.rules import (
+    colliding,
+    overlaps,
+    DidNotMatch,
+    DidNotPass,
+    Differential,
+    Rule,
+    Transition,
+    TransitionFunction,
+    move,
+    lorentz_law,
+    apply_friction,
+    apply_burn,
+    stop_condition,
+    kill_condition,
+    consume,
+    accelerate,
+)
+from segar.rules.collisions import (
+    overlap_time,
+    object_collision,
+    overlap_time_wall,
+    wall_collision,
+    overlaps_wall,
+    fix_overlap_wall,
+    fix_overlap_objects,
+)
 from segar.types import ThingID, Time
-from segar.parameters import (Framerate, FloorFriction, Gravity, MinMass,
-                              MaxVelocity, WallDamping, MinVelocity)
+from segar.parameters import (
+    Framerate,
+    FloorFriction,
+    Gravity,
+    MinMass,
+    MaxVelocity,
+    WallDamping,
+    MinVelocity,
+)
 
 from segar.things.boundaries import Wall, SquareWall
 
@@ -44,38 +99,43 @@ logger = logging.getLogger(__name__)
 
 first_factors = [ft for ft in FACTORS if ft not in (Velocity, Position)]
 
-_DEFAULT_FACTOR_UPDATE_ORDER = (
-    first_factors,
-    [Velocity]
-)
-DEFAULT_RULES = [move, lorentz_law, apply_friction, apply_burn, stop_condition,
-                 kill_condition, consume, accelerate]
+_DEFAULT_FACTOR_UPDATE_ORDER = (first_factors, [Velocity])
+DEFAULT_RULES = [
+    move,
+    lorentz_law,
+    apply_friction,
+    apply_burn,
+    stop_condition,
+    kill_condition,
+    consume,
+    accelerate,
+]
+_PRECISION = 1e-7  # For collision checks.
 
 FactorOrder = tuple[list[Type[Factor]], ...]
 
 
 class Simulator:
-    """Minimal custom simulator.
+    """The simulator.
 
     """
 
     def __init__(
-            self,
-            boundaries: Tuple[float, float] = (-1, 1),
-            framerate: int = FACTOR_DEFAULTS[Framerate],
-            friction: float = FACTOR_DEFAULTS[FloorFriction],
-            wall_damping: float = FACTOR_DEFAULTS[WallDamping],
-            gravity: float = FACTOR_DEFAULTS[Gravity],
-            min_mass: float = FACTOR_DEFAULTS[MinMass],
-            max_velocity: float = FACTOR_DEFAULTS[MaxVelocity],
-            min_velocity: float = FACTOR_DEFAULTS[MinVelocity],
-            safe_mode: bool = False,
-            save_path: str = None,
-            state_buffer_length: int = 1,
-            auto_adopt: bool = False,
-            rules: Optional[List[Rule]] = None,
-            factor_update_order: FactorOrder = _DEFAULT_FACTOR_UPDATE_ORDER
-
+        self,
+        boundaries: Tuple[float, float] = (-1, 1),
+        framerate: int = FACTOR_DEFAULTS[Framerate],
+        friction: float = FACTOR_DEFAULTS[FloorFriction],
+        wall_damping: float = FACTOR_DEFAULTS[WallDamping],
+        gravity: float = FACTOR_DEFAULTS[Gravity],
+        min_mass: float = FACTOR_DEFAULTS[MinMass],
+        max_velocity: float = FACTOR_DEFAULTS[MaxVelocity],
+        min_velocity: float = FACTOR_DEFAULTS[MinVelocity],
+        safe_mode: bool = False,
+        save_path: str = None,
+        state_buffer_length: int = 1,
+        rules: Optional[List[Rule]] = None,
+        factor_update_order: FactorOrder = _DEFAULT_FACTOR_UPDATE_ORDER,
+        local_sim: bool = False,
     ):
         """
 
@@ -89,10 +149,11 @@ class Simulator:
         :param save_path: Path to save simulator to.
         :param state_buffer_length: Length of state buffer, e.g.,
             for stacking.
-        :param auto_adopt: When object is created, adopt automatically.
         :param rules: Optional set of rules.
         :param factor_update_order: List of sets of factors to update in
             order when calling the transition function.
+        :param local_sim: Whether the sim is local, i.e., will not replace
+            or set global one.
         """
 
         super().__init__()
@@ -112,17 +173,17 @@ class Simulator:
             Gravity: Gravity(gravity),
             WallDamping: WallDamping(wall_damping),
             Friction: Friction(friction),
-            Time: Time(1. / framerate),
+            Time: Time(1.0 / framerate),
             MinMass: MinMass(min_mass),
             MaxVelocity: MaxVelocity(max_velocity),
-            MinVelocity: MinVelocity(min_velocity)
+            MinVelocity: MinVelocity(min_velocity),
         }
-        self._rules = rules or DEFAULT_RULES
+        self._rules = []
+        self.set_rules(rules or DEFAULT_RULES)
         self._valid_ep_rules = None
         self._factor_update_order = factor_update_order
 
         # Sim parameters
-        self._auto_adopt = auto_adopt
         self._save_path = save_path
         self._state_buffer = deque(maxlen=state_buffer_length)
         self._results = {}
@@ -130,8 +191,8 @@ class Simulator:
         self.safe_mode = safe_mode
         self.timer = 0
         self.time = time.time()
-        self._next_id = 0
-        set_sim(self)
+        if not local_sim:
+            set_sim(self)
         self.reset()
 
     # Results and simulator benchmarking.
@@ -141,10 +202,10 @@ class Simulator:
         :param key: Key for this result.
         :param value: Value for this result.
         """
-        if 'time' in key:
-            key_ = key.replace('time', 'count')
+        if "time" in key:
+            key_ = key.replace("time", "count")
         else:
-            key_ = key + '_count'
+            key_ = key + "_count"
         if key in self._results:
             self._results[key].append(value)
             self._results[key_] += 1
@@ -161,11 +222,11 @@ class Simulator:
         results = {}
         total_time = sum(np.sum(v) / float(d) for v in self._results.values())
         for k, v in self._results.items():
-            if 'time' in k:
+            if "time" in k:
                 res = np.sum(v) / (total_time * float(d))
-                results[k] = f'{res:.2}'
+                results[k] = f"{res:.2}"
             else:
-                results[k] = f'{np.mean(v) / float(d):.2}'
+                results[k] = f"{np.mean(v) / float(d):.2}"
 
         return results
 
@@ -179,24 +240,28 @@ class Simulator:
         """
         save_path = out_path or self._save_path
         if save_path is None:
-            raise ValueError('No save path given.')
-        logger.info(f'Saving simulator to {save_path}.')
-        with open(save_path, 'wb') as f:
+            raise ValueError("No save path given.")
+        logger.info(f"Saving simulator to {save_path}.")
+        with open(save_path, "wb") as f:
             pickle.dump(self, f)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
-        del state['_rules']
-        del state['_valid_ep_rules']
-        warnings.warn('Removing rules while pickling. Default rules will be '
-                      'reloaded. Rule customization needs to be redone '
-                      'manually.')
+        del state["_rules"]
+        del state["_valid_ep_rules"]
+        warnings.warn(
+            "Removing rules while pickling. Default rules will be "
+            "reloaded. Rule customization needs to be redone "
+            "manually."
+        )
         return state
 
     def __setstate__(self, state: dict):
-        warnings.warn('Any custom rule sets were removed while pickling. '
-                      'Default rules will be reloaded. Rule customization '
-                      'needs to be redone manually.')
+        warnings.warn(
+            "Any custom rule sets were removed while pickling. "
+            "Default rules will be reloaded. Rule customization "
+            "needs to be redone manually."
+        )
         self.__dict__.update(**state)
         self._rules = DEFAULT_RULES
         self._valid_ep_rules = None
@@ -209,27 +274,30 @@ class Simulator:
         self._things.clear()
         self._sorted_things = None
         self._thing_histories.clear()
-        self._next_id = 0
         self._valid_ep_rules = None
         # Todo: This is built-in, but we want this to be controlled by the
         #  initializer.
-        self._walls[0] = SquareWall(self.boundaries,
-                                    damping=self.parameters[WallDamping])
+        self._walls[0] = SquareWall(
+            self.boundaries, damping=self.parameters[WallDamping]
+        )
         self.timer = 0
         self.time = time.time()
         self._results.clear()
         # Add an entity for global friction.
-        with self.auto_adopt(True):
-            Entity({Friction: self.parameters[Friction],
-                    ID: 'global_friction'})
+        self.adopt(
+            Entity(
+                {Friction: self.parameters[Friction], ID: "global_friction"}
+            )
+        )
 
     # Thing management
     @property
     def thing_ids(self) -> list[ThingID]:
         return list(self._things.keys())
 
-    def thing_ids_with_factor(self, *factor_types: Type[Factor]
-                              ) -> list[ThingID]:
+    def thing_ids_with_factor(
+        self, *factor_types: Type[Factor]
+    ) -> list[ThingID]:
         """Returns the ids of things that have all specified factors.
 
         :param factor_types: List of factor types.
@@ -237,14 +305,16 @@ class Simulator:
         """
         ids = []
         for k, v in self.things.items():
-            has_factor = [v.has_factor(factor_type)
-                          for factor_type in factor_types]
+            has_factor = [
+                v.has_factor(factor_type) for factor_type in factor_types
+            ]
             if all(has_factor):
                 ids.append(k)
         return ids
 
-    def things_with_factor(self, *factor_types: Type[Factor]
-                           ) -> dict[ThingID, Entity]:
+    def things_with_factor(
+        self, *factor_types: Type[Factor]
+    ) -> dict[ThingID, Entity]:
         """Returns a dictionary of things with all specified factors.
 
         :param factor_types: List of factor types.
@@ -252,14 +322,16 @@ class Simulator:
         """
         things_ = {}
         for k, thing in self._things.items():
-            has_factor = [thing.has_factor(factor_type)
-                          for factor_type in factor_types]
+            has_factor = [
+                thing.has_factor(factor_type) for factor_type in factor_types
+            ]
             if all(has_factor):
                 things_[k] = thing
         return things_
 
-    def things_without_factor(self, *factor_types: Type[Factor]
-                              ) -> dict[ThingID, Entity]:
+    def things_without_factor(
+        self, *factor_types: Type[Factor]
+    ) -> dict[ThingID, Entity]:
         """Returns a dictionary of things without all specified factors.
 
         :param factor_types: List of factor types.
@@ -267,11 +339,39 @@ class Simulator:
         """
         things_ = {}
         for k, thing in self._things.items():
-            has_factor = [not thing.has_factor(factor_type)
-                          for factor_type in factor_types]
+            has_factor = [
+                not thing.has_factor(factor_type)
+                for factor_type in factor_types
+            ]
             if all(has_factor):
                 things_[k] = thing
         return things_
+
+    def get_owner(self, factor: Factor) -> Union[Entity, None]:
+        """Returns the thing that owns the queried factor.
+
+        :param factor: Factor to search for.
+
+        """
+        for thing in self.things.values():
+            if thing.contains(factor):
+                return thing
+        return None
+
+    def get_paired_factor(
+        self, key: Factor, query: Type[Factor]
+    ) -> Union[Factor, None]:
+        """Attempts to find the corresponding factor from the type and
+            another factor that belongs to the same thing.
+
+        :param key: Key factor to reference factor being drawn out.
+        :param query: Type of factor being drawn.
+
+        """
+        owner = self.get_owner(key)
+        if owner.has_factor(query):
+            return owner[query]
+        return None
 
     @property
     def things(self) -> Dict[ThingID, Entity]:
@@ -297,44 +397,15 @@ class Simulator:
         """
         sim_things = self.things_with_factor(Order)
         unordered_things = self.things_without_factor(Order)
-        sorted_things = dict((k, v) for k, v in sorted(
-            sim_things.items(), key=lambda item: item[1].factors[Order]))
+        sorted_things = dict(
+            (k, v)
+            for k, v in sorted(
+                sim_things.items(), key=lambda item: item[1].factors[Order]
+            )
+        )
         for k, v in unordered_things.items():
             sorted_things[k] = v
         self._sorted_things = sorted_things
-
-    def _get_next_id(self, unique_id: ThingID = None) -> ThingID:
-        """Get next key (id) for thing.
-
-        :param unique_id: Optional unique id for thing
-        :return: The ID.
-        """
-        if unique_id is None:
-            self._next_id += 1
-            return self._next_id - 1
-
-        if not isinstance(unique_id, (int, str, ID)):
-            raise TypeError(unique_id)
-        if isinstance(unique_id, ID):
-            unique_id = unique_id.value
-        if isinstance(unique_id, str) and unique_id.isdigit():
-            unique_id = int(unique_id)
-        return str(unique_id)
-
-    def get_new_id(self, thing: Entity, thing_id: Optional[ThingID] = None
-                   ) -> ThingID:
-        """Generates a new ID for a thing.
-
-        :param thing: Thing to generate ID for.
-        :param thing_id: Optional specified thing ID.
-        :return: The ID.
-        """
-        assert isinstance(thing, Entity)
-        thing_id = self._get_next_id(thing_id)
-        if self._auto_adopt:
-            return self.adopt(thing, thing_id)
-        else:
-            return thing_id
 
     def shuffle_order(self, things: Optional[List[Entity]]) -> None:
         """Shuffles the order of the things.
@@ -342,17 +413,50 @@ class Simulator:
         :param things: Optional list of things to shuffle.
         """
         things = things or list(self._things.values())
-        ordered_things = list(thing for thing in things
-                              if thing.has_factor(Order))
+        ordered_things = list(
+            thing for thing in things if thing.has_factor(Order)
+        )
         orders = list(range(len(ordered_things)))
         random.shuffle(orders)
         for thing, order in zip(ordered_things, orders):
             if thing[Order] == 0:
                 thing.set_factor(Order, order, allow_in_place=True)
 
+    def get_new_id(self, thing: Entity) -> None:
+        """Generates a new ID for a thing.
+
+        :param thing: Thing to generate ID for.
+        :param thing_id: Optional specified thing ID.
+        :return: The ID.
+        """
+
+        id_thing = thing[ID].value
+
+        if isinstance(id_thing, str) and (
+            id_thing.isdigit() or id_thing[1:].isdigit()
+        ):
+            id_thing = int(id_thing)
+
+        if isinstance(id_thing, int) and id_thing == -1:
+            id_thing = 0
+
+        if (
+            isinstance(id_thing, int)
+            and id_thing in self.things.keys()
+            or id_thing is None
+        ):
+            # Give a unique ID
+            ids = [k for k in self.things.keys() if isinstance(k, int)]
+            max_id = max(ids)
+            id_thing = max_id + 1
+
+        if not isinstance(id_thing, (int, str, ID)):
+            raise TypeError(id_thing)
+        with thing.in_place():
+            thing[ID] = ID(id_thing)
+
     # Adoption of things into sim.
-    def adopt(self, thing: Entity, thing_id: Union[ThingID, ID] = None
-              ) -> ThingID:
+    def adopt(self, thing: Entity) -> ThingID:
         """Adds a thing to the simulator.
 
         :param thing: Thing to adopt.
@@ -360,72 +464,33 @@ class Simulator:
         :return: Valid unique id.
         """
 
+        self.get_new_id(thing)
+
         self._sorted_things = None
 
-        if isinstance(thing_id, ID):
-            thing_id = thing_id.value
+        if thing[ID] in self._things:
+            raise KeyError(
+                f"{thing[ID]} cannot be used as `unique_id` "
+                f"because it already is in use."
+            )
 
-        if thing_id is None:
-            if ID in thing:
-                thing_id = thing[ID].value
-            else:
-                thing_id = self.get_new_id(thing)
+        self._things[thing[ID].value] = thing
+        return thing[ID].value
 
-        if thing_id in self._things:
-            raise KeyError(f'{thing_id} cannot be used as `unique_id` '
-                           f'because it already is in use.')
-
-        if isinstance(thing_id, str) and thing_id.isdigit():
-            thing_id = int(thing_id)
-
-        with thing.in_place():
-            thing[ID] = ID(thing_id)
-
-        self._things[thing_id] = thing
-        return thing_id
-
-    class _AutoAdopt:
-        """For auto-adoption of Things as they are created.
-
-        Things are not automatically adopted by the sim. This class enables
-            this functionality when needed.
-
-        """
-        def __init__(self, sim: Simulator, value: bool):
-            self.prior_adopt = sim._auto_adopt
-            self.sim = sim
-            self.value = value
-
-        def __enter__(self):
-            self.sim._auto_adopt = self.value
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            self.sim._auto_adopt = self.prior_adopt
-
-    def auto_adopt(self, value: bool = True) -> _AutoAdopt:
-        """For auto-adopting things.
-
-        Normally, creating things wont add them to the sim. However,
-        with this one can do:
-
-        ```
-            with sim.auto_adopt(True):
-                obj = Object()
-        ```
-
-        :param value:
-        :return:
-        """
-        return self._AutoAdopt(self, value)
+    def copy(self):
+        raise NotImplementedError("Do not copy the sim.")
 
     # Thing states
     @property
     def thing_states(self) -> Dict[ThingID, Dict[Type[Factor], Factor]]:
         return dict((tid, thing.state) for tid, thing in self.things.items())
 
-    def change_thing_state(self, thing_id: Union[ThingID, ID],
-                           factor_type: Type[Factor],
-                           value: Any) -> None:
+    def change_thing_state(
+        self,
+        thing_id: Union[ThingID, ID],
+        factor_type: Type[Factor],
+        value: Any,
+    ) -> None:
         """Change an thing state.
 
         :param thing_id: ID (key) of thing.
@@ -444,10 +509,8 @@ class Simulator:
             scaling_factor=self.scaling_factor,
             safe_mode=self.safe_mode,
             timer=self.timer,
-            next_id=self._next_id,
-            walls=dict((tid, wall.state) for tid, wall in
-                       self.walls.items()),
-            things=self.thing_states
+            walls=dict((tid, wall.state) for tid, wall in self.walls.items()),
+            things=self.thing_states,
         )
         return deepcopy(state)
 
@@ -472,8 +535,7 @@ class Simulator:
 
         x1 = thing1[Position]
         x2 = thing2[Position]
-        return thing1_shape.overlaps(thing2_shape,
-                                     normal_vector=(x2 - x1))
+        return thing1_shape.overlaps(thing2_shape, normal_vector=(x2 - x1))
 
     def is_on(self, thing1: Entity, thing2: Entity) -> bool:
         """Checks if one entity is on another entity.
@@ -504,9 +566,12 @@ class Simulator:
     def set_rules(self, rules: List[Rule]) -> None:
         """Sets the rules of the simulator.
 
+        We need to copy the rules and reference this sim as there may be
+            multiple sims running and rules something references the sim.
+
         :param rules: List of rules.
         """
-        self._rules = rules
+        self._rules = [r.copy_for_sim(self) for r in rules]
 
     def add_rule(self, rule: Rule) -> None:
         """Adds a single rule to the simulator.
@@ -528,13 +593,13 @@ class Simulator:
         if idx is not None:
             self._rules.pop(idx)
         else:
-            raise ValueError(f'No such rule in sim `{rule_name}`.')
+            raise ValueError(f"No such rule in sim `{rule_name}`.")
         self._valid_ep_rules = None
 
     @timeit
-    def get_all_thing_tuples(self, order: int = 1,
-                             things: Optional[List[Entity]] = None
-                             ) -> List[List[Entity]]:
+    def get_all_thing_tuples(
+        self, order: int = 1, things: Optional[List[Entity]] = None
+    ) -> List[List[Entity]]:
         """For a given number of things, return the list of all tuples of
             things of that size.
 
@@ -559,10 +624,11 @@ class Simulator:
         return tuples
 
     @timeit
-    def get_rule_outcomes(self,
-                          rules_to_apply: List[TransitionFunction],
-                          things_to_apply_on: Optional[List[Entity]] = None
-                          ) -> List[Transition]:
+    def get_rule_outcomes(
+        self,
+        rules_to_apply: List[TransitionFunction],
+        things_to_apply_on: Optional[List[Entity]] = None,
+    ) -> List[Transition]:
         """Calculates the outcomes of all of the rules.
 
         :param rules_to_apply: List of rules to calculate outcomes.
@@ -573,18 +639,18 @@ class Simulator:
 
         rules_and_args = self.get_valid_rules(
             rules_to_apply=rules_to_apply,
-            things_to_apply_on=things_to_apply_on)
+            things_to_apply_on=things_to_apply_on,
+        )
         final_outcomes = self.get_final_outcomes(rules_and_args)
 
         return list(final_outcomes.values())
 
     @timeit
-    def get_final_outcomes(self,
-                           rules_and_args: List[Tuple[TransitionFunction,
-                                                      List]],
-                           affected_factors: Optional[list[Type[Factor]]] =
-                           None
-                           ) -> dict[Factor, Transition]:
+    def get_final_outcomes(
+        self,
+        rules_and_args: List[Tuple[TransitionFunction, List]],
+        affected_factors: Optional[list[Type[Factor]]] = None,
+    ) -> dict[Factor, Transition]:
         """Find the final outcomes of a set of rules and arguments.
 
         :param rules_and_args: List of tuples containing rules and arguments
@@ -598,15 +664,22 @@ class Simulator:
         for rule, args in rules_and_args:
 
             if affected_factors is not None:
-                ret_factor_types = rule.signature_info['return_factor_types']
+                ret_factor_types = rule.signature_info["return_factor_types"]
                 # Check if rule contains factors in effected list
-                if len(set(ret_factor_types).intersection(set(affected_factors)
-                                                          )) == 0:
+                if (
+                    len(
+                        set(ret_factor_types).intersection(
+                            set(affected_factors)
+                        )
+                    )
+                    == 0
+                ):
                     continue
             res = rule(*args)
             if isinstance(res, DidNotMatch):
-                raise ValueError(f'Incorrect args {args} provided for rule '
-                                 f'{rule}.')
+                raise ValueError(
+                    f"Incorrect args {args} provided for rule " f"{rule}."
+                )
             if not (isinstance(res, DidNotPass) or res is None):
                 if not isinstance(res, tuple):
                     res = [res]
@@ -628,11 +701,11 @@ class Simulator:
         return final_outcomes
 
     @timeit
-    def get_valid_rules(self,
-                        rules_to_apply: Optional[List[TransitionFunction]] =
-                        None,
-                        things_to_apply_on: Optional[List[Entity]] = None
-                        ) -> List[Tuple[TransitionFunction, list]]:
+    def get_valid_rules(
+        self,
+        rules_to_apply: Optional[List[TransitionFunction]] = None,
+        things_to_apply_on: Optional[List[Entity]] = None,
+    ) -> List[Tuple[TransitionFunction, list]]:
         """Find all of valid rules and their arguments given a list of things.
 
         Note: this function only needs to be used once per episode.
@@ -652,7 +725,8 @@ class Simulator:
             n_objects = rule.n_objects
             if n_objects not in all_tuples:
                 all_tuples[n_objects] = self.get_all_thing_tuples(
-                    n_objects, things=things_to_apply_on)
+                    n_objects, things=things_to_apply_on
+                )
 
             tuples = all_tuples[n_objects]
             for args in tuples:
@@ -678,10 +752,13 @@ class Simulator:
             self._valid_ep_rules = self.get_valid_rules()
         for factor_types in self._factor_update_order:
             if Position in factor_types:
-                raise ValueError(f'{Position} factor type must be modified '
-                                 f'only during collision management.')
+                raise ValueError(
+                    f"{Position} factor type must be modified "
+                    f"only during collision management."
+                )
             rule_outcomes = self.get_final_outcomes(
-                self._valid_ep_rules, affected_factors=factor_types)
+                self._valid_ep_rules, affected_factors=factor_types
+            )
 
             for res in rule_outcomes.values():
                 if isinstance(res, Differential):
@@ -702,17 +779,20 @@ class Simulator:
             self._valid_ep_rules = self.get_valid_rules()
 
         position_transitions = self.get_final_outcomes(
-            self._valid_ep_rules, affected_factors=[Position])
+            self._valid_ep_rules, affected_factors=[Position]
+        )
 
         return position_transitions
 
     # API for adding build-in things
-    def add_object(self,
-                   position: np.ndarray,
-                   initial_factors: Dict[Type[Factor], Any],
-                   unique_id: Optional[ThingID] = None,
-                   label: Optional[str] = None,
-                   text: Optional[str] = 'O') -> ThingID:
+    def add_object(
+        self,
+        position: np.ndarray,
+        initial_factors: Dict[Type[Factor], Any],
+        unique_id: Optional[ThingID] = None,
+        label: Optional[str] = None,
+        text: Optional[str] = "O",
+    ) -> ThingID:
         """Adds an object to the sim.
 
         :param position: Position of the object.
@@ -729,17 +809,17 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = Object(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Object(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_tile(self,
-                 position: np.ndarray,
-                 initial_factors: Dict[Type[Factor], Any],
-                 unique_id: Optional[ThingID] = None,
-                 label: Optional[str] = None, text: Optional[str] = 'T'
-                 ) -> ThingID:
+    def add_tile(
+        self,
+        position: np.ndarray,
+        initial_factors: Dict[Type[Factor], Any],
+        unique_id: Optional[ThingID] = None,
+        label: Optional[str] = None,
+        text: Optional[str] = "T",
+    ) -> ThingID:
         """Adds a tile to the sim.
 
         :param position: Position of the tile.
@@ -756,17 +836,18 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = Tile(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Tile(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_sand(self,
-                 position: np.ndarray,
-                 friction: float = 0.4, text: str = 'S',
-                 unique_id: ThingID = None, label: str = None,
-                 initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                 ) -> ThingID:
+    def add_sand(
+        self,
+        position: np.ndarray,
+        friction: float = 0.4,
+        text: str = "S",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds sand to simulator.
 
         :param position: Position of sand.
@@ -775,7 +856,7 @@ class Simulator:
         :param label: Optional label for sand.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for sand.
-        :
+
         :return: sand id (key).
         """
         initial_factors = initial_factors or {}
@@ -787,17 +868,17 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = SandTile(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = SandTile(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_magma(self,
-                  position: np.ndarray,
-                  text: str = None,
-                  unique_id: ThingID = None, label: str = None,
-                  initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                  ) -> ThingID:
+    def add_magma(
+        self,
+        position: np.ndarray,
+        text: str = None,
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds magma to simulator.
 
         :param position: Position of magma.
@@ -805,7 +886,7 @@ class Simulator:
         :param label: Optional label for magma.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for magma.
-        :
+
         :return: magma id (key).
         """
         initial_factors = initial_factors or {}
@@ -815,16 +896,17 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = MagmaTile(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = MagmaTile(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_fire(self,
-                 position: np.ndarray,
-                 text: str = 'F', unique_id: ThingID = None, label: str = None,
-                 initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                 ) -> ThingID:
+    def add_fire(
+        self,
+        position: np.ndarray,
+        text: str = "F",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds fire to simulator.
 
         :param position: Position of fire.
@@ -832,7 +914,7 @@ class Simulator:
         :param label: Optional label for fire.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for fire.
-        :
+
         :return: fire id (key).
         """
         initial_factors = initial_factors or {}
@@ -842,16 +924,17 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = FireTile(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = FireTile(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_hole(self,
-                 position: np.ndarray,
-                 text: str = 'H', unique_id: ThingID = None, label: str = None,
-                 initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                 ) -> ThingID:
+    def add_hole(
+        self,
+        position: np.ndarray,
+        text: str = "H",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds hole to simulator.
 
         :param position: Position of hole.
@@ -859,7 +942,7 @@ class Simulator:
         :param label: Optional label for hole.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for hole.
-        :
+
         :return: hole id (key).
         """
         initial_factors = initial_factors or {}
@@ -869,17 +952,17 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = Hole(initial_factors, unique_id=unique_id)
-        self.adopt(o)
+        o = Hole(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_ball(self,
-                 position: np.ndarray,
-                 initial_factors: Dict[Type[Factor], Any] = None,
-                 unique_id: Optional[ThingID] = None,
-                 label: Optional[str] = None,
-                 text: Optional[str] = 'B'
-                 ) -> ThingID:
+    def add_ball(
+        self,
+        position: np.ndarray,
+        initial_factors: Dict[Type[Factor], Any] = None,
+        unique_id: Optional[ThingID] = None,
+        label: Optional[str] = None,
+        text: Optional[str] = "B",
+    ) -> ThingID:
         """Adds ball to the simulator.
 
         :param position: Position of the ball.
@@ -896,18 +979,19 @@ class Simulator:
         if text is not None:
             initial_factors[Text] = text
 
-        o = Object(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Object(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_bumper(self,
-                   position: np.ndarray,
-                   stored_energy: float = 1.0, infinite_energy: bool = True,
-                   text: str = 'U',
-                   unique_id: ThingID = None, label: str = None,
-                   initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                   ) -> ThingID:
+    def add_bumper(
+        self,
+        position: np.ndarray,
+        stored_energy: float = 1.0,
+        infinite_energy: bool = True,
+        text: str = "U",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds bumper to simulator.
 
         :param position: Position of bumper.
@@ -917,7 +1001,7 @@ class Simulator:
         :param label: Optional label for bumper.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for bumper.
-        :
+
         :return: bumper id (key).
         """
         initial_factors = initial_factors or {}
@@ -931,18 +1015,19 @@ class Simulator:
         if InfiniteEnergy not in initial_factors:
             initial_factors[InfiniteEnergy] = infinite_energy
 
-        o = Bumper(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Bumper(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_damper(self,
-                   position: np.ndarray,
-                   stored_energy: float = -0.5, infinite_energy: bool = True,
-                   text: str = 'D', unique_id: ThingID = None,
-                   label: str = None,
-                   initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                   ) -> ThingID:
+    def add_damper(
+        self,
+        position: np.ndarray,
+        stored_energy: float = -0.5,
+        infinite_energy: bool = True,
+        text: str = "D",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds damper to simulator.
 
         :param position: Position of damper.
@@ -952,7 +1037,7 @@ class Simulator:
         :param label: Optional label for damper.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for damper.
-        :
+
         :return: damper id (key).
         """
         initial_factors = initial_factors or {}
@@ -966,17 +1051,18 @@ class Simulator:
         if InfiniteEnergy not in initial_factors:
             initial_factors[InfiniteEnergy] = infinite_energy
 
-        o = Damper(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Damper(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_charger(self,
-                    position: np.ndarray,
-                    charge: float = -1.0, text: str = 'Q',
-                    unique_id: ThingID = None, label: str = None,
-                    initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                    ) -> ThingID:
+    def add_charger(
+        self,
+        position: np.ndarray,
+        charge: float = -1.0,
+        text: str = "Q",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds charger to simulator.
 
         :param position: Position of charger.
@@ -985,7 +1071,7 @@ class Simulator:
         :param label: Optional label for charger.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for charger.
-        :
+
         :return: charger id (key).
         """
         initial_factors = initial_factors or {}
@@ -997,17 +1083,18 @@ class Simulator:
         if Charge not in initial_factors:
             initial_factors[Charge] = charge
 
-        o = Charger(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Charger(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
-    def add_magnet(self,
-                   position: np.ndarray,
-                   magnetism: float = 1.0, text: str = 'B',
-                   unique_id: ThingID = None, label: str = None,
-                   initial_factors: Optional[Dict[Type[Factor], Any]] = None
-                   ) -> ThingID:
+    def add_magnet(
+        self,
+        position: np.ndarray,
+        magnetism: float = 1.0,
+        text: str = "B",
+        unique_id: ThingID = None,
+        label: str = None,
+        initial_factors: Optional[Dict[Type[Factor], Any]] = None,
+    ) -> ThingID:
         """Adds magnet to simulator.
 
         :param position: Position of magnet.
@@ -1016,7 +1103,7 @@ class Simulator:
         :param label: Optional label for magnet.
         :param text: Optional text to be used in rendering.
         :param initial_factors: Optional initial factors for magnet.
-        :
+
         :return: magnet id (key).
         """
         initial_factors = initial_factors or {}
@@ -1028,15 +1115,16 @@ class Simulator:
         if Magnetism not in initial_factors:
             initial_factors[Magnetism] = magnetism
 
-        o = Magnet(initial_factors, unique_id=unique_id)
-        if not self._auto_adopt:
-            self.adopt(o)
+        o = Magnet(initial_factors, unique_id=unique_id, sim=self)
         return o[ID].value
 
     # API for thing factors
 
-    def add_force(self, thing_id: Union[ThingID, ID],
-                  force: Union[Tuple[float, float], np.ndarray]) -> None:
+    def add_force(
+        self,
+        thing_id: Union[ThingID, ID],
+        force: Union[Tuple[float, float], np.ndarray],
+    ) -> None:
         """ Apply a force to an object that results in a velocity that's
         relative to the object's mass
 
@@ -1057,11 +1145,15 @@ class Simulator:
             with thing[Velocity].in_place():
                 thing[Velocity] += np.array(force / thing[Mass].value)
         except KeyError:
-            raise KeyError('Force can only be added to objects with mass '
-                           'and velocity.')
+            raise KeyError(
+                "Force can only be added to objects with mass " "and velocity."
+            )
 
-    def add_velocity(self, thing_id: ThingID,
-                     velocity: Union[Tuple[float, float], np.ndarray]) -> None:
+    def add_velocity(
+        self,
+        thing_id: ThingID,
+        velocity: Union[Tuple[float, float], np.ndarray],
+    ) -> None:
         """ Apply a velocity to an object. This is cumulative with the
             object's existing speed.
 
@@ -1079,20 +1171,23 @@ class Simulator:
                 thing[Velocity] += velocity
 
         except KeyError:
-            raise KeyError('Force can only be added to objects with velocity.')
+            raise KeyError("Force can only be added to objects with velocity.")
 
     def all_stopped(self) -> bool:
         min_velocity = self.parameters[MinVelocity]
         for thing in self.things.values():
-            if (thing.has_factor[Velocity] and
-                    thing[Velocity].norm() > min_velocity):
+            if (
+                thing.has_factor[Velocity]
+                and thing[Velocity].norm() > min_velocity
+            ):
                 return False
         return True
 
     # Extra functionality
     @timeit
-    def l2_distance(self, thing1_id: Union[ThingID, ID],
-                    thing2_id: Union[ThingID, ID]):
+    def l2_distance(
+        self, thing1_id: Union[ThingID, ID], thing2_id: Union[ThingID, ID]
+    ):
         """L2 distance between things.
 
         :param thing1_id: ID (key) for thing 1.
@@ -1103,10 +1198,10 @@ class Simulator:
         thing1 = self.things[thing1_id]
         thing2 = self.things[thing2_id]
         t1 = time.time()
-        self.update_results('get_things_time', t1 - t0)
+        self.update_results("get_things_time", t1 - t0)
         pos_norm = (thing1[Position] - thing2[Position]).norm()
         t2 = time.time()
-        self.update_results('compute_norm_time', t2 - t1)
+        self.update_results("compute_norm_time", t2 - t1)
         return pos_norm / self.scaling_factor
 
     def fix_overlaps(self):
@@ -1120,7 +1215,10 @@ class Simulator:
         while s < 100:
             overlap = False
             shaped_things = self.things_with_factor(Shape, Position)
-            for thing in shaped_things.values():
+            # To randomize overlap fixes in case of cycles.
+            query_things = list(shaped_things.values())[:]
+            random.shuffle(query_things)
+            for thing in query_things:
                 wall_overlap = False
                 object_overlap = False
                 for wall in self._walls.values():
@@ -1132,9 +1230,9 @@ class Simulator:
                 for other_thing in shaped_things.values():
                     if thing is other_thing:
                         continue
-                    if (
-                            isinstance(thing, Object) and
-                            isinstance(other_thing, Object)):
+                    if isinstance(thing, Object) and isinstance(
+                        other_thing, Object
+                    ):
                         if overlaps(thing, other_thing):
                             fix_overlap_objects(thing, other_thing)
                             object_overlap = True
@@ -1144,13 +1242,15 @@ class Simulator:
                 break
             s += 1
         if overlap:
-            raise ValueError(f'Overlaps remain: {overlap_pair[0]}(Position='
-                             f'{overlap_pair[0][Position]}) and '
-                             f'{overlap_pair[1]}(Position='
-                             f'{overlap_pair[1][Position]}). When this '
-                             f'happens, it may be due to things in your '
-                             f'initialization sizes being too large for the '
-                             f'sim. Try reducing their sizes.')
+            raise ValueError(
+                f"Overlaps remain: {overlap_pair[0]}(Position="
+                f"{overlap_pair[0][Position]}) and "
+                f"{overlap_pair[1]}(Position="
+                f"{overlap_pair[1][Position]}). When this "
+                f"happens, it may be due to things in your "
+                f"initialization sizes being too large for the "
+                f"sim. Try reducing their sizes."
+            )
         return not overlap
 
     def jiggle_all_velocities(self):
@@ -1160,11 +1260,12 @@ class Simulator:
         """
         for thing in self.things.values():
             if Velocity in thing:
-                thing[Velocity] += np.random.normal(0, 2., size=(2,))
+                thing[Velocity] += np.random.normal(0, 2.0, size=(2,))
 
     @timeit
-    def _do_collision(self, position_transitions: dict[Factor, Transition]
-                      ) -> tuple[Time, Union[tuple, None]]:
+    def _do_collision(
+        self, position_transitions: dict[Factor, Transition]
+    ) -> tuple[Time, Union[tuple, None]]:
         """Checks the first collision after performing a discrete time step.
 
         The simulator takes discrete time steps. As such, we detect if there
@@ -1176,7 +1277,7 @@ class Simulator:
             None).
         """
 
-        max_time = 0.
+        max_time = 0.0
         colliding_pair = None
 
         # First get the objects that are moving from their Position
@@ -1204,8 +1305,10 @@ class Simulator:
                             max_time = reverse_time
                             colliding_pair = (obj, wall)
                     else:
-                        raise ValueError(f'Cannot reverse or fix overlaps '
-                                         f'from rule type {type(transition)}.')
+                        raise ValueError(
+                            f"Cannot reverse or fix overlaps "
+                            f"from rule type {type(transition)}."
+                        )
 
             for thing in self._things.values():
                 if isinstance(thing, Object):
@@ -1220,9 +1323,11 @@ class Simulator:
                                 max_time = reverse_time
                                 colliding_pair = (obj, thing)
                         else:
-                            raise ValueError(f'Cannot reverse or fix overlaps '
-                                             f'from rule type '
-                                             f'{type(transition)}.')
+                            raise ValueError(
+                                f"Cannot reverse or fix overlaps "
+                                f"from rule type "
+                                f"{type(transition)}."
+                            )
 
         rdt = max_time
         return rdt, colliding_pair
@@ -1254,7 +1359,7 @@ class Simulator:
         # objects that don't overlap at t and t + dt
         # overlap at t + dt_rem. So we need to double check every time
         # we rewind if we didn't miss anything.
-        rdt_total = Time(0.)
+        rdt_total = Time(0.0)
         colliding_pair = None
 
         while True:
@@ -1284,7 +1389,18 @@ class Simulator:
             for collision in final_collisions:
                 collision()
 
-            assert 0 <= rdt_total < dt, (dt, rdt_total, colliding_pair)
+            if not (-_PRECISION <= rdt_total < dt + _PRECISION):
+                raise RuntimeError(
+                    f"Collision error, rollback is out of "
+                    f"bounds. If the error is small, "
+                    f"try decreasing precision of check not("
+                    f"{_PRECISION} <= {rdt_total} < {dt} + "
+                    f"{_PRECISION})."
+                )
+
+            # Due to precision errors.
+            rdt_total = max(Time(0.0), rdt_total)
+            rdt_total = min(dt, rdt_total)
 
             self._move_objects(dt=rdt_total)
 
@@ -1294,27 +1410,30 @@ class Simulator:
                 for j, other_object in enumerate(self.things.values()):
                     if j <= i:
                         continue
-                    if (isinstance(obj, Object) and isinstance(other_object,
-                                                               Object)):
+                    if isinstance(obj, Object) and isinstance(
+                        other_object, Object
+                    ):
                         assert other_object is not obj
                         if colliding(obj, other_object):
-                            raise RuntimeError('Still overlapping!',
-                                               (obj, other_object))
+                            raise RuntimeError(
+                                "Still overlapping!", (obj, other_object)
+                            )
 
     def _update_histories(self, history_length=10):
         """Keeps a buffer of all of the objects.
 
         :param history_length: Max length of buffers.
         """
-        with self.auto_adopt(False):
-            for k, thing in self.things.items():
-                thing_copy = thing.copy()
-                if k in self._thing_histories.keys():
-                    self._thing_histories[k].append(thing_copy)
-                else:
-                    self._thing_histories[k] = [thing_copy]
-                self._thing_histories[k] = self._thing_histories[k][
-                                           -history_length:]
+
+        for k, thing in self.things.items():
+            thing_copy = thing.copy()
+            if k in self._thing_histories.keys():
+                self._thing_histories[k].append(thing_copy)
+            else:
+                self._thing_histories[k] = [thing_copy]
+            self._thing_histories[k] = self._thing_histories[k][
+                -history_length:
+            ]
 
     def rewind(self):
         """Rewinds objects from past histories.
@@ -1329,7 +1448,7 @@ class Simulator:
             try:
                 obj = self._thing_histories[k].pop()
             except IndexError:
-                raise IndexError('Rewinding too far.')
+                raise IndexError("Rewinding too far.")
             self._things[k] = obj
 
     @timeit
@@ -1389,8 +1508,10 @@ class Simulator:
 
         if n_elements is not None:
             if n_elements > self._state_buffer.maxlen:
-                raise ValueError('Attempting to pull more elements than '
-                                 'maximum elements in buffer.')
+                raise ValueError(
+                    "Attempting to pull more elements than "
+                    "maximum elements in buffer."
+                )
         else:
             n_elements = self._state_buffer.maxlen
 
