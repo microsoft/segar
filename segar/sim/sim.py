@@ -1077,12 +1077,18 @@ class Simulator:
         s = 0
         overlap = False
         overlap_pair = None
+        wall_overlap = False
         while s < 100:
             overlap = False
             shaped_things = self.things_with_factor(Shape, Position)
-            for thing in shaped_things.values():
-                wall_overlap = False
-                object_overlap = False
+            # To randomize overlap fixes in case of cycles.
+            query_things = list(shaped_things.values())[:]
+            random.shuffle(query_things)
+
+            wall_overlap = False
+            object_overlap = False
+
+            for thing in query_things:
                 for wall in self._walls.values():
                     if overlaps_wall(thing, wall):
                         fix_overlap_wall(thing, wall)
@@ -1103,7 +1109,15 @@ class Simulator:
             if not overlap:
                 break
             s += 1
+
         if overlap:
+            if wall_overlap:
+                raise ValueError(
+                    f'Overlaps remain: {overlap_pair[0]}(Position='
+                    f'{overlap_pair[0][Position]}) and {overlap_pair[1]}('
+                    f'Wall). When this happens, it may be due to things in '
+                    f'your initialization sizes being too large for the sim. '
+                    f'Try reducing their sizes.')
             raise ValueError(f'Overlaps remain: {overlap_pair[0]}(Position='
                              f'{overlap_pair[0][Position]}) and '
                              f'{overlap_pair[1]}(Position='

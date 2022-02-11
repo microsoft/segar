@@ -70,7 +70,7 @@ flags.DEFINE_float("lr", 1e-4, "PPO learning rate")
 flags.DEFINE_integer("epoch_ppo", 1, "Number of PPO epochs on a single batch")
 flags.DEFINE_float("clip_eps", 0.2, "Clipping range")
 flags.DEFINE_float("gae_lambda", 0.95, "GAE lambda")
-flags.DEFINE_float("entropy_coeff", 1e-3, "Entropy loss coefficient")
+flags.DEFINE_float("entropy_coeff", 3e-4, "Entropy loss coefficient")
 flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
 # Ablations
 flags.DEFINE_boolean(
