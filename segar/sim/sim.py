@@ -110,7 +110,7 @@ DEFAULT_RULES = [
     consume,
     accelerate,
 ]
-_PRECISION = 1e-7  # For collision checks.
+_PRECISION = 1e-6  # For collision checks.
 
 FactorOrder = tuple[list[Type[Factor]], ...]
 
