@@ -1,7 +1,10 @@
-# import pandas as pd
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 import os
 import json
-import numpy as np
 
 import wandb
 import time
@@ -23,6 +26,8 @@ def main(argv):
 
     for run in tqdm.tqdm(runs):
         params = json.loads(run.json_config)
+        if 'fixed' not in params['run_id']['value']:
+            continue
 
         env_name = params['env_name']['value']
         num_levels = params['num_train_levels']['value']

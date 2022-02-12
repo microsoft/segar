@@ -70,7 +70,7 @@ flags.DEFINE_float("lr", 1e-4, "PPO learning rate")
 flags.DEFINE_integer("epoch_ppo", 1, "Number of PPO epochs on a single batch")
 flags.DEFINE_float("clip_eps", 0.2, "Clipping range")
 flags.DEFINE_float("gae_lambda", 0.95, "GAE lambda")
-flags.DEFINE_float("entropy_coeff", 1e-3, "Entropy loss coefficient")
+flags.DEFINE_float("entropy_coeff", 3e-4, "Entropy loss coefficient")
 flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
 # Ablations
 flags.DEFINE_boolean(
@@ -139,6 +139,7 @@ def main(argv):
         max_steps=MAX_STEPS,
         _async=False,
         seed=FLAGS.seed,
+        save_path=os.path.join(FLAGS.output_dir, run_name)
     )
     env_test = SEGAREnv(
         FLAGS.env_name,
@@ -149,6 +150,7 @@ def main(argv):
         max_steps=MAX_STEPS,
         _async=False,
         seed=FLAGS.seed + 1,
+        save_path=os.path.join(FLAGS.output_dir, run_name)
     )
     n_action = env.action_space[0].shape[-1]
 
@@ -215,7 +217,7 @@ def main(argv):
 
     for step in range(1, int(FLAGS.train_steps // FLAGS.num_envs + 1)):
         # Pick action according to PPO policy and update state
-        action_test, _, _, key = select_action(
+        action_test, _, _, _, key = select_action(
             train_state,
             state_test.astype(jnp.float32) / 255.0,
             latent_factors,
@@ -224,9 +226,9 @@ def main(argv):
         )
         state_test, _, _, test_infos = env_test.step(action_test)
 
-        train_state, state, latent_factors, batch,
-        key, reward, done, train_infos = get_transition(
-            train_state, env, state, latent_factors, batch, key)
+        (train_state, state, latent_factors, batch, key, reward, done,
+         train_infos) = get_transition(train_state, env, state, latent_factors,
+                                       batch, key)
 
         # Save episode returns and success rate
         for info in train_infos:

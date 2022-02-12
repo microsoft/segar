@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 from collections import defaultdict
 from functools import partial
 from typing import Any, Callable, Tuple
@@ -58,7 +63,7 @@ def loss_actor_and_critic(params_model: flax.core.frozen_dict.FrozenDict,
     """
     state = state.astype(jnp.float32) / 255.
 
-    value_pred, pi_dist = apply_fn(params_model, state, latent_factors)
+    value_pred, pi_dist, z = apply_fn(params_model, state, latent_factors)
     value_pred = value_pred[:, 0]
 
     log_prob = pi_dist.log_prob(action)
@@ -97,8 +102,8 @@ def select_action(
     """
     Select action either deterministically (mean) or sample
     """
-    value, pi_dist = train_state.apply_fn(train_state.params, state,
-                                          latent_factors)
+    value, pi_dist, z = train_state.apply_fn(train_state.params, state,
+                                             latent_factors)
     rng, key = jax.random.split(rng)
     if sample:
         action = pi_dist.sample(seed=key)
@@ -107,7 +112,7 @@ def select_action(
         action = jnp.tanh(pi_dist.distribution.mean())
 
     log_prob = pi_dist.log_prob(action)
-    return action, log_prob, value[:, 0], rng
+    return action, log_prob, value[:, 0], z, rng
 
 
 def get_transition(
@@ -124,12 +129,12 @@ def get_transition(
     replay buffer.
     """
 
-    action, log_pi, value, new_key = select_action(train_state,
-                                                   state.astype(jnp.float32) /
-                                                   255.,
-                                                   latent_factors,
-                                                   rng,
-                                                   sample=True)
+    action, log_pi, value, _, new_key = select_action(
+        train_state,
+        state.astype(jnp.float32) / 255.,
+        latent_factors,
+        rng,
+        sample=True)
     next_state, reward, done, info = env.step(action)
     task_ids = np.array([x['task_id'] for x in info])
     latent_factors = extract_latent_factors(info)

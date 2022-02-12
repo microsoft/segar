@@ -41,7 +41,7 @@ class SequentialTaskWrapper:
 
         self.task_list = []
         self.mdp_list = []
-        for _ in range(num_levels):
+        for i in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
             task = PuttPutt(
                 action_range=action_range, initialization=initialization
@@ -51,7 +51,7 @@ class SequentialTaskWrapper:
                 wall_damping=wall_damping,
                 friction=friction,
                 safe_mode=False,
-                save_path=save_path,
+                save_path=save_path + str(i),
             )
             task.set_sim(sim)
             task.sample()
