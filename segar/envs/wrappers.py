@@ -43,14 +43,16 @@ class SequentialTaskWrapper:
         self.mdp_list = []
         for i in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
-            task = PuttPutt(action_range=action_range,
-                            initialization=initialization)
-            
-            sim = Simulator(state_buffer_length=50,
-                            wall_damping=wall_damping,
-                            friction=friction,
-                            safe_mode=False,
-                            save_path=save_path + str(i))
+            task = PuttPutt(
+                action_range=action_range, initialization=initialization
+            )
+            sim = Simulator(
+                state_buffer_length=50,
+                wall_damping=wall_damping,
+                friction=friction,
+                safe_mode=False,
+                save_path=save_path + str(i),
+            )
             task.set_sim(sim)
             task.sample()
             mdp = FrameStackWrapper(

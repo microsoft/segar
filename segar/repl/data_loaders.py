@@ -46,6 +46,7 @@ from segar.things import (
     ThingFactory,
 )
 from segar.repl.static_datasets.iid_samples import create_iid_from_init
+from segar.repl.static_datasets.iid_samples import IIDFromInit
 from segar.tasks.puttputt import PuttPuttInitialization, GolfBall, GoalTile
 
 import numpy as np
