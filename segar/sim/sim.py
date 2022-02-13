@@ -1210,11 +1210,11 @@ class Simulator:
         :return:
         """
         s = 0
-        overlap = False
         overlap_pair = None
         wall_overlap = False
-        while s < 100:
-            overlap = False
+        object_overlap = False
+
+        while s < 200:
             shaped_things = self.things_with_factor(Shape, Position)
             # To randomize overlap fixes in case of cycles.
             query_things = list(shaped_things.values())[:]
@@ -1222,45 +1222,50 @@ class Simulator:
 
             wall_overlap = False
             object_overlap = False
+            overlap_pair = None
 
             for thing in query_things:
-                for wall in self._walls.values():
-                    if overlaps_wall(thing, wall):
-                        fix_overlap_wall(thing, wall)
-                        wall_overlap = True
-                        overlap_pair = (thing, wall)
+                if not (wall_overlap or object_overlap):
+                    for wall in self._walls.values():
+                        if overlaps_wall(thing, wall):
+                            fix_overlap_wall(thing, wall)
+                            wall_overlap = True
+                            overlap_pair = (thing, wall)
 
-                for other_thing in shaped_things.values():
-                    if thing is other_thing:
-                        continue
-                    if isinstance(thing, Object) and isinstance(
-                        other_thing, Object
-                    ):
-                        if overlaps(thing, other_thing):
-                            fix_overlap_objects(thing, other_thing)
-                            object_overlap = True
-                            overlap_pair = (thing, other_thing)
-                overlap = overlap or wall_overlap or object_overlap
-            if not overlap:
+                if not (wall_overlap or object_overlap):
+                    for other_thing in shaped_things.values():
+                        if thing is other_thing:
+                            continue
+                        if isinstance(thing, Object) and isinstance(other_thing, Object):
+                            if overlaps(thing, other_thing):
+                                fix_overlap_objects(thing, other_thing)
+                                object_overlap = True
+                                overlap_pair = (thing, other_thing)
+            if not (wall_overlap or object_overlap):
                 break
             s += 1
 
-        if overlap:
-            if wall_overlap:
-                raise ValueError(
-                    f'Overlaps remain: {overlap_pair[0]}(Position='
-                    f'{overlap_pair[0][Position]}) and {overlap_pair[1]}('
-                    f'Wall). When this happens, it may be due to things in '
-                    f'your initialization sizes being too large for the sim. '
-                    f'Try reducing their sizes.')
-            raise ValueError(f'Overlaps remain: {overlap_pair[0]}(Position='
-                             f'{overlap_pair[0][Position]}) and '
-                             f'{overlap_pair[1]}(Position='
-                             f'{overlap_pair[1][Position]}). When this '
-                             f'happens, it may be due to things in your '
-                             f'initialization sizes being too large for the '
-                             f'sim. Try reducing their sizes.')
-        return not overlap
+        if wall_overlap:
+            raise ValueError(
+                f"Overlaps remain: {overlap_pair[0]}(Position="
+                f"{overlap_pair[0][Position]}) and {overlap_pair[1]}("
+                f"Wall). When this happens, it may be due to things in "
+                f"your initialization sizes being too large for the sim. "
+                f"Try reducing their sizes."
+            )
+
+        if object_overlap:
+            raise ValueError(
+                f"Overlaps remain: {overlap_pair[0]}(Position="
+                f"{overlap_pair[0][Position]}) and "
+                f"{overlap_pair[1]}(Position="
+                f"{overlap_pair[1][Position]}). When this "
+                f"happens, it may be due to things in your "
+                f"initialization sizes being too large for the "
+                f"sim. Try reducing their sizes."
+            )
+
+        return not (wall_overlap or object_overlap)
 
     def jiggle_all_velocities(self):
         """Jiggles object velocities randomly.
