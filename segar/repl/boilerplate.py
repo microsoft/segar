@@ -233,9 +233,17 @@ class Trainer:
                 train_results, test_results = self.test()
                 for k in train_results.keys():
                     if test_results is None:
-                        test_acc[f'{k}/test'].append(test_results[k])
+                        wandb.log(
+                            {f"{k}/train": train_results[k]}, step=self.epochs
+                        )
                     else:
-                        train_acc[f'{k}/train'].append(train_results[k])
+                        wandb.log(
+                            {
+                                f"{k}/train": train_results[k],
+                                f"{k}/test": test_results[k],
+                            },
+                            step=self.epochs,
+                        )
                 if self.vis_func is not None:
                     self.vis_func(last_inputs, features)
             else:

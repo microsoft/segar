@@ -125,7 +125,7 @@ def make_data_loaders(
     factors: list[Type[Factor]],
     batch_size: int = 64,
     n_workers: int = 8,
-    initialization: Optional[Initialization] = None
+    initialization: Optional[Initialization] = None,
 ) -> tuple[DataLoader, DataLoader, dict]:
     """Makes data loaders for initialization.
 
