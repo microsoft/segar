@@ -24,10 +24,10 @@ def rollouts(env: Env,
     while n_rollouts:
         states.append(state)
         action, _, _, z, key = select_action(train_state,
-                                          state.astype(jnp.float32) / 255.,
-                                          None,
-                                          key,
-                                          sample=True)
+                                             state.astype(jnp.float32) / 255.,
+                                             None,
+                                             key,
+                                             sample=True)
         zs.append(z)
         actions.append(action)
         state, _, _, infos = env.step(action)
