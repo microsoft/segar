@@ -40,4 +40,4 @@ def rollouts(env: Env,
             if maybe_epinfo:
                 returns.append(maybe_epinfo)
                 n_rollouts -= 1
-    return returns, (states, zs, actions, factors)
+    return returns, (states, zs, actions, factors, task_ids)

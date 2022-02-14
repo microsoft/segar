@@ -114,13 +114,15 @@ def main(argv):
                                                 seed=seed + 1)
                             returns_train, (states_train, zs_train,
                                             actions_train,
-                                            factors_train) = rollouts(
+                                            factors_train,
+                                            task_ids_train) = rollouts(
                                                 env_train,
                                                 loaded_state,
                                                 rng,
                                                 n_rollouts=FLAGS.n_rollouts)
                             returns_test, (states_test, zs_test, actions_test,
-                                           factors_test) = rollouts(
+                                           factors_test,
+                                           task_ids_test) = rollouts(
                                                env_test,
                                                loaded_state,
                                                rng,
@@ -128,8 +130,8 @@ def main(argv):
                             summary = np.mean(returns_test) - np.mean(
                                 returns_train)
                             w2_distance = task_set_init_dist(
-                                env_train.env.envs[0].task_list,
-                                env_test.env.envs[0].task_list)
+                                env_test.env.envs[0].task_list,
+                                env_train.env.envs[0].task_list)
                             w2_df.append(
                                 pd.DataFrame({
                                     r'$\eta_{test}-\eta_{train}$': [summary],
@@ -212,13 +214,15 @@ def main(argv):
                                             seed=seed + 1)
 
                         returns_train, (states_train, zs_train, actions_train,
-                                        factors_train) = rollouts(
+                                        factors_train,
+                                        task_ids_train) = rollouts(
                                             env_train,
                                             loaded_state,
                                             rng,
                                             n_rollouts=FLAGS.n_rollouts)
                         returns_test, (states_test, zs_test, actions_test,
-                                       factors_test) = rollouts(
+                                       factors_test,
+                                       task_ids_test) = rollouts(
                                            env_test,
                                            loaded_state,
                                            rng,
