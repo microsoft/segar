@@ -110,7 +110,7 @@ DEFAULT_RULES = [
     consume,
     accelerate,
 ]
-_PRECISION = 1e-7  # For collision checks.
+_PRECISION = 1e-6  # For collision checks.
 
 FactorOrder = tuple[list[Type[Factor]], ...]
 
@@ -1210,38 +1210,51 @@ class Simulator:
         :return:
         """
         s = 0
-        overlap = False
         overlap_pair = None
-        while s < 100:
-            overlap = False
+        wall_overlap = False
+        object_overlap = False
+
+        while s < 200:
             shaped_things = self.things_with_factor(Shape, Position)
             # To randomize overlap fixes in case of cycles.
             query_things = list(shaped_things.values())[:]
             random.shuffle(query_things)
-            for thing in query_things:
-                wall_overlap = False
-                object_overlap = False
-                for wall in self._walls.values():
-                    if overlaps_wall(thing, wall):
-                        fix_overlap_wall(thing, wall)
-                        wall_overlap = True
-                        overlap_pair = (thing, wall)
 
-                for other_thing in shaped_things.values():
-                    if thing is other_thing:
-                        continue
-                    if isinstance(thing, Object) and isinstance(
-                        other_thing, Object
-                    ):
-                        if overlaps(thing, other_thing):
-                            fix_overlap_objects(thing, other_thing)
-                            object_overlap = True
-                            overlap_pair = (thing, other_thing)
-                overlap = overlap or wall_overlap or object_overlap
-            if not overlap:
+            wall_overlap = False
+            object_overlap = False
+            overlap_pair = None
+
+            for thing in query_things:
+                if not (wall_overlap or object_overlap):
+                    for wall in self._walls.values():
+                        if overlaps_wall(thing, wall):
+                            fix_overlap_wall(thing, wall)
+                            wall_overlap = True
+                            overlap_pair = (thing, wall)
+
+                if not (wall_overlap or object_overlap):
+                    for other_thing in shaped_things.values():
+                        if thing is other_thing:
+                            continue
+                        if isinstance(thing, Object) and isinstance(other_thing, Object):
+                            if overlaps(thing, other_thing):
+                                fix_overlap_objects(thing, other_thing)
+                                object_overlap = True
+                                overlap_pair = (thing, other_thing)
+            if not (wall_overlap or object_overlap):
                 break
             s += 1
-        if overlap:
+
+        if wall_overlap:
+            raise ValueError(
+                f"Overlaps remain: {overlap_pair[0]}(Position="
+                f"{overlap_pair[0][Position]}) and {overlap_pair[1]}("
+                f"Wall). When this happens, it may be due to things in "
+                f"your initialization sizes being too large for the sim. "
+                f"Try reducing their sizes."
+            )
+
+        if object_overlap:
             raise ValueError(
                 f"Overlaps remain: {overlap_pair[0]}(Position="
                 f"{overlap_pair[0][Position]}) and "
@@ -1251,7 +1264,8 @@ class Simulator:
                 f"initialization sizes being too large for the "
                 f"sim. Try reducing their sizes."
             )
-        return not overlap
+
+        return not (wall_overlap or object_overlap)
 
     def jiggle_all_velocities(self):
         """Jiggles object velocities randomly.

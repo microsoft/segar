@@ -17,6 +17,8 @@ import wandb
 
 from segar.utils import append_dict, average_dict
 
+from collections import defaultdict
+
 
 _DEVICE = "cpu"
 
@@ -224,6 +226,7 @@ class Trainer:
         self.model.train()
         last_inputs = None
         features = None
+        train_acc, test_acc = defaultdict(list), defaultdict(list)
         while True:
             inputs, next_epoch = self.next_train()
             if next_epoch:
@@ -250,3 +253,4 @@ class Trainer:
                 last_inputs = inputs
             if self.epochs >= self.max_epochs:
                 break
+        return train_acc, test_acc

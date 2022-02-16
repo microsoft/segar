@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 from flax.training.train_state import TrainState
 from flax.training import checkpoints
 import jax.numpy as jnp
@@ -13,6 +18,7 @@ class NumpyRepresentation:
     A simple interface between pre-trained PPO policies (in Jax) and any other 
     framework, e.g. PyTorch, Tensorflow, etc. Converts all vectors to NumPy.
     """
+
     def __init__(self,
                  n_action: int,
                  resolution: int = 64,

@@ -325,12 +325,12 @@ def fix_overlap_wall(
             if p[0] > max_x:
                 max_x = p[0]
 
-        xf = np.array(
-            (
-                np.clip(x[0], b[0] - min_x + thresh, b[1] + max_x - thresh),
-                np.clip(x[1], b[0] - min_y + thresh, b[1] + max_y - thresh),
-            )
-        )
+        xf = np.array((
+            np.clip(x[0], b[0] - min_x + thresh,
+                    b[1] - max_x - thresh),
+            np.clip(x[1], b[0] - min_y + thresh,
+                    b[1] - max_y - thresh),
+        ))
 
     else:
         raise NotImplementedError(shape)

@@ -46,7 +46,10 @@ from segar.things import (
     ThingFactory,
 )
 from segar.repl.static_datasets.iid_samples import create_iid_from_init
+from segar.repl.static_datasets.iid_samples import IIDFromInit
 from segar.tasks.puttputt import PuttPuttInitialization, GolfBall, GoalTile
+
+import numpy as np
 
 
 def create_initialization():
@@ -173,3 +176,42 @@ def make_data_loaders(
 
     data_args = dict(input_size=input_observation.resolution)
     return train_loader, test_loader, data_args
+
+
+def make_numpy_data_loaders(
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_test: np.ndarray,
+        y_test: np.ndarray,
+        batch_size: int = 64,
+        n_workers: int = 8) -> tuple[DataLoader, DataLoader, dict]:
+    """Makes data loaders for initialization.
+
+    :param X_train: NumPy array for train inputs.
+    :param y_train: NumPy array for train labels.
+    :param X_test: NumPy array for test inputs.
+    :param y_test: NumPy array for test labels.
+    :param batch_size: Batch size for data loaders.
+    :param n_workers: Number of workers for data loaders.
+    :return:
+    """
+
+    train_dataset = IIDFromInit(X_train, y_train)
+    test_dataset = IIDFromInit(X_test, y_test)
+
+    train_loader = DataLoader(dataset=train_dataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              pin_memory=True,
+                              drop_last=True,
+                              num_workers=n_workers,
+                              sampler=None)
+    test_loader = DataLoader(dataset=test_dataset,
+                             batch_size=batch_size,
+                             shuffle=True,
+                             pin_memory=True,
+                             drop_last=True,
+                             num_workers=n_workers,
+                             sampler=None)
+
+    return train_loader, test_loader, {}

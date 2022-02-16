@@ -80,6 +80,7 @@ for task in task_names:
             for n_entities in [1, 2, 3]:
                 if task == "empty" and n_entities == 1:
                     env_name = f"Segar-{task}-{difficulty}-{observation}-v0"
+                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
@@ -93,12 +94,13 @@ for task in task_names:
                         f"Segar-{task}x{n_entities}-{difficulty}-"
                         f"{observation}-v0"
                     )
+                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
                         kwargs={
                             "env_name": f"{task}x{n_entities}-{difficulty}-"
-                                        f"{observation}"
+                            f"{observation}"
                         },
                         max_episode_steps=100,
                     )
