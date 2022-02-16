@@ -1,21 +1,21 @@
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
 __license__ = "MIT"
 
 import cv2
 import gym
 import numpy as np
-import imageio
 
 import segar
-
-resolution = 64
+from segar.factors import Position
 
 env1 = gym.make(
     "Segar-empty-hard-rgb-v0",
     num_envs=1,
     num_levels=2,
     framestack=1,
-    resolution=resolution,
+    resolution=64,
     max_steps=200,
     seed=123,
 )
@@ -24,16 +24,16 @@ env2 = gym.make(
     num_envs=1,
     num_levels=2,
     framestack=1,
-    resolution=resolution,
+    resolution=64,
     max_steps=200,
     seed=123,
 )
 env3 = gym.make(
-    "Segar-objectsx2-hard-rgb-v0",
+    "Segar-objectsx1-hard-rgb-v0",
     num_envs=1,
     num_levels=2,
     framestack=1,
-    resolution=resolution,
+    resolution=64,
     max_steps=200,
     seed=123,
 )
@@ -44,24 +44,21 @@ coords = []
 
 cv2.namedWindow("image")
 
-img_buf = np.zeros((resolution, resolution * 3 + 2, 3), np.uint8)
+img_buf = np.zeros((64, 64 * 3 + 2, 3), np.uint8)
 
-images = []
-GIF_frames = 500
 while 1:
     obs1 = env1.reset()
     obs2 = env2.reset()
     obs3 = env3.reset()
     done = False
     while 1:
-        img_buf[:, :resolution, :] = obs1
-        img_buf[:, resolution + 1 : resolution * 2 + 1, :] = obs2
-        img_buf[:, (resolution + 1) * 2 :, :] = obs3
-        img_buf_rescaled = cv2.resize(img_buf, (0, 0), fx=SCALE_FACTOR, fy=SCALE_FACTOR)
-        if GIF_frames:
-            images.append(img_buf_rescaled)
-            GIF_frames -= 1
-        cv2.imshow("image", img_buf_rescaled)
+        img_buf[:, :64, :] = obs1
+        img_buf[:, 65 : 65 + 64, :] = obs2
+        img_buf[:, 65 * 2 :, :] = obs3
+        cv2.imshow(
+            "image",
+            cv2.resize(img_buf, (0, 0), fx=SCALE_FACTOR, fy=SCALE_FACTOR),
+        )
         # k = cv2.waitKey(-1) & 0xFF
         cv2.waitKey(10)
 
@@ -73,7 +70,3 @@ while 1:
 
         if done1 or done2 or done3:
             break
-
-        if not GIF_frames:
-            imageio.mimsave("movie.gif", images)
-            print("GIF saved!")
