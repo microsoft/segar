@@ -32,13 +32,15 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer("n_rollouts", 10, "Number of per-env rollouts.")
 flags.DEFINE_string("model_dir", "../data", "PPO weights directory")
-flags.DEFINE_integer("num_envs", 4, "Number of rollout environments")
+flags.DEFINE_integer("num_envs", 1, "Number of rollout environments")
+flags.DEFINE_boolean("sample", False, "Use a=E[pi(s)] or a~pi(s)?")
 
 
 def main(argv):
     num_envs = FLAGS.num_envs
-    probe_wasserstein = False
+    probe_wasserstein = True
     probe_mine = True
+    MAX_STEPS = 100
     """
     Load the pre-trained PPO model
     """
@@ -51,6 +53,8 @@ def main(argv):
                          num_levels=1,
                          framestack=1,
                          resolution=64,
+                         max_steps=MAX_STEPS,
+                         _async=False,
                          seed=123)
 
     n_action = dummy_env.action_space[0].shape[-1]
@@ -105,41 +109,54 @@ def main(argv):
                                                  num_levels=num_levels,
                                                  framestack=1,
                                                  resolution=64,
+                                                 max_steps=MAX_STEPS,
+                                                 _async=False,
                                                  seed=seed)
                             env_test = SEGAREnv(env_name,
                                                 num_envs=num_envs,
                                                 num_levels=num_test_levels,
                                                 framestack=1,
                                                 resolution=64,
+                                                max_steps=MAX_STEPS,
+                                                _async=False,
                                                 seed=seed + 1)
                             returns_train, (states_train, zs_train,
-                                            actions_train,
-                                            factors_train,
+                                            actions_train, factors_train,
                                             task_ids_train) = rollouts(
                                                 env_train,
                                                 loaded_state,
                                                 rng,
-                                                n_rollouts=FLAGS.n_rollouts)
+                                                n_rollouts=FLAGS.n_rollouts,
+                                                sample=FLAGS.sample)
                             returns_test, (states_test, zs_test, actions_test,
                                            factors_test,
                                            task_ids_test) = rollouts(
                                                env_test,
                                                loaded_state,
                                                rng,
-                                               n_rollouts=FLAGS.n_rollouts)
-                            summary = np.mean(returns_test) - np.mean(
-                                returns_train)
+                                               n_rollouts=FLAGS.n_rollouts,
+                                               sample=FLAGS.sample)
                             w2_distance = task_set_init_dist(
                                 env_test.env.envs[0].task_list,
                                 env_train.env.envs[0].task_list)
                             w2_df.append(
                                 pd.DataFrame({
-                                    r'$\eta_{test}-\eta_{train}$': [summary],
+                                    'returns':
+                                    np.concatenate(
+                                        [returns_train, returns_test], axis=0),
+                                    'set':
+                                    ['train'
+                                     for _ in range(FLAGS.n_rollouts)] +
+                                    ['test' for _ in range(FLAGS.n_rollouts)],
+                                    # r'$\eta_{test}-\eta_{train}$': [summary],
                                     r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$':
-                                    [w2_distance],
-                                    'task': [task],
-                                    'difficulty': [difficulty],
-                                    'num_levels': [num_levels]
+                                    w2_distance,
+                                    'task':
+                                    task,
+                                    'difficulty':
+                                    difficulty,
+                                    'num_levels':
+                                    num_levels
                                 }))
                             print('W2(train levels, test levels)=%.5f' %
                                   w2_distance)
@@ -151,6 +168,26 @@ def main(argv):
             w2_df = pd.concat(w2_df)
             pickle.dump(w2_df, open('../plots/01_Wasserstein.pkl', "wb"))
 
+        w2_df = w2_df.reset_index(drop=True)
+        g = sns.FacetGrid(w2_df[w2_df['task'] == 'empty'],
+                          hue="set",
+                          col="num_levels",
+                          row="difficulty",
+                          sharex=False)
+        g.map(plt.hist, "returns", alpha=.6)
+        plt.legend()
+        plt.savefig('../plots/03_returns.png')
+        plt.clf()
+
+        x = w2_df.groupby([
+            'task', 'difficulty', 'num_levels',
+            r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$'
+        ]).apply(lambda x: x[x['set'] == 'test']['returns'].mean() - x[x[
+            'set'] == 'train']['returns'].mean()).reset_index()
+        columns = list(x.columns)
+        columns[-1] = r'$\eta_{test}-\eta_{train}$'
+        x.columns = columns
+
         # Conditional plot per task type /difficulty
         sns.lmplot(
             x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
@@ -158,14 +195,14 @@ def main(argv):
             # hue='num_levels',
             row='task',
             col='difficulty',
-            data=w2_df.reset_index(drop=True))
+            data=x)
         plt.savefig('../plots/01_Wasserstein.png')
         plt.clf()
 
         # Average plot with all tasks combined
         sns.lmplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
                    y=r'$\eta_{test}-\eta_{train}$',
-                   data=w2_df.reset_index(drop=True))
+                   data=x)
         plt.savefig('../plots/01_Wasserstein_joint.png')
 
     if probe_mine:
@@ -205,12 +242,16 @@ def main(argv):
                                              num_levels=num_levels,
                                              framestack=1,
                                              resolution=64,
+                                             max_steps=MAX_STEPS,
+                                             _async=False,
                                              seed=seed)
                         env_test = SEGAREnv(env_name,
                                             num_envs=num_envs,
                                             num_levels=num_test_levels,
                                             framestack=1,
                                             resolution=64,
+                                            max_steps=MAX_STEPS,
+                                            _async=False,
                                             seed=seed + 1)
 
                         returns_train, (states_train, zs_train, actions_train,
@@ -221,8 +262,7 @@ def main(argv):
                                             rng,
                                             n_rollouts=FLAGS.n_rollouts)
                         returns_test, (states_test, zs_test, actions_test,
-                                       factors_test,
-                                       task_ids_test) = rollouts(
+                                       factors_test, task_ids_test) = rollouts(
                                            env_test,
                                            loaded_state,
                                            rng,

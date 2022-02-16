@@ -13,7 +13,8 @@ from samples.jax.algo import select_action
 def rollouts(env: Env,
              train_state: TrainState,
              key: PRNGKey,
-             n_rollouts: int = 10):
+             n_rollouts: int = 10,
+             sample: bool = True):
     state = env.reset()
     returns = []
     states = []
@@ -27,7 +28,7 @@ def rollouts(env: Env,
                                              state.astype(jnp.float32) / 255.,
                                              None,
                                              key,
-                                             sample=True)
+                                             sample=sample)
         zs.append(z)
         actions.append(action)
         state, _, _, infos = env.step(action)
