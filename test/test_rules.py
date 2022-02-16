@@ -62,12 +62,15 @@ _factors_and_parameters_sig = {
     "n_objects": 1,
     "input_patterns": [Charge, Magnetism, Gravity],
     "returns": SetFactor[Charge],
-    "hints": {"charge": Charge, "magnetism": Magnetism, "return": SetFactor[Charge],},
+    "hints": {"charge": Charge, "magnetism": Magnetism, "return": SetFactor[Charge]},
 }
 
 
 _factors_and_parameters_ios = [
-    ((Charge(0.3), Magnetism(0.5), Gravity(0.7)), SetFactor[Charge](Charge(0.3), Gravity(0.7)),),
+    (
+        (Charge(0.3), Magnetism(0.5), Gravity(0.7)),
+        SetFactor[Charge](Charge(0.3), Gravity(0.7)),
+    ),
     (
         (Object({Charge: 0.3, Magnetism: 0.5}), Gravity(0.7)),
         SetFactor[Charge](Charge(0.3), Gravity(0.7)),
@@ -116,11 +119,11 @@ _tuples_and_parameters_with_condition_rule = conditional_transition(relation=IsE
 
 _tuples_and_parameters_ios = [
     (
-        ((Charge(0.3), Magnetism(0.5)), (Floor(), Heat(0.11), Friction(0.13)), Gravity(0.7),),
+        ((Charge(0.3), Magnetism(0.5)), (Floor(), Heat(0.11), Friction(0.13)), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     ),
     (
-        (Object({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7),),
+        (Object({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     ),
 ]
@@ -128,7 +131,7 @@ _tuples_and_parameters_ios = [
 
 _tuples_and_parameters_with_entity_pass_ios = [
     (
-        (Magnet({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7),),
+        (Magnet({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -136,7 +139,7 @@ _tuples_and_parameters_with_entity_pass_ios = [
 
 _tuples_and_parameters_with_entity_fail_ios = [
     (
-        (Charger({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7),),
+        (Charger({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -156,7 +159,7 @@ _tuples_and_parameters_with_factor_pass_ios = [
 
 _tuples_and_parameters_with_factor_fail_ios = [
     (
-        (Entity({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7),),
+        (Entity({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -164,7 +167,7 @@ _tuples_and_parameters_with_factor_fail_ios = [
 
 _tuples_and_parameters_with_condition_pass_ios = [
     (
-        (Entity({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7),),
+        (Entity({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -172,7 +175,7 @@ _tuples_and_parameters_with_condition_pass_ios = [
 
 _tuples_and_parameters_with_condition_fail_ios = [
     (
-        (Entity({Charge: 0.4, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7),),
+        (Entity({Charge: 0.4, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.4), Gravity(0.7)),
     )
 ]
@@ -192,7 +195,7 @@ _entities_and_parameters_sig = {
     "n_objects": 2,
     "input_patterns": [Object, Object, Gravity],
     "returns": Differential[Charge],
-    "hints": {"o1": Object, "o2": Object, "gravity": Gravity, "return": Differential[Charge],},
+    "hints": {"o1": Object, "o2": Object, "gravity": Gravity, "return": Differential[Charge]},
 }
 
 
@@ -237,7 +240,9 @@ class TestRules(unittest.TestCase):
                 "returns",
             ):
                 self.assertEqual(
-                    signature_info[k], target_info[k], f"Signature on {rule_name} failed on {k}.",
+                    signature_info[k],
+                    target_info[k],
+                    f"Signature on {rule_name} failed on {k}.",
                 )
 
         bad_rule_names = ("factors_and_entities",)

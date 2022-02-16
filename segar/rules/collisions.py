@@ -67,7 +67,7 @@ def overlap_time(obj1: Object, obj2: Object) -> Time:
 def object_collision(
     o1: Object, o2: Object
 ) -> Tuple[
-    SetFactor[Velocity], SetFactor[Velocity], SetFactor[StoredEnergy], SetFactor[StoredEnergy],
+    SetFactor[Velocity], SetFactor[Velocity], SetFactor[StoredEnergy], SetFactor[StoredEnergy]
 ]:
     """Computes collision rules.
 

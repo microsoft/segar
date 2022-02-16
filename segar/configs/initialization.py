@@ -48,11 +48,9 @@ from segar.tasks.billiards import billiards_default_config
 
 default_config = {
     "numbers": [
-        (ThingFactory([Charger, Magnet, Bumper, Damper, Object]), DiscreteRangeNoise(2, 3),),
+        (ThingFactory([Charger, Magnet, Bumper, Damper, Object]), DiscreteRangeNoise(2, 3)),
         (
-            ThingFactory(
-                {SandTile: 2 / 5.0, MagmaTile: 1 / 5.0, Hole: 1 / 5.0, FireTile: 1 / 5.0,}
-            ),
+            ThingFactory({SandTile: 2 / 5.0, MagmaTile: 1 / 5.0, Hole: 1 / 5.0, FireTile: 1 / 5.0}),
             DiscreteRangeNoise(1, 2),
         ),
     ],
@@ -66,10 +64,10 @@ default_config = {
         Prior(Mass, 1.0),
         Prior(Mobile, True),
         Prior(
-            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger,
+            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger
         ),
         Prior(
-            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet,
+            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet
         ),
         Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
     ],

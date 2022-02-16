@@ -60,7 +60,7 @@ def create_initialization():
         numbers=[
             (
                 ThingFactory(
-                    [Charger, Magnet, Bumper, Damper, Object, SandTile, MagmaTile, Hole, FireTile,]
+                    [Charger, Magnet, Bumper, Damper, Object, SandTile, MagmaTile, Hole, FireTile]
                 ),
                 0,
             ),
@@ -73,8 +73,8 @@ def create_initialization():
             Prior(Position, RandomTopLocation(), entity_type=GoalTile),
             Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
             Prior(Shape, Circle(0.3), entity_type=GoalTile),
-            Prior(Size, GaussianNoise(0.3, 0.01, clip=(0.1, 0.3)), entity_type=Object,),
-            Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+            Prior(Size, GaussianNoise(0.3, 0.01, clip=(0.1, 0.3)), entity_type=Object),
+            Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
             Prior(Mass, 1.0),
             Prior(Mobile, True),
             Prior(
@@ -87,7 +87,7 @@ def create_initialization():
                 GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
                 entity_type=GolfBall,
             ),
-            Prior(Density, GaussianNoise(1.0, 0.1, clip=(0.0, 2.0)), entity_type=GolfBall,),
+            Prior(Density, GaussianNoise(1.0, 0.1, clip=(0.0, 2.0)), entity_type=GolfBall),
             Prior(Mass, GaussianNoise(2.0, 0.5), entity_type=GolfBall),
             Prior(StoredEnergy, GaussianNoise(0, 2.0), entity_type=GolfBall),
             Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
@@ -119,10 +119,10 @@ def make_data_loaders(
 
     initialization = initialization or create_initialization()
     train_dataset = create_iid_from_init(
-        initialization, input_observation, target_observation, n_observations=1000,
+        initialization, input_observation, target_observation, n_observations=1000
     )
     test_dataset = create_iid_from_init(
-        initialization, input_observation, target_observation, n_observations=1000,
+        initialization, input_observation, target_observation, n_observations=1000
     )
 
     train_loader = DataLoader(
