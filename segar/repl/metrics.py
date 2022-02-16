@@ -1,6 +1,5 @@
 __author__ = "Bogdan Mazoure"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
 __license__ = "MIT"
 """Representation learning metrics (e.g. MINE).
 
@@ -20,11 +19,12 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test):
         X_train=np.concatenate([X_train, Z_train], axis=1),
         y_train=np.ones(shape=X_train.shape[0]),
         X_test=np.concatenate([X_test, Z_test], axis=1),
-        y_test=np.ones(shape=X_test.shape[0]))
+        y_test=np.ones(shape=X_test.shape[0]),
+    )
 
     def update_function(model, opt, joint, **kwargs):
         joint, labels = joint
-        log_2 = math.log(2.)
+        log_2 = math.log(2.0)
         marginal = torch.gather(joint, 0, torch.rand(size=joint.shape).argsort(0))
         joint = model(joint)
         marginal = model(marginal)
@@ -33,7 +33,7 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test):
         E_neg = F.softplus(-marginal) + marginal - log_2
 
         loss = E_neg.mean() - E_pos.mean()
-        results = {'mi': -loss.detach().cpu().item()}
+        results = {"mi": -loss.detach().cpu().item()}
         features = None
 
         opt.zero_grad()
@@ -43,7 +43,7 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test):
 
     def test_function(model, joint):
         joint, labels = joint
-        log_2 = math.log(2.)
+        log_2 = math.log(2.0)
         marginal = torch.gather(joint, 0, torch.rand(size=joint.shape).argsort(0))
         joint = model(joint)
         marginal = model(marginal)
@@ -52,18 +52,21 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test):
         E_neg = F.softplus(-marginal) + marginal - log_2
 
         loss = E_neg.mean() - E_pos.mean()
-        results = {'mi': -loss.detach().cpu().item()}
+        results = {"mi": -loss.detach().cpu().item()}
         return results
 
-    def yielder(_DEVICE, inputs): return [inp.to(_DEVICE) for inp in inputs]
+    def yielder(_DEVICE, inputs):
+        return [inp.to(_DEVICE) for inp in inputs]
 
-    trainer = Trainer(model=model,
-                      opt=opt,
-                      train_loader=train,
-                      test_loader=test,
-                      data_iter=data_iterator(yielder),
-                      update_func=update_function,
-                      test_func=test_function,
-                      max_epochs=10)
+    trainer = Trainer(
+        model=model,
+        opt=opt,
+        train_loader=train,
+        test_loader=test,
+        data_iter=data_iterator(yielder),
+        update_func=update_function,
+        test_func=test_function,
+        max_epochs=10,
+    )
     train_metrics, test_metrics = trainer()
     return train_metrics, test_metrics

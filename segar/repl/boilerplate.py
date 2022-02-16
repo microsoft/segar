@@ -47,7 +47,7 @@ def updater(update_function: Callable) -> Callable:
     """
 
     def update(
-        model: torch.nn.Module, opt: Optimizer, inputs: tuple[torch.Tensor], **kwargs,
+        model: torch.nn.Module, opt: Optimizer, inputs: tuple[torch.Tensor], **kwargs
     ) -> tuple[dict[str, float], Union[dict[str, torch.Tensor], None]]:
 
         t0 = time.time()
@@ -162,9 +162,7 @@ class Trainer:
         self.make_train_iter()
 
     def make_train_iter(self) -> None:
-        """Makes a training iterator.
-
-        """
+        """Makes a training iterator."""
         self.train_iter = self.data_iter(
             self.train_loader, desc=f"Training (epoch" f" {self.epochs})"
         )
@@ -213,9 +211,7 @@ class Trainer:
         return train_results, test_results
 
     def __call__(self):
-        """Main loop function.
-
-        """
+        """Main loop function."""
         self.model.train()
         last_inputs = None
         features = None
@@ -229,7 +225,7 @@ class Trainer:
                         wandb.log({f"{k}/train": train_results[k]}, step=self.epochs)
                     else:
                         wandb.log(
-                            {f"{k}/train": train_results[k], f"{k}/test": test_results[k],},
+                            {f"{k}/train": train_results[k], f"{k}/test": test_results[k]},
                             step=self.epochs,
                         )
                 if self.vis_func is not None:
