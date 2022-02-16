@@ -168,7 +168,7 @@ class FrameStackWrapper:
             low=0,
             high=255,
             shape=np.concatenate(
-                [wrapped_obs_shape[:2], [wrapped_obs_shape[2] * n_frames]], axis=0,
+                [wrapped_obs_shape[:2], [wrapped_obs_shape[2] * n_frames]], axis=0
             ),
             dtype=np.uint8,
         )

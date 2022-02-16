@@ -93,18 +93,17 @@ class GolfBall(
 
 
 class GoalTile(
-    Tile, default={Label: "goal", Order: -2, Shape: Circle(0.3), Text: "G", ID: "goal",},
+    Tile,
+    default={Label: "goal", Order: -2, Shape: Circle(0.3), Text: "G", ID: "goal"},
 ):
     pass
 
 
 puttputt_default_config = {
     "numbers": [
-        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), DiscreteRangeNoise(1, 2),),
+        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), DiscreteRangeNoise(1, 2)),
         (
-            ThingFactory(
-                {SandTile: 2 / 5.0, MagmaTile: 1 / 5.0, Hole: 1 / 5.0, FireTile: 1 / 5.0,}
-            ),
+            ThingFactory({SandTile: 2 / 5.0, MagmaTile: 1 / 5.0, Hole: 1 / 5.0, FireTile: 1 / 5.0}),
             DiscreteRangeNoise(1, 2),
         ),
         (GoalTile, 1),
@@ -125,10 +124,10 @@ puttputt_default_config = {
         Prior(Mobile, True, entity_type=Ball),
         Prior(Mobile, True, entity_type=GolfBall),
         Prior(
-            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger,
+            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger
         ),
         Prior(
-            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet,
+            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet
         ),
         Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
     ],
@@ -139,7 +138,7 @@ puttputt_random_middle_config = {
     "numbers": [
         (
             ThingFactory(
-                [Charger, Magnet, Bumper, Damper, Object, SandTile, MagmaTile, Hole, FireTile,]
+                [Charger, Magnet, Bumper, Damper, Object, SandTile, MagmaTile, Hole, FireTile]
             ),
             1,
         ),
@@ -157,10 +156,10 @@ puttputt_random_middle_config = {
         Prior(Mass, 1.0),
         Prior(Mobile, True),
         Prior(
-            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger,
+            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger
         ),
         Prior(
-            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet,
+            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet
         ),
         Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
     ],
@@ -168,12 +167,12 @@ puttputt_random_middle_config = {
 
 
 invisiball_config = {
-    "numbers": [(Charger, DiscreteRangeNoise(1, 3)), (GoalTile, 1), (GolfBall, 1),],
+    "numbers": [(Charger, DiscreteRangeNoise(1, 3)), (GoalTile, 1), (GolfBall, 1)],
     "priors": [
         Prior(Position, RandomMiddleLocation(), entity_type=Charger),
         Prior(Position, RandomBottomLocation(), entity_type=GolfBall),
         Prior(Position, RandomTopLocation(), entity_type=GoalTile),
-        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.25)), entity_type=Object,),
+        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.25)), entity_type=Object),
         Prior(Mass, 1.0),
         Prior(Mobile, True),
         Prior(Charge, 1.0, entity_type=Charger),
@@ -252,9 +251,7 @@ class PuttPuttInitialization(ArenaInitialization):
 
 
 class PuttPutt(Task):
-    """The putt-putt task.
-
-    """
+    """The putt-putt task."""
 
     def __init__(
         self,
@@ -315,7 +312,7 @@ class PuttPutt(Task):
         return goal_id
 
     def distance(self) -> float:
-        """ Calculate euclidean distance to goal, normalized by arena diagonal.
+        """Calculate euclidean distance to goal, normalized by arena diagonal.
 
         :return: float, Distance of ball to goal
         """

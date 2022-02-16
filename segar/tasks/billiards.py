@@ -49,7 +49,7 @@ _ACTION_RANGE = (-100, 100)
 
 
 def billiard_ball_positions(
-    start: list[float, float], r: float = _DEFAULT_BALL_SIZE / 2 + 1e-3, n: int = 10,
+    start: list[float, float], r: float = _DEFAULT_BALL_SIZE / 2 + 1e-3, n: int = 10
 ) -> list[list[float, float]]:
     x, y = start
     sq2r = math.sqrt(2.0) * r
@@ -85,7 +85,7 @@ class CueBall(
 
 
 billiards_default_config = {
-    "numbers": [(CueBall, 1),],
+    "numbers": [(CueBall, 1)],
     "priors": [
         Prior(
             Size,
