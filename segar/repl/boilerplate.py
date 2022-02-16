@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Boilerplate for training models easily with PyTorch.
 
@@ -16,6 +14,8 @@ from tqdm import tqdm
 import wandb
 
 from segar.utils import append_dict, average_dict
+
+from collections import defaultdict
 
 
 _DEVICE = "cpu"
@@ -47,10 +47,7 @@ def updater(update_function: Callable) -> Callable:
     """
 
     def update(
-        model: torch.nn.Module,
-        opt: Optimizer,
-        inputs: tuple[torch.Tensor],
-        **kwargs,
+        model: torch.nn.Module, opt: Optimizer, inputs: tuple[torch.Tensor], **kwargs
     ) -> tuple[dict[str, float], Union[dict[str, torch.Tensor], None]]:
 
         t0 = time.time()
@@ -78,9 +75,7 @@ def make_optimizer(model: torch.nn.Module, learning_rate: float) -> Optimizer:
     :param learning_rate: Learning rate.
     :return: Optimizer.
     """
-    opt = torch.optim.Adam(
-        model.parameters(), lr=learning_rate, betas=(0.8, 0.999), eps=1e-8
-    )
+    opt = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.8, 0.999), eps=1e-8)
     return opt
 
 
@@ -167,9 +162,7 @@ class Trainer:
         self.make_train_iter()
 
     def make_train_iter(self) -> None:
-        """Makes a training iterator.
-
-        """
+        """Makes a training iterator."""
         self.train_iter = self.data_iter(
             self.train_loader, desc=f"Training (epoch" f" {self.epochs})"
         )
@@ -218,35 +211,28 @@ class Trainer:
         return train_results, test_results
 
     def __call__(self):
-        """Main loop function.
-
-        """
+        """Main loop function."""
         self.model.train()
         last_inputs = None
         features = None
+        train_acc, test_acc = defaultdict(list), defaultdict(list)
         while True:
             inputs, next_epoch = self.next_train()
             if next_epoch:
                 train_results, test_results = self.test()
                 for k in train_results.keys():
                     if test_results is None:
-                        wandb.log(
-                            {f"{k}/train": train_results[k]}, step=self.epochs
-                        )
+                        wandb.log({f"{k}/train": train_results[k]}, step=self.epochs)
                     else:
                         wandb.log(
-                            {
-                                f"{k}/train": train_results[k],
-                                f"{k}/test": test_results[k],
-                            },
+                            {f"{k}/train": train_results[k], f"{k}/test": test_results[k]},
                             step=self.epochs,
                         )
                 if self.vis_func is not None:
                     self.vis_func(last_inputs, features)
             else:
-                results, features = self.update_func(
-                    self.model, self.optim, inputs
-                )
+                results, features = self.update_func(self.model, self.optim, inputs)
                 last_inputs = inputs
             if self.epochs >= self.max_epochs:
                 break
+        return train_acc, test_acc

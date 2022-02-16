@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Rules for collisions
 
@@ -61,9 +59,7 @@ def overlap_time(obj1: Object, obj2: Object) -> Time:
         return Time(0.0)
 
     unit_vel = relative_vel.unit_vector()
-    dist = shape1.fix_overlap(
-        shape2, normal_vec.value, unit_vector=unit_vel.value
-    )
+    dist = shape1.fix_overlap(shape2, normal_vec.value, unit_vector=unit_vel.value)
     return Time(dist / relative_vel.norm())
 
 
@@ -71,10 +67,7 @@ def overlap_time(obj1: Object, obj2: Object) -> Time:
 def object_collision(
     o1: Object, o2: Object
 ) -> Tuple[
-    SetFactor[Velocity],
-    SetFactor[Velocity],
-    SetFactor[StoredEnergy],
-    SetFactor[StoredEnergy],
+    SetFactor[Velocity], SetFactor[Velocity], SetFactor[StoredEnergy], SetFactor[StoredEnergy]
 ]:
     """Computes collision rules.
 
@@ -122,9 +115,7 @@ def object_collision(
     v2f = unit_norm * v2nf + unit_tang * v2t
 
     # Check conservation of momentum
-    check = np.allclose(
-        (v1f * m1 + v2f * m2).value, (v1_ * m1 + v2_ * m2).value, atol=atol
-    )
+    check = np.allclose((v1f * m1 + v2f * m2).value, (v1_ * m1 + v2_ * m2).value, atol=atol)
 
     if not check:
         fail_str = (
@@ -184,9 +175,7 @@ def overlaps_wall(thing: Thing, wall: Wall) -> bool:
     raise NotImplementedError(type(wall))
 
 
-def overlap_time_wall(
-    obj: Object, wall: SquareWall, thresh: float = 1e-7
-) -> Time:
+def overlap_time_wall(obj: Object, wall: SquareWall, thresh: float = 1e-7) -> Time:
     """Time to reverse an overlap with wall, given shape, position,
         and velocity of object.
 
@@ -284,9 +273,7 @@ def wall_collision(obj: Object, wall: SquareWall) -> SetFactor[Velocity]:
     return SetFactor[Velocity](v, vf)
 
 
-def fix_overlap_wall(
-    obj: Thing, wall: SquareWall, thresh: float = 1e-5
-) -> None:
+def fix_overlap_wall(obj: Thing, wall: SquareWall, thresh: float = 1e-5) -> None:
     """Fixes any overlaps with wall.
 
     Useful in initialization when objects may overlap just due to position
@@ -327,8 +314,8 @@ def fix_overlap_wall(
 
         xf = np.array(
             (
-                np.clip(x[0], b[0] - min_x + thresh, b[1] + max_x - thresh),
-                np.clip(x[1], b[0] - min_y + thresh, b[1] + max_y - thresh),
+                np.clip(x[0], b[0] - min_x + thresh, b[1] - max_x - thresh),
+                np.clip(x[1], b[0] - min_y + thresh, b[1] - max_y - thresh),
             )
         )
 

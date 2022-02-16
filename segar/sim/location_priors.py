@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Noise distributions for locations in the sim.
 
@@ -55,9 +53,7 @@ class Position2D(Noise[np.ndarray]):
         return np.prod(cdfs, axis=1)
 
     def log_cdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
-        log_cdfs = [
-            dist.logcdf(samples[i]) for i, dist in enumerate(self._dists)
-        ]
+        log_cdfs = [dist.logcdf(samples[i]) for i, dist in enumerate(self._dists)]
         return sum(log_cdfs)
 
     def pdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
@@ -65,9 +61,7 @@ class Position2D(Noise[np.ndarray]):
         return np.prod(pdfs, axis=1)
 
     def log_pdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
-        log_pdfs = [
-            dist.logpdf(samples[i]) for i, dist in enumerate(self._dists)
-        ]
+        log_pdfs = [dist.logpdf(samples[i]) for i, dist in enumerate(self._dists)]
         return sum(log_pdfs)
 
     def sample(self) -> Position:

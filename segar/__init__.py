@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 import os
@@ -12,9 +10,7 @@ from gym import register
 
 _SIM = None
 
-ASSET_DIR = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "..", "resources"
-)
+ASSET_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "resources")
 
 
 def get_sim():
@@ -80,26 +76,20 @@ for task in task_names:
             for n_entities in [1, 2, 3]:
                 if task == "empty" and n_entities == 1:
                     env_name = f"Segar-{task}-{difficulty}-{observation}-v0"
+                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={
-                            "env_name": f"{task}-{difficulty}-{observation}"
-                        },
+                        kwargs={"env_name": f"{task}-{difficulty}-{observation}"},
                         max_episode_steps=100,
                     )
                 elif task != "empty":
-                    env_name = (
-                        f"Segar-{task}x{n_entities}-{difficulty}-"
-                        f"{observation}-v0"
-                    )
+                    env_name = f"Segar-{task}x{n_entities}-{difficulty}-" f"{observation}-v0"
+                    # print(env_name)
                     register(
                         id=env_name,
                         entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={
-                            "env_name": f"{task}x{n_entities}-{difficulty}-"
-                                        f"{observation}"
-                        },
+                        kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-" f"{observation}"},
                         max_episode_steps=100,
                     )
 

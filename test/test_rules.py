@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 import unittest
 
@@ -53,9 +51,9 @@ _factors_and_parameters_rule_with_entity = TransitionFunction(
 _factors_and_parameters_rule_with_factor = TransitionFunction(
     _factors_and_parameters, factor_type=Mass
 )
-_factors_and_parameters_rule_with_condition = conditional_transition(
-    relation=IsEqual(Charge, 1.0)
-)(_factors_and_parameters)
+_factors_and_parameters_rule_with_condition = conditional_transition(relation=IsEqual(Charge, 1.0))(
+    _factors_and_parameters
+)
 
 
 _factors_and_parameters_sig = {
@@ -64,11 +62,7 @@ _factors_and_parameters_sig = {
     "n_objects": 1,
     "input_patterns": [Charge, Magnetism, Gravity],
     "returns": SetFactor[Charge],
-    "hints": {
-        "charge": Charge,
-        "magnetism": Magnetism,
-        "return": SetFactor[Charge],
-    },
+    "hints": {"charge": Charge, "magnetism": Magnetism, "return": SetFactor[Charge]},
 }
 
 
@@ -118,26 +112,18 @@ _tuples_and_parameters_with_entity_rule = TransitionFunction(
 _tuples_and_parameters_with_factor_rule = TransitionFunction(
     _tuples_and_parameters, factor_type=Mass
 )
-_tuples_and_parameters_with_condition_rule = conditional_transition(
-    relation=IsEqual(Charge, 0.3)
-)(_tuples_and_parameters)
+_tuples_and_parameters_with_condition_rule = conditional_transition(relation=IsEqual(Charge, 0.3))(
+    _tuples_and_parameters
+)
 
 
 _tuples_and_parameters_ios = [
     (
-        (
-            (Charge(0.3), Magnetism(0.5)),
-            (Floor(), Heat(0.11), Friction(0.13)),
-            Gravity(0.7),
-        ),
+        ((Charge(0.3), Magnetism(0.5)), (Floor(), Heat(0.11), Friction(0.13)), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     ),
     (
-        (
-            Object({Charge: 0.3, Magnetism: 0.5}),
-            Tile({Heat: 0.11, Friction: 0.13}),
-            Gravity(0.7),
-        ),
+        (Object({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     ),
 ]
@@ -145,11 +131,7 @@ _tuples_and_parameters_ios = [
 
 _tuples_and_parameters_with_entity_pass_ios = [
     (
-        (
-            Magnet({Charge: 0.3, Magnetism: 0.5}),
-            Tile({Heat: 0.11, Friction: 0.13}),
-            Gravity(0.7),
-        ),
+        (Magnet({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -157,11 +139,7 @@ _tuples_and_parameters_with_entity_pass_ios = [
 
 _tuples_and_parameters_with_entity_fail_ios = [
     (
-        (
-            Charger({Charge: 0.3, Magnetism: 0.5}),
-            Tile({Heat: 0.11, Friction: 0.13}),
-            Gravity(0.7),
-        ),
+        (Charger({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -181,11 +159,7 @@ _tuples_and_parameters_with_factor_pass_ios = [
 
 _tuples_and_parameters_with_factor_fail_ios = [
     (
-        (
-            Entity({Charge: 0.3, Magnetism: 0.5}),
-            Tile({Heat: 0.11, Friction: 0.13}),
-            Gravity(0.7),
-        ),
+        (Entity({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -193,11 +167,7 @@ _tuples_and_parameters_with_factor_fail_ios = [
 
 _tuples_and_parameters_with_condition_pass_ios = [
     (
-        (
-            Entity({Charge: 0.3, Magnetism: 0.5}),
-            Tile({Heat: 0.11, Friction: 0.13}),
-            Gravity(0.7),
-        ),
+        (Entity({Charge: 0.3, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.3), Gravity(0.7)),
     )
 ]
@@ -205,11 +175,7 @@ _tuples_and_parameters_with_condition_pass_ios = [
 
 _tuples_and_parameters_with_condition_fail_ios = [
     (
-        (
-            Entity({Charge: 0.4, Magnetism: 0.5}),
-            Tile({Heat: 0.11, Friction: 0.13}),
-            Gravity(0.7),
-        ),
+        (Entity({Charge: 0.4, Magnetism: 0.5}), Tile({Heat: 0.11, Friction: 0.13}), Gravity(0.7)),
         Differential[Charge](Charge(0.4), Gravity(0.7)),
     )
 ]
@@ -218,9 +184,7 @@ _tuples_and_parameters_with_condition_fail_ios = [
 #  Entities and parameters
 
 
-def _entities_and_parameters(
-    o1: Object, o2: Object, gravity: Gravity
-) -> Differential[Charge]:
+def _entities_and_parameters(o1: Object, o2: Object, gravity: Gravity) -> Differential[Charge]:
     charge = o1[Charge]
     return Differential[Charge](charge, gravity)
 
@@ -231,12 +195,7 @@ _entities_and_parameters_sig = {
     "n_objects": 2,
     "input_patterns": [Object, Object, Gravity],
     "returns": Differential[Charge],
-    "hints": {
-        "o1": Object,
-        "o2": Object,
-        "gravity": Gravity,
-        "return": Differential[Charge],
-    },
+    "hints": {"o1": Object, "o2": Object, "gravity": Gravity, "return": Differential[Charge]},
 }
 
 
@@ -289,9 +248,7 @@ class TestRules(unittest.TestCase):
         bad_rule_names = ("factors_and_entities",)
         for rule_name in bad_rule_names:
             rule_fn = globals()["_" + rule_name]
-            with self.assertRaises(
-                TypeError, msg=f"{rule_name} should fail with " f"TypeError"
-            ):
+            with self.assertRaises(TypeError, msg=f"{rule_name} should fail with " f"TypeError"):
                 inspect_signature(rule_fn)
 
     def test_rules(self):
@@ -308,9 +265,7 @@ class TestRules(unittest.TestCase):
             for inp, target in rule_ios:
                 out = rule(*inp)
                 if isinstance(out, DidNotMatch):
-                    raise ValueError(
-                        f"Input {inp} did not match on" f" {rule_name}."
-                    )
+                    raise ValueError(f"Input {inp} did not match on" f" {rule_name}.")
                 self.assertEqual(out, target)
 
     def test_rule_breaking(self):
@@ -358,9 +313,7 @@ class TestRules(unittest.TestCase):
             for inp, target in rule_ios_pass:
                 out = rule(*inp)
                 if isinstance(out, DidNotMatch):
-                    raise ValueError(
-                        f"Input {inp} did not match on" f" {rule_name}."
-                    )
+                    raise ValueError(f"Input {inp} did not match on" f" {rule_name}.")
                 self.assertEqual(out, target)
 
             for inp, target in rule_ios_fail:
@@ -404,9 +357,7 @@ class TestRules(unittest.TestCase):
             Prior(Position, [1.5, 1.5], relation=IsEqual(Label, "ball")),
             Prior(Position, [2.0, 2.0], relation=IsEqual(ID, "golfball")),
         ]
-        init = ArenaInitialization(
-            config={"numbers": numbers, "priors": priors}
-        )
+        init = ArenaInitialization(config={"numbers": numbers, "priors": priors})
         init.set_sim(sim)
         if init.sim is not sim:
             raise ValueError("init has wrong sim.")

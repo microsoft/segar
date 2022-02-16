@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Special case rules.
 
@@ -43,9 +41,7 @@ from .transitions import (
 
 
 @TransitionFunction
-def move(
-    x: Position, v: Velocity, min_vel: MinVelocity
-) -> Differential[Position]:
+def move(x: Position, v: Velocity, min_vel: MinVelocity) -> Differential[Position]:
     """Moves a thing that has velocity.
 
     :param x: Position to change.
@@ -92,12 +88,7 @@ def stop_condition(
 
 @TransitionFunction
 def kill_condition(
-    m: Mass,
-    v: Velocity,
-    vis: Visible,
-    a: Acceleration,
-    alive: Alive,
-    min_mass: MinMass,
+    m: Mass, v: Velocity, vis: Visible, a: Acceleration, alive: Alive, min_mass: MinMass,
 ) -> Tuple[
     SetFactor[Mass],
     SetFactor[Velocity],
@@ -128,9 +119,7 @@ def kill_condition(
 
 @conditional_transition(relation=IsOn())
 def apply_friction(
-    o1_factors: Tuple[Mass, Velocity, Acceleration],
-    o2_factors: Tuple[Friction],
-    gravity: Gravity,
+    o1_factors: Tuple[Mass, Velocity, Acceleration], o2_factors: Tuple[Friction], gravity: Gravity,
 ) -> Aggregate[Acceleration]:
     """Applies friction to an object conditioned on it is on something with
         friction.
@@ -155,9 +144,7 @@ def apply_friction(
 
 
 @conditional_transition(relation=IsOn())
-def apply_burn(
-    o1_factors: Tuple[Mass, Mobile], o2_factors: Tuple[Heat],
-) -> SetFactor[Mass]:
+def apply_burn(o1_factors: Tuple[Mass, Mobile], o2_factors: Tuple[Heat],) -> SetFactor[Mass]:
     """Reduces the mass of something conditioned it is on something with heat.
 
     :param o1_factors: First set of factors.

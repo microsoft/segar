@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 from collections import deque
@@ -41,23 +39,19 @@ class SequentialTaskWrapper:
 
         self.task_list = []
         self.mdp_list = []
-        for _ in range(num_levels):
+        for i in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
-            task = PuttPutt(
-                action_range=action_range, initialization=initialization
-            )
+            task = PuttPutt(action_range=action_range, initialization=initialization)
             sim = Simulator(
                 state_buffer_length=50,
                 wall_damping=wall_damping,
                 friction=friction,
                 safe_mode=False,
-                save_path=save_path,
+                save_path=save_path + str(i),
             )
             task.set_sim(sim)
             task.sample()
-            mdp = FrameStackWrapper(
-                ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack
-            )
+            mdp = FrameStackWrapper(ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack)
             self.task_list.append(task)
             self.mdp_list.append(mdp)
 
@@ -116,9 +110,7 @@ class SequentialTaskWrapper:
 
     def _pick_env(self, task_id=None):
         if task_id is None:
-            self.task_id = np.random.randint(
-                low=0, high=self.n_envs, size=(1,)
-            ).item()
+            self.task_id = np.random.randint(low=0, high=self.n_envs, size=(1,)).item()
         else:
             self.task_id = task_id
         return self.mdp_list[self.task_id]
@@ -176,8 +168,7 @@ class FrameStackWrapper:
             low=0,
             high=255,
             shape=np.concatenate(
-                [wrapped_obs_shape[:2], [wrapped_obs_shape[2] * n_frames]],
-                axis=0,
+                [wrapped_obs_shape[:2], [wrapped_obs_shape[2] * n_frames]], axis=0
             ),
             dtype=np.uint8,
         )

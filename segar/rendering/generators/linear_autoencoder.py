@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Module for training and loading Linear AE visual features.
 
@@ -57,17 +55,13 @@ class RandomUniformFeatures(Dataset):
         return 2 ** self.n_features
 
     def __getitem__(self, idx: int) -> np.ndarray:
-        bits = np.unpackbits(np.array([idx], dtype=">i8").view(np.uint8))[
-            -self.n_features:
-        ]
+        bits = np.unpackbits(np.array([idx], dtype=">i8").view(np.uint8))[-self.n_features :]
         bits = bits.astype(np.float64)
         mag = np.random.uniform(low=-1.0, high=1.0, size=bits.shape)
         return bits * mag
 
 
-def make_data_loaders(
-    n_features: int, batch_size: int = 64, n_workers: int = 0
-) -> DataLoader:
+def make_data_loaders(n_features: int, batch_size: int = 64, n_workers: int = 0) -> DataLoader:
     train_dataset = RandomUniformFeatures(n_features)
     train_loader = DataLoader(
         dataset=train_dataset,
@@ -104,18 +98,12 @@ class AutoEncoder(nn.Module):
         self.n_features = n_features
         self.l2_reg = l2_regularization
 
-        self.convt = torch.nn.ConvTranspose2d(
-            n_features, n_inputs, kernel_size, stride, 1
-        )
-        self.conv = torch.nn.Conv2d(
-            n_inputs, n_features, kernel_size, stride, 1
-        )
+        self.convt = torch.nn.ConvTranspose2d(n_features, n_inputs, kernel_size, stride, 1)
+        self.conv = torch.nn.Conv2d(n_inputs, n_features, kernel_size, stride, 1)
 
         self.mse = nn.functional.mse_loss
 
-    def losses(
-        self, x: torch.Tensor, features: torch.Tensor, out: torch.Tensor
-    ) -> torch.Tensor:
+    def losses(self, x: torch.Tensor, features: torch.Tensor, out: torch.Tensor) -> torch.Tensor:
 
         loss_recon = self.mse(x, out)
 
@@ -190,8 +178,7 @@ def test(model: torch.nn.Module, inputs: torch.Tensor) -> dict:
 
 
 def visualize(
-    inputs: tuple[torch.tensor, torch.tensor],
-    features: dict[str, torch.Tensor],
+    inputs: tuple[torch.tensor, torch.tensor], features: dict[str, torch.Tensor],
 ) -> None:
     images = wandb.Image((features["vis_features"] + 0.5) * 255)
     wandb.log(dict(examples=images))
@@ -224,10 +211,7 @@ class LinearAEGenerator(Generator):
         )
 
         model = AutoEncoder(
-            self.n_channels,
-            self.n_factors,
-            kernel_size=kernel_size,
-            stride=stride,
+            self.n_channels, self.n_factors, kernel_size=kernel_size, stride=stride,
         )
         model.init_weights(1.0)
         self.model = model.to(get_device())
@@ -299,22 +283,15 @@ def main(argv):
     for n in range(FLAGS.n_models):
         set_seeds(seed)
         LinearAEGenerator(
-            out_path=FLAGS.out_path,
-            model_path=FLAGS.pretrained_weights,
-            seed=seed,
+            out_path=FLAGS.out_path, model_path=FLAGS.pretrained_weights, seed=seed,
         )
         seed += 1
 
 
 if __name__ == "__main__":
+    flags.DEFINE_string("pretrained_weights", None, "Optional weights to load.", short_name="p")
     flags.DEFINE_string(
-        "pretrained_weights", None, "Optional weights to load.", short_name="p"
-    )
-    flags.DEFINE_string(
-        "out_path",
-        None,
-        "Optional out path for trained " "weights.",
-        short_name="o",
+        "out_path", None, "Optional out path for trained " "weights.", short_name="o",
     )
     flags.DEFINE_integer("seed", 0, "Random seed.")
     flags.DEFINE_integer("n_models", 1, "Number of models to generate")

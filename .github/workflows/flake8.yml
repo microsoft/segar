@@ -19,5 +19,5 @@ jobs:
         pip install flake8
     - name: Analysing the code with pylint
       run: |
-        flake8 segar
-        flake8 test
+        flake8 --ignore=E203,W503 segar
+        flake8 --ignore=E203,W503 test

@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Task component of the MDP
 
@@ -50,10 +48,7 @@ class Task:
 
         self._sim = None
         self._action_space = Box(
-            action_range[0],
-            action_range[1],
-            shape=action_shape,
-            dtype=action_type,
+            action_range[0], action_range[1], shape=action_shape, dtype=action_type,
         )
 
         self._initialization = initialization

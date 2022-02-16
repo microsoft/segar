@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 # TODO fix and update this.
@@ -27,14 +25,7 @@ class OpticalFloRenderer(Renderer):
 
 class OpticalFlo:
     def __init__(
-        self,
-        res,
-        arena_boundaries,
-        max_vel,
-        dt,
-        coordinate2pix_func,
-        absolute2pix_func,
-        scaling=1,
+        self, res, arena_boundaries, max_vel, dt, coordinate2pix_func, absolute2pix_func, scaling=1,
     ):
         self.old_ball_pos = None
         # half_extent = max(arena_boundaries) - min(arena_boundaries) / 2

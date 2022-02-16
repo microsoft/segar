@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Tests spawning environments from config dictionaries.
 
@@ -45,14 +43,10 @@ def test(task=None, visual_dist="baseline", iterations=100):
 
     config = dict(
         initialization_config=dict(c=initialization, config=init_config),
-        observation_config=dict(
-            c="RGBObservation", config=visual_config, resolution=256
-        ),
+        observation_config=dict(c="RGBObservation", config=visual_config, resolution=256),
         sim_config=dict(c="Simulator"),
         task_config=dict(c=task_),
-        mdp_config=dict(
-            max_steps_per_episode=iterations, episodes_per_arena=1, sub_steps=1
-        ),
+        mdp_config=dict(max_steps_per_episode=iterations, episodes_per_arena=1, sub_steps=1),
     )
 
     try:
@@ -63,10 +57,7 @@ def test(task=None, visual_dist="baseline", iterations=100):
     except Exception:
         traceback.print_exc()
         logger.error("[FAILED]")
-        raise ValueError(
-            f"Testing environment from config with variables "
-            f"task={task} FAILED."
-        )
+        raise ValueError(f"Testing environment from config with variables " f"task={task} FAILED.")
     logger.info("[PASSED]")
 
 

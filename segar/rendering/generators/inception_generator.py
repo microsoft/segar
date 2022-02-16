@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Generator from Inception model.
 
@@ -114,15 +112,9 @@ def generate_aligned_generative_models(
 
         baseline_idx = [i for i in s_idx if distances[i] < close_range[0]]
 
-        close_idx = [
-            i
-            for i in s_idx
-            if close_range[0] <= distances[i] <= close_range[1]
-        ]
+        close_idx = [i for i in s_idx if close_range[0] <= distances[i] <= close_range[1]]
 
-        far_idx = [
-            i for i in s_idx if far_range[0] <= distances[i] <= far_range[1]
-        ]
+        far_idx = [i for i in s_idx if far_range[0] <= distances[i] <= far_range[1]]
 
         save(baseline_path, baseline_idx)
         save(close_path, close_idx)
@@ -185,9 +177,7 @@ class InceptionClusterGenerator(Generator):
 
         # Construct a transpose convolutional layer for generation using
         # weights.
-        self.convt = torch.nn.ConvTranspose2d(
-            self.n_features, self.n_channels, 3, stride, 1
-        )
+        self.convt = torch.nn.ConvTranspose2d(self.n_features, self.n_channels, 3, stride, 1)
         self.convt.weight.data = torch.tensor(w)
 
         if self.model_path is None:
@@ -220,10 +210,7 @@ class InceptionClusterGenerator(Generator):
         # Begin copy from https://github.com/huyvnphan/PyTorch_CIFAR10/data.py
 
         if not os.path.exists(zip_path):
-            url = (
-                "https://rutgers.box.com/shared/static"
-                "/gkw08ecs797j2et1ksmbg1w5t3idf5r5.zip"
-            )
+            url = "https://rutgers.box.com/shared/static" "/gkw08ecs797j2et1ksmbg1w5t3idf5r5.zip"
 
             # Streaming, so we can iterate over the response.
             r = requests.get(url, stream=True)
@@ -265,8 +252,7 @@ class InceptionClusterGenerator(Generator):
             p = _inception_paths[dist]
         except KeyError:
             raise KeyError(
-                f"Distribution {dist} not compatible "
-                f"configuration with {cls.__name__}."
+                f"Distribution {dist} not compatible " f"configuration with {cls.__name__}."
             )
 
         return p
@@ -297,9 +283,7 @@ class InceptionClusterGenerator(Generator):
 
         affordance_vec = torch.zeros(self.n_clusters)
         affordance_vec[0] = 1.0
-        return self.gen_visual_features(
-            affordance_vec, dim_x=dim_x, dim_y=dim_y
-        )
+        return self.gen_visual_features(affordance_vec, dim_x=dim_x, dim_y=dim_y)
 
     def gen_visual_features(
         self,
@@ -339,9 +323,7 @@ class InceptionClusterGenerator(Generator):
                 # Randomly select cluster members.
                 weights = torch.zeros(self.n_features)
                 weights[c_idxs] = 1.0
-                f_idxs = torch.multinomial(
-                    weights, dim_x * dim_y, replacement=True
-                )
+                f_idxs = torch.multinomial(weights, dim_x * dim_y, replacement=True)
             elif self.cluster_sampling == "sequential":
                 # Randomly start at one of the cluster members, then sample
                 # sequentially.
@@ -379,19 +361,12 @@ class InceptionClusterGenerator(Generator):
         factor_array = np.array(factor_list)
 
         if self.n_rand_factors > 0:
-            random_factors = np.clip(
-                np.random.normal(0.0, 1.0, size=(self.n_rand_factors,)), -1, 1
-            )
+            random_factors = np.clip(np.random.normal(0.0, 1.0, size=(self.n_rand_factors,)), -1, 1)
             factor_array = np.append(factor_array, random_factors)
 
         pattern = self.gen_visual_features(torch.tensor(factor_array).float())
         if pattern is not None:
-            pattern = (
-                np.zeros(
-                    (self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8
-                )
-                + pattern
-            )
+            pattern = np.zeros((self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8) + pattern
         return pattern
 
     def show_patterns(self, outpath: str = None):
@@ -466,9 +441,7 @@ class InceptionClusterGenerator(Generator):
         assert self.n_features == other.n_features
         cost = -contingency_matrix(self._km_labels, other._km_labels)
         _, col_ind = linear_sum_assignment(cost)
-        self._km_labels = np.array(
-            [col_ind[i] for i in self._km_labels.tolist()]
-        )
+        self._km_labels = np.array([col_ind[i] for i in self._km_labels.tolist()])
 
     @staticmethod
     def get_paths(dir_path: str) -> list[str]:
@@ -489,23 +462,16 @@ if __name__ == "__main__":
         )
 
         parser.add_argument(
-            "model",
-            type=str,
-            choices=_MODELS,
-            help="Which generative model to use.",
+            "model", type=str, choices=_MODELS, help="Which generative model to use.",
         )
 
         parser.add_argument(
             "out_path",
             type=str,
-            help="Path to directory where model parameters "
-            "and figures will be saved.",
+            help="Path to directory where model parameters " "and figures will be saved.",
         )
         parser.add_argument(
-            "--n_models",
-            type=int,
-            default=100,
-            help="Number of models to generate.",
+            "--n_models", type=int, default=100, help="Number of models to generate.",
         )
         parser.add_argument(
             "--close_range",
@@ -513,8 +479,7 @@ if __name__ == "__main__":
             default=(1e-16, 0.5),
             metavar=("low", "high"),
             nargs=2,
-            help="Range of distances where models are "
-            "considered close to each other.",
+            help="Range of distances where models are " "considered close to each other.",
         )
         parser.add_argument(
             "--far_range",
@@ -522,8 +487,7 @@ if __name__ == "__main__":
             default=(0.5, 100.0),
             metavar=("low", "high"),
             nargs=2,
-            help="Range of distances where models are "
-            "considered far to each other.",
+            help="Range of distances where models are " "considered far to each other.",
         )
 
         return parser.parse_args()

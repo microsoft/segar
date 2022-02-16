@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 import logging
 import traceback
@@ -53,9 +51,7 @@ def test(
     )
     Simulator()
 
-    config = dict(
-        max_steps_per_episode=iterations, episodes_per_arena=1, sub_steps=1
-    )
+    config = dict(max_steps_per_episode=iterations, episodes_per_arena=1, sub_steps=1)
 
     visual_config = get_env_config("visual", vis_gen, dist_name=visual_dist)
     o_render = RGBObservation(resolution=256, config=visual_config)
@@ -77,9 +73,7 @@ def test(
         unique_tile_ids = ["goal"]
 
     elif task == "billiards":
-        initialization = BilliardsInitialization(
-            config=billiards_default_config
-        )
+        initialization = BilliardsInitialization(config=billiards_default_config)
         t = Billiards(initialization)
         unique_obj_id = "cueball"
         unique_tile_id = "0_hole"
@@ -112,18 +106,12 @@ def test(
 
         for i in range(n_envs):
             rollout(
-                mdp,
-                observation=o_render,
-                show_render=show,
-                label=task + str(i),
+                mdp, observation=o_render, show_render=show, label=task + str(i),
             )
     except Exception:
         traceback.print_exc()
         logger.error("[FAILED]")
-        raise ValueError(
-            f"Exception raised on task {task} and observations"
-            f" {observations}."
-        )
+        raise ValueError(f"Exception raised on task {task} and observations" f" {observations}.")
     logger.info("[PASSED]")
 
 
@@ -131,8 +119,5 @@ if __name__ == "__main__":
     for task in _TASKS:
         for observations in _OBSERVATIONS:
             test(
-                task=task,
-                observations=observations,
-                vis_gen=_VIS_GEN,
-                show=True,
+                task=task, observations=observations, vis_gen=_VIS_GEN, show=True,
             )

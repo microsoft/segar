@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 import unittest
 
@@ -29,9 +27,7 @@ class TestFactor(unittest.TestCase):
                     print(f"Testing creations Factor {cls}.")
                     c = cls()
                 except Exception:
-                    raise AssertionError(
-                        f"Creation failed on factor `" f"{name}`."
-                    )
+                    raise AssertionError(f"Creation failed on factor `" f"{name}`.")
 
                 if cls not in (Factor, number_factors.NumericFactor):
                     if c.value is not None:

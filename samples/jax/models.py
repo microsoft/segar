@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 from typing import Optional, Sequence
 
 import flax.linen as nn
@@ -14,6 +19,7 @@ LOG_STD_MAX = 2.0
 """
 These regulate default inits for conv, pre-linear and pre-ReLU layers
 """
+
 
 def default_conv_init(scale: Optional[float] = jnp.sqrt(2)):
     return nn.initializers.xavier_uniform()
@@ -190,7 +196,7 @@ class TwinHeadModel(nn.Module):
                 [tfb.Scale(scale=self.action_scale),
                  tfb.Tanh()]))
 
-        return v, pi
+        return v, pi, z
 
     def encode(self, x):
         return self.encoder(x)

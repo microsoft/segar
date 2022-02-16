@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 """Vector-like factors.
@@ -53,9 +51,7 @@ class VectorFactor(Factor[np.ndarray], default=[0.0, 0.0]):
     def __sub__(self, other: Union[VectorFactor, T, Number]) -> VectorFactor:
         return self.__class__(self.value - Factor._get_value(other))
 
-    def __truediv__(
-        self, other: Union[VectorFactor, T, Number]
-    ) -> VectorFactor:
+    def __truediv__(self, other: Union[VectorFactor, T, Number]) -> VectorFactor:
         other_value = Factor._get_value(other)
         if norm(other_value) == 0:
             raise ValueError(f"Dividing by zero: {self} / {other}.")
@@ -83,14 +79,9 @@ class VectorFactor(Factor[np.ndarray], default=[0.0, 0.0]):
         dtype = self.value.dtype
         value_ = Factor._get_value(value)
         if np.isinf(value_).any():
-            raise ValueError(
-                f"Attempting to set factor {self} to infinite "
-                f"value {value}."
-            )
+            raise ValueError(f"Attempting to set factor {self} to infinite " f"value {value}.")
         if np.isnan(value_).any():
-            raise ValueError(
-                f"Attempting to set factor {self} to NaN " f"value {value}."
-            )
+            raise ValueError(f"Attempting to set factor {self} to NaN " f"value {value}.")
         super().set(value, allow_in_place=allow_in_place)
         if self.value.dtype != dtype:
             raise TypeError(

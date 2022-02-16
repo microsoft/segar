@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Runs all of the tests for CI.
 
@@ -55,10 +53,7 @@ if __name__ == "__main__":
         for observations in _OBSERVATIONS:
             for vis_gen in _VIS_GENS:
                 test_env(
-                    task=task,
-                    observations=observations,
-                    vis_gen=vis_gen,
-                    show=False,
+                    task=task, observations=observations, vis_gen=vis_gen, show=False,
                 )
 
     # Test running the mdp from config.

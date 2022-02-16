@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 """Configurations for initialization.
@@ -50,19 +48,9 @@ from segar.tasks.billiards import billiards_default_config
 
 default_config = {
     "numbers": [
+        (ThingFactory([Charger, Magnet, Bumper, Damper, Object]), DiscreteRangeNoise(2, 3)),
         (
-            ThingFactory([Charger, Magnet, Bumper, Damper, Object]),
-            DiscreteRangeNoise(2, 3),
-        ),
-        (
-            ThingFactory(
-                {
-                    SandTile: 2 / 5.0,
-                    MagmaTile: 1 / 5.0,
-                    Hole: 1 / 5.0,
-                    FireTile: 1 / 5.0,
-                }
-            ),
+            ThingFactory({SandTile: 2 / 5.0, MagmaTile: 1 / 5.0, Hole: 1 / 5.0, FireTile: 1 / 5.0}),
             DiscreteRangeNoise(1, 2),
         ),
     ],
@@ -71,32 +59,22 @@ default_config = {
         Prior(Position, RandomMiddleLocation(), entity_type=Tile),
         Prior(Shape, RandomConvexHull(), entity_type=Tile),
         Prior(Shape, Circle(0.4), entity_type=Hole),
-        Prior(
-            Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object
-        ),
-        Prior(
-            Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile
-        ),
+        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object),
+        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
         Prior(Mass, 1.0),
         Prior(Mobile, True),
         Prior(
-            Charge,
-            GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
-            entity_type=Charger,
+            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger
         ),
         Prior(
-            Magnetism,
-            GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
-            entity_type=Magnet,
+            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet
         ),
         Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
     ],
 }
 
 
-def handle_config(
-    config_set: Union[str, None], dist_name: str = "default"
-) -> dict:
+def handle_config(config_set: Union[str, None], dist_name: str = "default") -> dict:
     """Handles drawing initialization configuration from built-ins
 
     :param config_set: Configuration set.

@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Module for loading and testing trajectories are consistent with current
 code.
@@ -30,14 +28,11 @@ def load_trajectory(traj_path: str):
 def parse_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="Tests trajectories are consistent when reloading and "
-        "running simulator.",
+        description="Tests trajectories are consistent when reloading and " "running simulator.",
     )
 
     parser.add_argument(
-        "in_path",
-        type=str,
-        help="Path to simulators and trajectories directory.",
+        "in_path", type=str, help="Path to simulators and trajectories directory.",
     )
     parser.add_argument("--n_steps", default=500, type=int)
     return parser.parse_args()

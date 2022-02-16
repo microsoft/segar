@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Simple encoders.
 
@@ -23,9 +21,7 @@ def loss_xent(logits, labels, ignore_index=-1):
     return loss
 
 
-def loss_regression(
-    features: torch.Tensor, targets: torch.Tensor
-) -> torch.Tensor:
+def loss_regression(features: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
     mse = nn.functional.mse_loss
     loss = mse(features, targets)
     return loss
@@ -65,15 +61,7 @@ class Flatten(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(
-        self,
-        nc=3,
-        nf=64,
-        input_size=64,
-        norm_type=None,
-        pool_out=False,
-        **encoder_args
-    ):
+    def __init__(self, nc=3, nf=64, input_size=64, norm_type=None, pool_out=False, **encoder_args):
         super(Encoder, self).__init__()
         self.nc = nc
         self.nf = nf
@@ -126,9 +114,7 @@ class Encoder(nn.Module):
             layer_in = layer_out
 
         if self.pool_out:
-            layer_acts.append(
-                nnF.avg_pool2d(layer_out, layer_out.size(2), 1, 0)
-            )
+            layer_acts.append(nnF.avg_pool2d(layer_out, layer_out.size(2), 1, 0))
 
         # remove input from the returned list of activations
         return layer_acts
@@ -154,15 +140,7 @@ class Encoder(nn.Module):
 
 class ConvBlock(nn.Module):
     def __init__(
-        self,
-        n_in,
-        n_out,
-        n_kern,
-        n_stride,
-        n_pad,
-        norm_type=None,
-        bias=None,
-        leaky=False,
+        self, n_in, n_out, n_kern, n_stride, n_pad, norm_type=None, bias=None, leaky=False,
     ):
         super(ConvBlock, self).__init__()
 
@@ -177,9 +155,7 @@ class ConvBlock(nn.Module):
         elif norm_type == "batch":
             self.norm = nn.BatchNorm2d(n_out)
         elif norm_type == "layer":
-            self.norm = nn.Sequential(
-                Permute(0, 2, 3, 1), nn.LayerNorm(n_out), Permute(0, 3, 1, 2)
-            )
+            self.norm = nn.Sequential(Permute(0, 2, 3, 1), nn.LayerNorm(n_out), Permute(0, 3, 1, 2))
         else:
             raise NotImplementedError(norm_type)
 
@@ -211,16 +187,10 @@ class ConvnetEncoder(Encoder):
         layers = []
 
         if self.input_size == 64:
-            layers.append(
-                ConvBlock(nc, nf, 7, 2, 1, norm_type=None, bias=False)
-            )
+            layers.append(ConvBlock(nc, nf, 7, 2, 1, norm_type=None, bias=False))
             layers.append(ConvBlock(nf, nf * 2, 4, 2, 1, norm_type=norm_type))
-            layers.append(
-                ConvBlock(nf * 2, nf * 4, 4, 2, 1, norm_type=norm_type)
-            )
-            layers.append(
-                ConvBlock(nf * 4, n_out, 4, 1, 0, norm_type=norm_type)
-            )
+            layers.append(ConvBlock(nf * 2, nf * 4, 4, 2, 1, norm_type=norm_type))
+            layers.append(ConvBlock(nf * 4, n_out, 4, 1, 0, norm_type=norm_type))
         else:
             raise NotImplementedError(self.input_size)
 
@@ -249,9 +219,7 @@ class SimpleMLP(nn.Module):
         if n_hidden is None:
             # use linear classifier
             self.block_forward = nn.Sequential(
-                Flatten(),
-                nn.Dropout(p=p),
-                nn.Linear(n_input, n_out, bias=True),
+                Flatten(), nn.Dropout(p=p), nn.Linear(n_input, n_out, bias=True),
             )
         else:
             # use simple MLP classifier
@@ -272,10 +240,7 @@ class SimpleMLP(nn.Module):
 
 class MLPClassifier(SimpleMLP):
     def get_accuracies(self, features, labels):
-        accuracies = dict(
-            (k, 100.0 * get_accuracy(lgt, labels))
-            for k, lgt in features.items()
-        )
+        accuracies = dict((k, 100.0 * get_accuracy(lgt, labels)) for k, lgt in features.items())
         return accuracies
 
 
@@ -299,9 +264,7 @@ class ConvnetClassifier(ConvnetEncoder):
         super(ConvnetClassifier, self).__init__(**kwargs)
 
         n_input = self.n_features * self.n_locs[0] * self.n_locs[1]
-        self.mlp = MLPClassifier(
-            n_input, n_classes, n_hidden=n_hidden_class, p=dropout
-        )
+        self.mlp = MLPClassifier(n_input, n_classes, n_hidden=n_hidden_class, p=dropout)
 
     def get_accuracies(self, *args, **kwargs):
         return self.mlp.get_accuracies(*args, **kwargs)
@@ -314,14 +277,10 @@ class ConvnetClassifier(ConvnetEncoder):
 
 
 class ConvnetRegressor(ConvnetEncoder):
-    def __init__(
-        self, n_outs, n_hidden_class=128, dropout=0.1, **encoder_args
-    ):
+    def __init__(self, n_outs, n_hidden_class=128, dropout=0.1, **encoder_args):
         super().__init__(**encoder_args)
         n_input = self.n_features * self.n_locs[0] * self.n_locs[1]
-        self.mlp = SimpleMLP(
-            n_input, n_outs, n_hidden=n_hidden_class, p=dropout
-        )
+        self.mlp = SimpleMLP(n_input, n_outs, n_hidden=n_hidden_class, p=dropout)
         self.loss_func = torch.nn.MSELoss()
 
     def error(self, x, targets):
@@ -357,9 +316,7 @@ class LocCondConvnetClassifier(ConvnetClassifier):
         self.bn = nn.BatchNorm1d(n_input)
 
     def forward(self, x, locs, labels):
-        features = (
-            super(ConvnetClassifier, self).forward(x)[-1].flatten(start_dim=1)
-        )
+        features = super(ConvnetClassifier, self).forward(x)[-1].flatten(start_dim=1)
         loc_features = self.relu(self.bn(self.loc_encoder.forward(locs)))
         features += loc_features
         lgt = self.mlp(features)

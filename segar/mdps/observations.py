@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Module for observation space components
 
@@ -142,9 +140,7 @@ class RGBObservation(Observation):
         self._renderer.set_filter(self._filter_factors)
 
     def _make_observation_space(self) -> None:
-        self._observation_space = Box(
-            0, 255, shape=self.img_shape, dtype=np.uint8
-        )
+        self._observation_space = Box(0, 255, shape=self.img_shape, dtype=np.uint8)
 
     def render(self, results: dict[str, Any] = None):
         """Renders the state space into an RGB observation.
@@ -223,13 +219,9 @@ class StateObservation(Observation):
         self.unique_id = unique_id
 
     def _make_observation_space(self) -> None:
-        self._observation_space = Box(
-            -100, 100, shape=(self.len,), dtype=np.float32
-        )
+        self._observation_space = Box(-100, 100, shape=(self.len,), dtype=np.float32)
 
-    def make_observation_from_state(
-        self, state: dict[Type[Factor], Factor]
-    ) -> np.ndarray:
+    def make_observation_from_state(self, state: dict[Type[Factor], Factor]) -> np.ndarray:
         obs = []
         for factor in self.factors:
             if factor in self._filter_factors:
@@ -247,9 +239,7 @@ class StateObservation(Observation):
                 obs.append(value)
             elif issubclass(factor, VectorFactor):
                 if value is None:
-                    value = np.array(
-                        [DoesNotHaveFactor().value, DoesNotHaveFactor().value]
-                    )
+                    value = np.array([DoesNotHaveFactor().value, DoesNotHaveFactor().value])
                 obs += value.tolist()
             elif issubclass(factor, BooleanFactor):
                 if value is None:
@@ -264,8 +254,7 @@ class StateObservation(Observation):
             state = thing_states[self.unique_id]
         except KeyError:
             raise KeyError(
-                f"{self.unique_id} not found in states, "
-                f"found {list(thing_states.keys())}."
+                f"{self.unique_id} not found in states, " f"found {list(thing_states.keys())}."
             )
         return self.make_observation_from_state(state)
 
@@ -279,9 +268,7 @@ class ObjectStateObservation(StateObservation):
     """
 
     def __init__(
-        self,
-        unique_id: ThingID,
-        filter_factors: Optional[list[Type[Factor]]] = None,
+        self, unique_id: ThingID, filter_factors: Optional[list[Type[Factor]]] = None,
     ):
         factors = [
             Charge,
@@ -294,9 +281,7 @@ class ObjectStateObservation(StateObservation):
             Alive,
             Done,
         ]
-        super().__init__(
-            unique_id, factors=factors, filter_factors=filter_factors
-        )
+        super().__init__(unique_id, factors=factors, filter_factors=filter_factors)
 
 
 class TileStateObservation(StateObservation):
@@ -307,14 +292,10 @@ class TileStateObservation(StateObservation):
     """
 
     def __init__(
-        self,
-        unique_id: ThingID,
-        filter_factors: Optional[list[Type[Factor]]] = None,
+        self, unique_id: ThingID, filter_factors: Optional[list[Type[Factor]]] = None,
     ):
         factors = [Heat, Friction, Position]
-        super().__init__(
-            unique_id, factors=factors, filter_factors=filter_factors
-        )
+        super().__init__(unique_id, factors=factors, filter_factors=filter_factors)
 
 
 class AllStateObservation(StateObservation):
@@ -348,9 +329,7 @@ class AllStateObservation(StateObservation):
         self.n_things = n_things
         self.required_factors = required_factors
         self.unique_ids = unique_ids or []
-        super().__init__(
-            unique_id=None, factors=factors, filter_factors=filter_factors
-        )
+        super().__init__(unique_id=None, factors=factors, filter_factors=filter_factors)
 
     def __call__(self, states: dict) -> np.ndarray:
         if self.required_factors is not None:
@@ -376,8 +355,7 @@ class AllStateObservation(StateObservation):
                 state = thing_states[key_]
             except KeyError:
                 raise KeyError(
-                    f"{key_} not found in thing states, "
-                    f"found {list(thing_states.keys())}."
+                    f"{key_} not found in thing states, " f"found {list(thing_states.keys())}."
                 )
 
             obs = self.make_observation_from_state(state)
@@ -463,9 +441,7 @@ class MultimodalObservation(Observation):
         super().__init__()
 
     def _make_observation_space(self):
-        self._observation_space = Tuple(
-            obs.observation_space for obs in self._observations
-        )
+        self._observation_space = Tuple(obs.observation_space for obs in self._observations)
 
     def add_modality(self, observation_modality: Observation) -> None:
         """Adds another observation modality.
@@ -528,9 +504,7 @@ class MultimodalObservation(Observation):
         return tuple(obs(state_dict) for obs in self._observations)
 
 
-def make_stacked_observation(
-    observation_class: Type[Observation], n_stack: int
-):
+def make_stacked_observation(observation_class: Type[Observation], n_stack: int):
     """Makes a stacked version of `observation_class`.
 
     Note: this stacks according to the sim state buffer. This buffer must be

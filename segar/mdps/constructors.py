@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Constructors for MDP objects using pickleable dictionaries.
 
@@ -105,11 +103,7 @@ def mdp_constructor(
 
 
 def from_config(
-    task: type,
-    init: type,
-    obs: type,
-    sim: type = Simulator,
-    config: dict = None,
+    task: type, init: type, obs: type, sim: type = Simulator, config: dict = None,
 ):
     """Construct MDP from types and configuration.
 

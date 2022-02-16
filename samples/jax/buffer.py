@@ -1,3 +1,8 @@
+__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
+                "Institute"
+__license__ = "MIT"
+
 from functools import partial
 from typing import Tuple
 
@@ -30,6 +35,7 @@ class Batch:
     Batch of data.
     Inspired by: https://github.com/ku2482/rljax/tree/master/rljax/algorithm .
     """
+
     def __init__(self, discount: float, gae_lambda: float, n_steps: int,
                  num_envs: int, n_actions: int, state_shape,
                  latent_factors: False):

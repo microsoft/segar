@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Boundaries and such.
 
@@ -108,7 +106,7 @@ class SquareWall(Wall):
             return x[0] + r >= b[1] - thresh
         elif isinstance(shape, ConvexHullShape):
             points = shape.points
-            max_x = points[0][1]
+            max_x = points[0][0]
             for p in points:
                 if p[0] > max_x:
                     max_x = p[0]
