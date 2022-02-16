@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Abstract class for rendering generators.
 
@@ -84,13 +82,9 @@ class Generator:
         """
         affordance_vec = torch.zeros(self.n_factors)
         affordance_vec[0] = 1.0
-        return self.gen_visual_features(
-            affordance_vec, dim_x=dim_x, dim_y=dim_y
-        )
+        return self.gen_visual_features(affordance_vec, dim_x=dim_x, dim_y=dim_y)
 
-    def get_pattern(
-        self, factor_dict: dict[Type[Factor], Factor]
-    ) -> Union[np.ndarray, None]:
+    def get_pattern(self, factor_dict: dict[Type[Factor], Factor]) -> Union[np.ndarray, None]:
         """Generates a pattern for the corresponding set of factors.
 
         Note: this is the main function exposed to the renderer.
@@ -108,19 +102,12 @@ class Generator:
 
         factor_array = np.array(factor_list)
 
-        random_factors = np.clip(
-            np.random.normal(0.0, 1.0, size=(self.n_rand_factors,)), -1, 1
-        )
+        random_factors = np.clip(np.random.normal(0.0, 1.0, size=(self.n_rand_factors,)), -1, 1)
         factor_array = np.append(factor_array, random_factors)
 
         pattern = self.gen_visual_features(torch.tensor(factor_array).float())
         if pattern is not None:
-            pattern = (
-                np.zeros(
-                    (self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8
-                )
-                + pattern
-            )
+            pattern = np.zeros((self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8) + pattern
 
         return pattern
 

@@ -1,6 +1,4 @@
-__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 import cv2
@@ -57,16 +55,13 @@ while 1:
     done = False
     while 1:
         img_buf[:, :resolution, :] = obs1
-        img_buf[:, resolution+1: resolution*2 + 1, :] = obs2
-        img_buf[:, (resolution+1) * 2:, :] = obs3
+        img_buf[:, resolution + 1 : resolution * 2 + 1, :] = obs2
+        img_buf[:, (resolution + 1) * 2 :, :] = obs3
         img_buf_rescaled = cv2.resize(img_buf, (0, 0), fx=SCALE_FACTOR, fy=SCALE_FACTOR)
         if GIF_frames:
             images.append(img_buf_rescaled)
             GIF_frames -= 1
-        cv2.imshow(
-            "image",
-            img_buf_rescaled
-        )
+        cv2.imshow("image", img_buf_rescaled)
         # k = cv2.waitKey(-1) & 0xFF
         cv2.waitKey(10)
 
@@ -80,5 +75,5 @@ while 1:
             break
 
         if not GIF_frames:
-            imageio.mimsave('movie.gif', images)
-            print('GIF saved!')
+            imageio.mimsave("movie.gif", images)
+            print("GIF saved!")

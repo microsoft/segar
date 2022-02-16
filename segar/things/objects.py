@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """SEGAR Objects.
 
@@ -55,59 +53,33 @@ class Object(Thing, default={Shape: Circle(0.2), Label: "object", Text: "O"}):
 
 
 class Ball(
-    Object,
-    default={Shape: Circle(0.2), Mobile: True, Label: "ball", Text: "B"},
+    Object, default={Shape: Circle(0.2), Mobile: True, Label: "ball", Text: "B"},
 ):
     pass
 
 
 class Magnet(
     Object,
-    default={
-        Shape: Circle(0.2),
-        Magnetism: -1.0,
-        Mobile: False,
-        Label: "magnet",
-        Text: "T",
-    },
+    default={Shape: Circle(0.2), Magnetism: -1.0, Mobile: False, Label: "magnet", Text: "T",},
 ):
     pass
 
 
 class Charger(
-    Object,
-    default={
-        Charge: -1.0,
-        Mobile: False,
-        Shape: Circle(0.2),
-        Label: "charger",
-        Text: "Q",
-    },
+    Object, default={Charge: -1.0, Mobile: False, Shape: Circle(0.2), Label: "charger", Text: "Q",},
 ):
     pass
 
 
 class Bumper(
     Object,
-    default={
-        StoredEnergy: 1.0,
-        Mobile: False,
-        Shape: Circle(0.2),
-        Label: "bumper",
-        Text: "U",
-    },
+    default={StoredEnergy: 1.0, Mobile: False, Shape: Circle(0.2), Label: "bumper", Text: "U",},
 ):
     pass
 
 
 class Damper(
     Object,
-    default={
-        StoredEnergy: -0.5,
-        Mobile: False,
-        Shape: Circle(0.2),
-        Label: "damper",
-        Text: "D",
-    },
+    default={StoredEnergy: -0.5, Mobile: False, Shape: Circle(0.2), Label: "damper", Text: "D",},
 ):
     pass

@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Module for MDPs
 
@@ -170,11 +168,7 @@ class MDP(gym.Env):
 
     @timeit
     def render(
-        self,
-        mode: str = "human",
-        delay: int = 2,
-        label: str = None,
-        agent_view: bool = False,
+        self, mode: str = "human", delay: int = 2, label: str = None, agent_view: bool = False,
     ) -> np.ndarray:
         """Render function for Gym functionality.
 
@@ -188,9 +182,7 @@ class MDP(gym.Env):
         """
 
         if agent_view:
-            if hasattr(self._observation, "render") and hasattr(
-                self._observation, "show"
-            ):
+            if hasattr(self._observation, "render") and hasattr(self._observation, "show"):
                 if mode == "rgb_array":
                     results = None
                 else:
@@ -206,9 +198,7 @@ class MDP(gym.Env):
                     self._observation.show(delay)
                     return img
             else:
-                raise AttributeError(
-                    "Agent's observation space is not " "pixel-based."
-                )
+                raise AttributeError("Agent's observation space is not " "pixel-based.")
 
         else:
             img = self._renderer()

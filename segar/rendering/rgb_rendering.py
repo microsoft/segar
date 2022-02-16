@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Rendering of RGB images
 
@@ -112,11 +110,7 @@ class RGBRenderer(Renderer):
     """
 
     def __init__(
-        self,
-        n_channels: int = 3,
-        img_type: type = np.uint8,
-        annotation: bool = False,
-        **kwargs,
+        self, n_channels: int = 3, img_type: type = np.uint8, annotation: bool = False, **kwargs,
     ) -> None:
         """
 
@@ -125,20 +119,14 @@ class RGBRenderer(Renderer):
         :param kwargs:
         """
         super().__init__(
-            n_channels=n_channels,
-            img_type=img_type,
-            annotation=annotation,
-            **kwargs,
+            n_channels=n_channels, img_type=img_type, annotation=annotation, **kwargs,
         )
 
     def get_background(self) -> np.ndarray:
         """Makes the background before anything is added.
 
         """
-        return (
-            np.zeros((self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8)
-            + 10
-        )
+        return np.zeros((self.dim_y, self.dim_x, self.n_channels), dtype=np.uint8) + 10
 
     def visual_mapping(self, thing: Union[Thing, Wall]) -> Visual:
         """Maps objects and tiles to their corresponding visuals.
@@ -171,9 +159,7 @@ class RGBRenderer(Renderer):
                 )
 
             elif isinstance(shape, ConvexHullShape):
-                visual_points = np.array(
-                    [self.coordinates_to_pix(p) for p in shape.points]
-                )
+                visual_points = np.array([self.coordinates_to_pix(p) for p in shape.points])
                 visual = PolyVisual(
                     thing,
                     points=visual_points,
@@ -222,25 +208,19 @@ class RGBTextureRenderer(RGBRenderer):
         super().__init__(*args, annotation=annotation, **kwargs)
 
         if config is None:
-            raise ValueError(
-                f"`config` must be provided for " f"{self.__class__.__name__}."
-            )
+            raise ValueError(f"`config` must be provided for " f"{self.__class__.__name__}.")
 
         try:
             generative_model_path = config["model_path"]
         except KeyError:
             raise KeyError(
-                f"{self.__class__.__name__} config must include "
-                f"path(s) to generative model."
+                f"{self.__class__.__name__} config must include " f"path(s) to generative model."
             )
 
         try:
             gclass = config["cls"]
         except KeyError:
-            raise KeyError(
-                f"{self.__class__.__name__} config must include "
-                f"generator class."
-            )
+            raise KeyError(f"{self.__class__.__name__} config must include " f"generator class.")
 
         if not issubclass(gclass, Generator):
             raise TypeError(gclass)
@@ -253,9 +233,7 @@ class RGBTextureRenderer(RGBRenderer):
                 generative_model_path = [generative_model_path]
 
             if len(generative_model_path) == 0:
-                raise ValueError(
-                    f"No models found for renderer " f'{config["model_path"]}.'
-                )
+                raise ValueError(f"No models found for renderer " f'{config["model_path"]}.')
 
             self.viz_generators = []
 
@@ -278,9 +256,7 @@ class RGBTextureRenderer(RGBRenderer):
     def sample(self) -> None:
         self.viz_generator = random.choice(self.viz_generators)
 
-    def get_pattern(
-        self, thing_factors: dict[Type[Factor], Factor]
-    ) -> np.ndarray:
+    def get_pattern(self, thing_factors: dict[Type[Factor], Factor]) -> np.ndarray:
         """Get pattern from arguments.
 
         """
@@ -292,11 +268,7 @@ class RGBTextureRenderer(RGBRenderer):
         if pattern is None:
             # Use a solid gray visual feature.
             color = 100.0, 100.0, 100.0
-            pattern = np.full(
-                (self.dim_x, self.dim_y, self.n_channels),
-                color,
-                dtype=np.uint8,
-            )
+            pattern = np.full((self.dim_x, self.dim_y, self.n_channels), color, dtype=np.uint8,)
         return pattern
 
     def get_background(self) -> np.ndarray:
@@ -329,9 +301,7 @@ class RGBTextureRenderer(RGBRenderer):
                 )
 
             elif isinstance(shape, ConvexHullShape):
-                visual_points = np.array(
-                    [self.coordinates_to_pix(p) for p in shape.points]
-                )
+                visual_points = np.array([self.coordinates_to_pix(p) for p in shape.points])
                 visual = PolyTextureVisual(
                     thing,
                     points=visual_points,
@@ -351,9 +321,7 @@ class CircleTextureVisual(CircleVisual):
 
     """
 
-    def __init__(
-        self, thing: Thing, radius: float, texture: np.ndarray, *args, **kwargs
-    ):
+    def __init__(self, thing: Thing, radius: float, texture: np.ndarray, *args, **kwargs):
         size = 2 * radius + 1
         img = texture[0:size, 0:size, :]
         super().__init__(thing, radius, *args, img=img, **kwargs)
@@ -365,12 +333,7 @@ class PolyTextureVisual(PolyVisual):
     """
 
     def __init__(
-        self,
-        thing: Thing,
-        points: np.ndarray,
-        texture: np.ndarray,
-        *args,
-        **kwargs,
+        self, thing: Thing, points: np.ndarray, texture: np.ndarray, *args, **kwargs,
     ):
         min_x = points[:, 0].min()
         min_y = points[:, 1].min()

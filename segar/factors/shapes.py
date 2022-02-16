@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Shape factors and shape objects.
 
@@ -48,9 +46,7 @@ class BaseShape:
     def area(self) -> float:
         raise NotImplementedError
 
-    def area_overlap(
-        self, other_shape: BaseShape, normal_vector: np.ndarray
-    ) -> float:
+    def area_overlap(self, other_shape: BaseShape, normal_vector: np.ndarray) -> float:
         if isinstance(self, Circle):
             if isinstance(other_shape, Circle):
                 d = norm(normal_vector)
@@ -66,17 +62,10 @@ class BaseShape:
                     return other_shape.area()
 
                 else:
-                    t1 = r1 ** 2 * math.acos(
-                        (d ** 2 + r1 ** 2 - r2 ** 2) / (2 * d * r1)
-                    )
-                    t2 = r2 ** 2 * math.acos(
-                        (d ** 2 + r2 ** 2 - r1 ** 2) / (2 * d * r2)
-                    )
+                    t1 = r1 ** 2 * math.acos((d ** 2 + r1 ** 2 - r2 ** 2) / (2 * d * r1))
+                    t2 = r2 ** 2 * math.acos((d ** 2 + r2 ** 2 - r1 ** 2) / (2 * d * r2))
                     t3 = 0.5 * math.sqrt(
-                        (-d + r1 + r2)
-                        * (d + r1 - r2)
-                        * (d - r1 + r2)
-                        * (d + r1 + r2)
+                        (-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2)
                     )
                     return t1 + t2 - t3
             elif isinstance(other_shape, ConvexHullShape):
@@ -94,17 +83,12 @@ class BaseShape:
             raise NotImplementedError(self)
 
     def overlaps(
-        self,
-        other_shape: BaseShape,
-        normal_vector: np.ndarray,
-        thresh: float = 1e-7,
+        self, other_shape: BaseShape, normal_vector: np.ndarray, thresh: float = 1e-7,
     ) -> bool:
 
         if isinstance(self, Circle):
             if isinstance(other_shape, Circle):
-                return norm(normal_vector) <= np.abs(
-                    other_shape.radius + self.radius + thresh
-                )
+                return norm(normal_vector) <= np.abs(other_shape.radius + self.radius + thresh)
             elif isinstance(other_shape, ConvexHullShape):
                 return other_shape.overlaps(self, -normal_vector)
             else:
@@ -158,15 +142,11 @@ class BaseShape:
                     a = 1
                     b = -2 * d * cosangle
                     c = d ** 2 - (r1 + r2 + thresh) ** 2
-                    dist = (-b + math.sqrt(b ** 2 - 4 * a * c)) / (
-                        2 * a
-                    ) + thresh
+                    dist = (-b + math.sqrt(b ** 2 - 4 * a * c)) / (2 * a) + thresh
                     assert dist > 0.0
 
             elif isinstance(other_shape, ConvexHullShape):
-                return other_shape.fix_overlap(
-                    self, -normal_vector, thresh=thresh
-                )
+                return other_shape.fix_overlap(self, -normal_vector, thresh=thresh)
 
         elif isinstance(self, ConvexHullShape):
             raise NotImplementedError(type(self), ConvexHullShape)
@@ -260,9 +240,7 @@ class ConvexHullShape(BaseShape):
         if not isinstance(other, self.__class__):
             return False
 
-        return (
-            np.allclose(self.points, other.points) and self.size == other.size
-        )
+        return np.allclose(self.points, other.points) and self.size == other.size
 
 
 class RandomConvexHull(ConvexHullShape):
@@ -340,18 +318,12 @@ class Shape(Factor[BaseShape]):
     def area(self) -> float:
         return self.value.area()
 
-    def area_overlap(
-        self, other: Shape, normal_vector: Union[np.ndarray, Position]
-    ) -> float:
+    def area_overlap(self, other: Shape, normal_vector: Union[np.ndarray, Position]) -> float:
         if isinstance(normal_vector, Position):
             normal_vector = normal_vector.value
-        return self.value.area_overlap(
-            other.value, normal_vector=normal_vector
-        )
+        return self.value.area_overlap(other.value, normal_vector=normal_vector)
 
-    def overlaps(
-        self, other: Shape, normal_vector: Union[np.ndarray, Position]
-    ) -> bool:
+    def overlaps(self, other: Shape, normal_vector: Union[np.ndarray, Position]) -> bool:
         if isinstance(normal_vector, Position):
             normal_vector = normal_vector.value
         return self.value.overlaps(other.value, normal_vector=normal_vector)
@@ -363,9 +335,7 @@ class Shape(Factor[BaseShape]):
         unit_vector: Optional[np.ndarray] = None,
     ) -> float:
         other = self._get_value(other)
-        return self.value.fix_overlap(
-            other, normal_vector, unit_vector=unit_vector
-        )
+        return self.value.fix_overlap(other, normal_vector, unit_vector=unit_vector)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Shape):

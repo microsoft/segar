@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """For rendering into pixel-based observations.
 
@@ -61,9 +59,7 @@ class Visual:
             self.label_img = np.ones_like(img)
             # Add some text (useful for identifying the ball, which the
             # agent can control)
-            text_size, _ = cv2.getTextSize(
-                label, _TEXT_FACE, _TEXT_SCALE, _TEXT_THICKNESS
-            )
+            text_size, _ = cv2.getTextSize(label, _TEXT_FACE, _TEXT_SCALE, _TEXT_THICKNESS)
             text_origin = (
                 int((self.width - text_size[0]) / 2),
                 int((self.height + text_size[1]) / 2),
@@ -96,9 +92,7 @@ class Visual:
         return self.thing.Size.value
 
     def resize(
-        self,
-        size: tuple[float, float],
-        center: Optional[tuple[float, float]] = None,
+        self, size: tuple[float, float], center: Optional[tuple[float, float]] = None,
     ) -> None:
         """Resizes the thing according to floor scaling.
 
@@ -106,11 +100,7 @@ class Visual:
         :param center: Optional center position.
         """
         width, height = size
-        if (
-            width == self.width
-            and height == self.height
-            and center == self.center
-        ):
+        if width == self.width and height == self.height and center == self.center:
             return
         if center is not None:
             self.center = center
@@ -119,14 +109,10 @@ class Visual:
         self.img = cv2.resize(self.img, (width, height))
         if self.label_img is not None:
             self.label_img = cv2.resize(self.label_img, (width, height))
-        self.alpha = cv2.resize(self.alpha, (width, height)).reshape(
-            (width, height, 1)
-        )
+        self.alpha = cv2.resize(self.alpha, (width, height)).reshape((width, height, 1))
         self.reverse_alpha = 1 - self.alpha
 
-    def render(
-        self, position: tuple[float, float], visual_map: np.ndarray
-    ) -> None:
+    def render(self, position: tuple[float, float], visual_map: np.ndarray) -> None:
         """Renders the visual and affordance maps.
 
         :param position: The position on the map where the visual should be
@@ -151,12 +137,7 @@ class Visual:
         _sy_max = _sy_min + (_ty_max - _ty_min)
 
         # make sure at least some part of the visual is within the map
-        if (
-            _tx_min >= map_size[0]
-            or _tx_max < 0
-            or _ty_min >= map_size[1]
-            or _ty_max < 0
-        ):
+        if _tx_min >= map_size[0] or _tx_max < 0 or _ty_min >= map_size[1] or _ty_max < 0:
             return
 
         # update visuals
@@ -222,19 +203,11 @@ class CircleVisual(Visual):
         try:
             img = img * alpha
         except ValueError:
-            raise ValueError(
-                f"Object may be larger than arena: "
-                f"{alpha.shape} vs {img.shape}"
-            )
+            raise ValueError(f"Object may be larger than arena: " f"{alpha.shape} vs {img.shape}")
         if outline:
             cv2.circle(img, (radius, radius), radius, 0, 1, 8, 0)
         super().__init__(
-            thing,
-            (radius, radius),
-            img,
-            alpha,
-            label=label,
-            show_label=show_label,
+            thing, (radius, radius), img, alpha, label=label, show_label=show_label,
         )
 
     def get_obj_size(self) -> float:
@@ -279,12 +252,7 @@ class PolyVisual(Visual):
         cv2.fillPoly(alpha, [points], color=1)
         img = img * alpha
         super().__init__(
-            thing,
-            (width // 2, height // 2),
-            img,
-            alpha,
-            label=label,
-            show_label=show_label,
+            thing, (width // 2, height // 2), img, alpha, label=label, show_label=show_label,
         )
 
     def render(self, position: tuple[float, float], *args) -> None:
@@ -326,12 +294,8 @@ class Renderer:
             dim_y = self.dim_y * 2
         else:
             dim_y = self.dim_y
-        self._floor = np.zeros(
-            (self.dim_x, self.dim_y, self.n_channels), dtype=img_type
-        )
-        self.img = np.zeros(
-            (self.dim_x, dim_y, self.n_channels), dtype=img_type
-        )
+        self._floor = np.zeros((self.dim_x, self.dim_y, self.n_channels), dtype=img_type)
+        self.img = np.zeros((self.dim_x, dim_y, self.n_channels), dtype=img_type)
         self.obj_visuals = []
         self.tile_visuals = []
         self._filter_factors = filter_factors or []
@@ -363,13 +327,7 @@ class Renderer:
         lineType = 2
 
         cv2.putText(
-            self.img,
-            txt,
-            bottomLeftCornerOfText,
-            font,
-            fontScale,
-            fontColor,
-            lineType,
+            self.img, txt, bottomLeftCornerOfText, font, fontScale, fontColor, lineType,
         )
 
     @property
@@ -446,8 +404,7 @@ class Renderer:
         """
         obj_vis.resize(self.absolute_to_pix(obj_vis.get_obj_size()))
         obj_vis.render(
-            self.coordinates_to_pix(obj_vis.get_position()),
-            self.img[:, : self.dim_y],
+            self.coordinates_to_pix(obj_vis.get_position()), self.img[:, : self.dim_y],
         )
 
     def reset(self, sim: Simulator = None) -> None:
@@ -485,12 +442,7 @@ class Renderer:
 
         def rescale(val):
             return int(
-                np.around(
-                    (val - self.sim.boundaries[0])
-                    * self.res
-                    / self.sim.arena_size,
-                    0,
-                )
+                np.around((val - self.sim.boundaries[0]) * self.res / self.sim.arena_size, 0,)
             )
 
         x_scaled = rescale(x)
@@ -529,7 +481,7 @@ class Renderer:
         color: tuple[int, int, int] = (255, 255, 255),
     ) -> None:
 
-        annotation_arr = np.zeros_like(arr[:, self.dim_y:])
+        annotation_arr = np.zeros_like(arr[:, self.dim_y :])
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = size
@@ -541,7 +493,7 @@ class Renderer:
             cv2.putText(annotation_arr, txt, pos, font, font_scale, color, 2)
             pos = (pos[0], pos[1] + 20)  # Move cursor
 
-        self.img[:, self.dim_y:] = annotation_arr
+        self.img[:, self.dim_y :] = annotation_arr
 
     def __call__(self, results: dict[str, Any] = None) -> np.ndarray:
         """Draw current observation (arena background + ball)

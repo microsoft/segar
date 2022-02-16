@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Billiards game
 
@@ -51,9 +49,7 @@ _ACTION_RANGE = (-100, 100)
 
 
 def billiard_ball_positions(
-    start: list[float, float],
-    r: float = _DEFAULT_BALL_SIZE / 2 + 1e-3,
-    n: int = 10,
+    start: list[float, float], r: float = _DEFAULT_BALL_SIZE / 2 + 1e-3, n: int = 10,
 ) -> list[list[float, float]]:
     x, y = start
     sq2r = math.sqrt(2.0) * r
@@ -89,7 +85,7 @@ class CueBall(
 
 
 billiards_default_config = {
-    "numbers": [(CueBall, 1), ],
+    "numbers": [(CueBall, 1),],
     "priors": [
         Prior(
             Size,
@@ -138,9 +134,7 @@ class BilliardsInitialization(ArenaInitialization):
 
         hole_positions = [[-0.9, -0.9], [-0.9, 0.9], [0.9, -0.9], [0.9, 0.9]]
         for i, pos in enumerate(hole_positions):
-            hole = Hole(
-                {Position: pos, ID: f"{i}_hole", Size: _DEFAULT_HOLE_SIZE}
-            )
+            hole = Hole({Position: pos, ID: f"{i}_hole", Size: _DEFAULT_HOLE_SIZE})
             sampled_things.append(hole)
 
         has_cueball = False
@@ -227,8 +221,7 @@ class Billiards(Task):
     def cueball_id(self) -> ID:
         if not hasattr(self._initialization, "cueball_id"):
             raise AttributeError(
-                "Initialization must define `cueball_id` to "
-                "be compatible with task."
+                "Initialization must define `cueball_id` to " "be compatible with task."
             )
         cueball_id = self._initialization.cueball_id
         if cueball_id is None:
@@ -239,8 +232,7 @@ class Billiards(Task):
     def hole_ids(self) -> list[ID]:
         if not hasattr(self._initialization, "hole_ids"):
             raise AttributeError(
-                "Initialization must define `hole_ids` to "
-                "be compatible with task."
+                "Initialization must define `hole_ids` to " "be compatible with task."
             )
         hole_ids = self._initialization.hole_ids
         return hole_ids
@@ -249,8 +241,7 @@ class Billiards(Task):
     def ball_ids(self) -> list[ID]:
         if not hasattr(self._initialization, "ball_ids"):
             raise AttributeError(
-                "Initialization must define `ball_ids` to "
-                "be compatible with task."
+                "Initialization must define `ball_ids` to " "be compatible with task."
             )
         ball_ids = self._initialization.ball_ids
         return ball_ids
@@ -269,12 +260,7 @@ class Billiards(Task):
         # because sim owns scaling
         distance_reward = 0.0
         for ball_id in self.ball_ids:
-            distance = min(
-                [
-                    self.sim.l2_distance(ball_id, hole_id)
-                    for hole_id in self.hole_ids
-                ]
-            )
+            distance = min([self.sim.l2_distance(ball_id, hole_id) for hole_id in self.hole_ids])
             if distance <= self._hole_distance_threshold:
                 self.sim.change_thing_state(ball_id, Alive, False)
                 self.sim.change_thing_state(ball_id, Visible, False)
@@ -315,10 +301,7 @@ class Billiards(Task):
         """
 
         distance = min(
-            [
-                self.sim.l2_distance(self.cueball_id, hole_id)
-                for hole_id in self.hole_ids
-            ]
+            [self.sim.l2_distance(self.cueball_id, hole_id) for hole_id in self.hole_ids]
         )
         ball_state = state["things"][self.cueball_id]
         return dict(

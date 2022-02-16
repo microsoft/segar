@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """For generating random variables from distributions.
 
@@ -38,9 +36,7 @@ def w2_gaussian(m1: float, s1: float, m2: float, s2: float):
     return (m1 - m2) ** 2 + s1 + s2 - 2 * math.sqrt(s1 * s2)
 
 
-def w2_sample(
-    dist1: Noise[T], dist2: Noise[T], n_samples: int = 100000
-) -> float:
+def w2_sample(dist1: Noise[T], dist2: Noise[T], n_samples: int = 100000) -> float:
     """For distributions on which the distance hasn't been implemented yet or
         doesn't have closed form, use samples.
 
@@ -71,9 +67,7 @@ class Noise(Generic[T]):
     _protected_in_place = False
 
     def __init__(
-        self,
-        params: dict[str, Any],
-        dist: Union[norm, multivariate_normal, None] = None,
+        self, params: dict[str, Any], dist: Union[norm, multivariate_normal, None] = None,
     ):
         self._params = params
         self._dist = dist
@@ -147,17 +141,13 @@ class Deterministic(Noise[T]):
 
 class GaussianNoise(Noise[float]):
     def __init__(
-        self,
-        mean: float = 0.0,
-        std: float = 0.1,
-        clip: Tuple[float, float] = None,
+        self, mean: float = 0.0, std: float = 0.1, clip: Tuple[float, float] = None,
     ):
         self.mean = mean
         self.std = std
         self.clip = clip
         super().__init__(
-            dist=norm(self.mean, self.std),
-            params=dict(mean=self.mean, std=self.std),
+            dist=norm(self.mean, self.std), params=dict(mean=self.mean, std=self.std),
         )
 
     def sample(self) -> Factor[float]:
@@ -234,18 +224,14 @@ class GaussianMixtureNoise(Noise[float]):
         return sum([c.log_likelihood(samples) for c in self.components])
 
     def cdf(self, samples: np.ndarray) -> np.ndarray:
-        cdfs = [
-            p * dist.cdf(samples) for p, dist in zip(self.pvals, self._dists)
-        ]
+        cdfs = [p * dist.cdf(samples) for p, dist in zip(self.pvals, self._dists)]
         return sum(cdfs)
 
     def log_cdf(self, samples: np.ndarray) -> np.ndarray:
         return np.log(self.cdf(samples))
 
     def pdf(self, samples: np.ndarray) -> np.ndarray:
-        pdfs = [
-            p * dist.pdf(samples) for p, dist in zip(self.pvals, self._dists)
-        ]
+        pdfs = [p * dist.pdf(samples) for p, dist in zip(self.pvals, self._dists)]
         return sum(pdfs)
 
     def log_pdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
@@ -285,9 +271,7 @@ class Choice(Noise[T]):
         return s
 
     def w2_distance(self, other: Any):
-        raise NotImplementedError(
-            "Choice needs special distance because " "values are special."
-        )
+        raise NotImplementedError("Choice needs special distance because " "values are special.")
 
     @staticmethod
     def _test_init():

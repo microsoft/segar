@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI " "Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Simulator
 
@@ -277,27 +275,19 @@ class Simulator:
         self._valid_ep_rules = None
         # Todo: This is built-in, but we want this to be controlled by the
         #  initializer.
-        self._walls[0] = SquareWall(
-            self.boundaries, damping=self.parameters[WallDamping]
-        )
+        self._walls[0] = SquareWall(self.boundaries, damping=self.parameters[WallDamping])
         self.timer = 0
         self.time = time.time()
         self._results.clear()
         # Add an entity for global friction.
-        self.adopt(
-            Entity(
-                {Friction: self.parameters[Friction], ID: "global_friction"}
-            )
-        )
+        self.adopt(Entity({Friction: self.parameters[Friction], ID: "global_friction"}))
 
     # Thing management
     @property
     def thing_ids(self) -> list[ThingID]:
         return list(self._things.keys())
 
-    def thing_ids_with_factor(
-        self, *factor_types: Type[Factor]
-    ) -> list[ThingID]:
+    def thing_ids_with_factor(self, *factor_types: Type[Factor]) -> list[ThingID]:
         """Returns the ids of things that have all specified factors.
 
         :param factor_types: List of factor types.
@@ -305,16 +295,12 @@ class Simulator:
         """
         ids = []
         for k, v in self.things.items():
-            has_factor = [
-                v.has_factor(factor_type) for factor_type in factor_types
-            ]
+            has_factor = [v.has_factor(factor_type) for factor_type in factor_types]
             if all(has_factor):
                 ids.append(k)
         return ids
 
-    def things_with_factor(
-        self, *factor_types: Type[Factor]
-    ) -> dict[ThingID, Entity]:
+    def things_with_factor(self, *factor_types: Type[Factor]) -> dict[ThingID, Entity]:
         """Returns a dictionary of things with all specified factors.
 
         :param factor_types: List of factor types.
@@ -322,16 +308,12 @@ class Simulator:
         """
         things_ = {}
         for k, thing in self._things.items():
-            has_factor = [
-                thing.has_factor(factor_type) for factor_type in factor_types
-            ]
+            has_factor = [thing.has_factor(factor_type) for factor_type in factor_types]
             if all(has_factor):
                 things_[k] = thing
         return things_
 
-    def things_without_factor(
-        self, *factor_types: Type[Factor]
-    ) -> dict[ThingID, Entity]:
+    def things_without_factor(self, *factor_types: Type[Factor]) -> dict[ThingID, Entity]:
         """Returns a dictionary of things without all specified factors.
 
         :param factor_types: List of factor types.
@@ -339,10 +321,7 @@ class Simulator:
         """
         things_ = {}
         for k, thing in self._things.items():
-            has_factor = [
-                not thing.has_factor(factor_type)
-                for factor_type in factor_types
-            ]
+            has_factor = [not thing.has_factor(factor_type) for factor_type in factor_types]
             if all(has_factor):
                 things_[k] = thing
         return things_
@@ -358,9 +337,7 @@ class Simulator:
                 return thing
         return None
 
-    def get_paired_factor(
-        self, key: Factor, query: Type[Factor]
-    ) -> Union[Factor, None]:
+    def get_paired_factor(self, key: Factor, query: Type[Factor]) -> Union[Factor, None]:
         """Attempts to find the corresponding factor from the type and
             another factor that belongs to the same thing.
 
@@ -398,10 +375,7 @@ class Simulator:
         sim_things = self.things_with_factor(Order)
         unordered_things = self.things_without_factor(Order)
         sorted_things = dict(
-            (k, v)
-            for k, v in sorted(
-                sim_things.items(), key=lambda item: item[1].factors[Order]
-            )
+            (k, v) for k, v in sorted(sim_things.items(), key=lambda item: item[1].factors[Order])
         )
         for k, v in unordered_things.items():
             sorted_things[k] = v
@@ -413,9 +387,7 @@ class Simulator:
         :param things: Optional list of things to shuffle.
         """
         things = things or list(self._things.values())
-        ordered_things = list(
-            thing for thing in things if thing.has_factor(Order)
-        )
+        ordered_things = list(thing for thing in things if thing.has_factor(Order))
         orders = list(range(len(ordered_things)))
         random.shuffle(orders)
         for thing, order in zip(ordered_things, orders):
@@ -432,19 +404,13 @@ class Simulator:
 
         id_thing = thing[ID].value
 
-        if isinstance(id_thing, str) and (
-            id_thing.isdigit() or id_thing[1:].isdigit()
-        ):
+        if isinstance(id_thing, str) and (id_thing.isdigit() or id_thing[1:].isdigit()):
             id_thing = int(id_thing)
 
         if isinstance(id_thing, int) and id_thing == -1:
             id_thing = 0
 
-        if (
-            isinstance(id_thing, int)
-            and id_thing in self.things.keys()
-            or id_thing is None
-        ):
+        if isinstance(id_thing, int) and id_thing in self.things.keys() or id_thing is None:
             # Give a unique ID
             ids = [k for k in self.things.keys() if isinstance(k, int)]
             max_id = max(ids)
@@ -470,8 +436,7 @@ class Simulator:
 
         if thing[ID] in self._things:
             raise KeyError(
-                f"{thing[ID]} cannot be used as `unique_id` "
-                f"because it already is in use."
+                f"{thing[ID]} cannot be used as `unique_id` " f"because it already is in use."
             )
 
         self._things[thing[ID].value] = thing
@@ -486,10 +451,7 @@ class Simulator:
         return dict((tid, thing.state) for tid, thing in self.things.items())
 
     def change_thing_state(
-        self,
-        thing_id: Union[ThingID, ID],
-        factor_type: Type[Factor],
-        value: Any,
+        self, thing_id: Union[ThingID, ID], factor_type: Type[Factor], value: Any,
     ) -> None:
         """Change an thing state.
 
@@ -638,8 +600,7 @@ class Simulator:
         things_to_apply_on = things_to_apply_on or self.things.values()
 
         rules_and_args = self.get_valid_rules(
-            rules_to_apply=rules_to_apply,
-            things_to_apply_on=things_to_apply_on,
+            rules_to_apply=rules_to_apply, things_to_apply_on=things_to_apply_on,
         )
         final_outcomes = self.get_final_outcomes(rules_and_args)
 
@@ -666,20 +627,11 @@ class Simulator:
             if affected_factors is not None:
                 ret_factor_types = rule.signature_info["return_factor_types"]
                 # Check if rule contains factors in effected list
-                if (
-                    len(
-                        set(ret_factor_types).intersection(
-                            set(affected_factors)
-                        )
-                    )
-                    == 0
-                ):
+                if len(set(ret_factor_types).intersection(set(affected_factors))) == 0:
                     continue
             res = rule(*args)
             if isinstance(res, DidNotMatch):
-                raise ValueError(
-                    f"Incorrect args {args} provided for rule " f"{rule}."
-                )
+                raise ValueError(f"Incorrect args {args} provided for rule " f"{rule}.")
             if not (isinstance(res, DidNotPass) or res is None):
                 if not isinstance(res, tuple):
                     res = [res]
@@ -753,8 +705,7 @@ class Simulator:
         for factor_types in self._factor_update_order:
             if Position in factor_types:
                 raise ValueError(
-                    f"{Position} factor type must be modified "
-                    f"only during collision management."
+                    f"{Position} factor type must be modified " f"only during collision management."
                 )
             rule_outcomes = self.get_final_outcomes(
                 self._valid_ep_rules, affected_factors=factor_types
@@ -1121,9 +1072,7 @@ class Simulator:
     # API for thing factors
 
     def add_force(
-        self,
-        thing_id: Union[ThingID, ID],
-        force: Union[Tuple[float, float], np.ndarray],
+        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray],
     ) -> None:
         """ Apply a force to an object that results in a velocity that's
         relative to the object's mass
@@ -1145,14 +1094,10 @@ class Simulator:
             with thing[Velocity].in_place():
                 thing[Velocity] += np.array(force / thing[Mass].value)
         except KeyError:
-            raise KeyError(
-                "Force can only be added to objects with mass " "and velocity."
-            )
+            raise KeyError("Force can only be added to objects with mass " "and velocity.")
 
     def add_velocity(
-        self,
-        thing_id: ThingID,
-        velocity: Union[Tuple[float, float], np.ndarray],
+        self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray],
     ) -> None:
         """ Apply a velocity to an object. This is cumulative with the
             object's existing speed.
@@ -1176,18 +1121,13 @@ class Simulator:
     def all_stopped(self) -> bool:
         min_velocity = self.parameters[MinVelocity]
         for thing in self.things.values():
-            if (
-                thing.has_factor[Velocity]
-                and thing[Velocity].norm() > min_velocity
-            ):
+            if thing.has_factor[Velocity] and thing[Velocity].norm() > min_velocity:
                 return False
         return True
 
     # Extra functionality
     @timeit
-    def l2_distance(
-        self, thing1_id: Union[ThingID, ID], thing2_id: Union[ThingID, ID]
-    ):
+    def l2_distance(self, thing1_id: Union[ThingID, ID], thing2_id: Union[ThingID, ID]):
         """L2 distance between things.
 
         :param thing1_id: ID (key) for thing 1.
@@ -1320,8 +1260,7 @@ class Simulator:
                             colliding_pair = (obj, wall)
                     else:
                         raise ValueError(
-                            f"Cannot reverse or fix overlaps "
-                            f"from rule type {type(transition)}."
+                            f"Cannot reverse or fix overlaps " f"from rule type {type(transition)}."
                         )
 
             for thing in self._things.values():
@@ -1424,14 +1363,10 @@ class Simulator:
                 for j, other_object in enumerate(self.things.values()):
                     if j <= i:
                         continue
-                    if isinstance(obj, Object) and isinstance(
-                        other_object, Object
-                    ):
+                    if isinstance(obj, Object) and isinstance(other_object, Object):
                         assert other_object is not obj
                         if colliding(obj, other_object):
-                            raise RuntimeError(
-                                "Still overlapping!", (obj, other_object)
-                            )
+                            raise RuntimeError("Still overlapping!", (obj, other_object))
 
     def _update_histories(self, history_length=10):
         """Keeps a buffer of all of the objects.
@@ -1445,9 +1380,7 @@ class Simulator:
                 self._thing_histories[k].append(thing_copy)
             else:
                 self._thing_histories[k] = [thing_copy]
-            self._thing_histories[k] = self._thing_histories[k][
-                -history_length:
-            ]
+            self._thing_histories[k] = self._thing_histories[k][-history_length:]
 
     def rewind(self):
         """Rewinds objects from past histories.
@@ -1523,8 +1456,7 @@ class Simulator:
         if n_elements is not None:
             if n_elements > self._state_buffer.maxlen:
                 raise ValueError(
-                    "Attempting to pull more elements than "
-                    "maximum elements in buffer."
+                    "Attempting to pull more elements than " "maximum elements in buffer."
                 )
         else:
             n_elements = self._state_buffer.maxlen

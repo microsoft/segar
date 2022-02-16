@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Priors
 
@@ -57,10 +55,7 @@ class Prior(TransitionFunction):
             return SetFactor[target_factor](f, source_)
 
         super().__init__(
-            prior,
-            factor_type=factor_type,
-            entity_type=entity_type,
-            relation=relation,
+            prior, factor_type=factor_type, entity_type=entity_type, relation=relation,
         )
 
     def copy_for_sim(self, sim):

@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """A relation is treated like a special type of Rule that returns bool.
 
@@ -53,9 +51,7 @@ class Relation(Rule):
 
 
 @Relation
-def overlaps(
-    o1_factors: Tuple[Position, Shape], o2_factors: Tuple[Position, Shape]
-):
+def overlaps(o1_factors: Tuple[Position, Shape], o2_factors: Tuple[Position, Shape]):
     """Whether there is an overlap given position and shape.
 
     :param o1_factors: First set of factors.
@@ -71,8 +67,7 @@ def overlaps(
 
 @Relation
 def colliding(
-    o1_factors: Tuple[Position, Shape, Velocity],
-    o2_factors: Tuple[Position, Shape, Velocity],
+    o1_factors: Tuple[Position, Shape, Velocity], o2_factors: Tuple[Position, Shape, Velocity],
 ):
     """Whether there is a collision, given positions, shapes, and velocity.
 
@@ -162,9 +157,7 @@ class Contains(Relation):
             normal_vec = thing2[Position] - thing1[Position]
             shape1 = thing1[Shape]
             shape2 = thing2[Shape]
-            area_overlap = shape1.area_overlap(
-                shape2, normal_vector=normal_vec
-            )
+            area_overlap = shape1.area_overlap(shape2, normal_vector=normal_vec)
             obj_area = shape1.area()
             return (area_overlap == obj_area) and is_on
 

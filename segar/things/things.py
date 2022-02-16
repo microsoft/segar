@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """A thing is the base object in SEGAR.
 
@@ -54,9 +52,7 @@ class Entity(FactorContainer, default={}):
         """
 
         if not isinstance(initial_factors, dict):
-            raise ValueError(
-                "Argument `initial_factors` must be a " "dictionary."
-            )
+            raise ValueError("Argument `initial_factors` must be a " "dictionary.")
 
         if ID not in initial_factors.keys() or initial_factors[ID] is None:
             initial_factors[ID] = unique_id
@@ -64,9 +60,7 @@ class Entity(FactorContainer, default={}):
         thing_factors = {}
         for k, v in initial_factors.items():
             if not issubclass(k, Factor):
-                raise TypeError(
-                    f"Initial factors must have {Factor} subclass " f"keys."
-                )
+                raise TypeError(f"Initial factors must have {Factor} subclass " f"keys.")
 
             if k == ID and v is None:
                 if ID in self.default:

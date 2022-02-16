@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """To be filled as bugs and mis-implemented features are found.
 
@@ -83,9 +81,7 @@ def _make_things(sim):
         initial_factors={Charge: -0.5},
     )
     sim.add_magnet(
-        position=np.array([-0.5, 0.5]),
-        text="M",
-        initial_factors={Mobile: True, Size: 0.3},
+        position=np.array([-0.5, 0.5]), text="M", initial_factors={Mobile: True, Size: 0.3},
     )
     sim.add_sand(
         position=np.array([0.1, -0.1]),
@@ -94,14 +90,10 @@ def _make_things(sim):
         unique_id="sand_pit",
     )
     sim.add_magma(
-        position=np.array([-0.5, 0.5]),
-        initial_factors={Shape: Square(0.3)},
-        text="G",
+        position=np.array([-0.5, 0.5]), initial_factors={Shape: Square(0.3)}, text="G",
     )
     sim.add_charger(
-        position=np.array([0.3, 0.7]),
-        text="C",
-        initial_factors={Charge: 1.0, Mobile: True},
+        position=np.array([0.3, 0.7]), text="C", initial_factors={Charge: 1.0, Mobile: True},
     )
 
 
@@ -208,9 +200,7 @@ def test_apply_action():
         expected_vel = (expected_vel + da * dt).value
 
         if not np.allclose(expected_vel, vel, atol=1e-7):
-            raise ValueError(
-                f"Velocity {vel} doesn't match expected " f"{expected_vel}."
-            )
+            raise ValueError(f"Velocity {vel} doesn't match expected " f"{expected_vel}.")
     print("[PASSED]")
 
 
@@ -237,9 +227,7 @@ def test_local_sim():
 
 
 def run_all_tests():
-    test_funcs = dict(
-        (k, f) for k, f in globals().items() if k.startswith("test")
-    )
+    test_funcs = dict((k, f) for k, f in globals().items() if k.startswith("test"))
     for k, f in test_funcs.items():
         logger.info(f"Testing {k}.")
         f()

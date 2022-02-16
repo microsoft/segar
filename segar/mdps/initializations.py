@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Module for initialization components
 
@@ -78,10 +76,7 @@ class ArenaInitialization(Initialization):
     """
 
     def __init__(
-        self,
-        config: dict = None,
-        enforce_distances: bool = True,
-        min_distance: float = 0.1,
+        self, config: dict = None, enforce_distances: bool = True, min_distance: float = 0.1,
     ):
         """
 
@@ -98,13 +93,9 @@ class ArenaInitialization(Initialization):
 
         # These are read in by the config
         self._config = dict()
-        self._numbers: list[
-            Union[Type[Entity], ThingFactory], Union[int, Noise]
-        ] = []
+        self._numbers: list[Union[Type[Entity], ThingFactory], Union[int, Noise]] = []
         self._priors: list[Prior] = []
-        self._positions: list[
-            Union[Type[Entity], ThingFactory], list[list[float, float]]
-        ]
+        self._positions: list[Union[Type[Entity], ThingFactory], list[list[float, float]]]
         self._things: list[Entity] = []
         self._inits: list[Transition] = []
 
@@ -113,12 +104,8 @@ class ArenaInitialization(Initialization):
     def _read_config(
         self,
         priors: list[Prior] = None,
-        numbers: tuple[
-            Union[Type[Entity], ThingFactory], Union[int, Noise]
-        ] = None,
-        positions: list[
-            Union[Type[Entity], ThingFactory], list[list[float, float]]
-        ] = None,
+        numbers: tuple[Union[Type[Entity], ThingFactory], Union[int, Noise]] = None,
+        positions: list[Union[Type[Entity], ThingFactory], list[list[float, float]]] = None,
     ) -> None:
         """Reads the configurations, which should have information about
             priors, numbers of things, and positions.
@@ -162,14 +149,11 @@ class ArenaInitialization(Initialization):
             prior.set_sim(self.sim)
 
         def bad_positions(pos1: Position, pos2: Position):
-            return (
-                self._enforce_distances
-                and (pos1 - pos2).norm() <= self._min_distance
-            )
+            return self._enforce_distances and (pos1 - pos2).norm() <= self._min_distance
 
         def check_all_positions(plist: list[Position], fail_on_check=False):
             for i, pos1 in enumerate(plist):
-                for pos2 in plist[i + 1:]:
+                for pos2 in plist[i + 1 :]:
                     if bad_positions(pos1, pos2):
                         if fail_on_check:
                             raise ValueError(
@@ -208,15 +192,11 @@ class ArenaInitialization(Initialization):
                         cls = factor_type
                     things.append(cls())
 
-            inits = self.sim.get_rule_outcomes(
-                self._priors, things_to_apply_on=things
-            )
+            inits = self.sim.get_rule_outcomes(self._priors, things_to_apply_on=things)
             for init in inits:
                 init()
 
-            positions = [
-                thing[Position] for thing in things if Position in thing
-            ]
+            positions = [thing[Position] for thing in things if Position in thing]
             positions_ok = check_all_positions(positions)
             if positions_ok:
                 break

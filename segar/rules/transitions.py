@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Transition functions and applications.
 
@@ -61,9 +59,7 @@ class TransitionFunction(Rule):
         """
 
         self._relation = relation
-        super().__init__(
-            rule_fn, factor_type=factor_type, entity_type=entity_type
-        )
+        super().__init__(rule_fn, factor_type=factor_type, entity_type=entity_type)
 
     @property
     def priority(self) -> int:
@@ -186,10 +182,7 @@ def conditional_transition(
     class ConditionalTransitionFunction(TransitionFunction):
         def __init__(self, rule_fn: Callable):
             super().__init__(
-                rule_fn,
-                factor_type=factor_type,
-                entity_type=entity_type,
-                relation=relation,
+                rule_fn, factor_type=factor_type, entity_type=entity_type, relation=relation,
             )
 
     return ConditionalTransitionFunction
@@ -295,9 +288,7 @@ class Differential(Transition, Generic[F]):
 
     def __call__(self, dt: Time) -> F:
         if not self.applied:
-            self.factor.set(
-                self.factor.value + self.value * dt, allow_in_place=True
-            )
+            self.factor.set(self.factor.value + self.value * dt, allow_in_place=True)
             return self.factor
         else:
             raise ValueError("Transition can only be applied once.")

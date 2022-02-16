@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Generic rules.
 
@@ -61,9 +59,7 @@ def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
             args = get_args(pattern)
             for arg in args:
                 if not issubclass(arg, Factor):
-                    raise ValueError(
-                        "Unknown pattern type within tuple, " "must be Factor."
-                    )
+                    raise ValueError("Unknown pattern type within tuple, " "must be Factor.")
             if origin == tuple:
                 input_patterns.append(args)
                 has_entity = True
@@ -88,14 +84,9 @@ def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
             elif issubclass(pattern, Wall):
                 pass
             else:
-                raise TypeError(
-                    f"Pattern {pattern} of type "
-                    f"{type(pattern)} not recognized."
-                )
+                raise TypeError(f"Pattern {pattern} of type " f"{type(pattern)} not recognized.")
 
-    if returns is not None and isinstance(
-        returns, (_GenericAlias, GenericAlias)
-    ):
+    if returns is not None and isinstance(returns, (_GenericAlias, GenericAlias)):
         origin = get_origin(returns)
         return_factor_types = get_args(returns)
         if origin == tuple:
@@ -118,18 +109,13 @@ def inspect_signature(rule_fn: Callable) -> Union[None, dict]:
     )
 
     if has_entity and has_factors:
-        raise TypeError(
-            f"Rule signature ({sig}) cannot have both factors and "
-            "containers."
-        )
+        raise TypeError(f"Rule signature ({sig}) cannot have both factors and " "containers.")
 
     return sig
 
 
 def match_pattern(
-    rule: Rule,
-    *inputs: Union[tuple, list, Factor, Entity, Parameter],
-    loose_match: bool = False,
+    rule: Rule, *inputs: Union[tuple, list, Factor, Entity, Parameter], loose_match: bool = False,
 ) -> Union[None, list[Union[Factor, Entity, Parameter]]]:
     """Attempts to match a set of inputs to a pattern provided.
 
@@ -145,9 +131,9 @@ def match_pattern(
     args = []
 
     inputs = list(inputs)
-    patterns: list[
-        Type[Parameter], Type[Factor], Type[Entity], tuple
-    ] = rule.signature_info["input_patterns"].copy()
+    patterns: list[Type[Parameter], Type[Factor], Type[Entity], tuple] = rule.signature_info[
+        "input_patterns"
+    ].copy()
     factor_type = rule.factor_type
     entity_type = rule.entity_type
 

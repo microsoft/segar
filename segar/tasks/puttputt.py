@@ -1,6 +1,4 @@
-__copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 """Puttputt game. Get ball as close as possible to the goal.
 
@@ -95,32 +93,17 @@ class GolfBall(
 
 
 class GoalTile(
-    Tile,
-    default={
-        Label: "goal",
-        Order: -2,
-        Shape: Circle(0.3),
-        Text: "G",
-        ID: "goal",
-    },
+    Tile, default={Label: "goal", Order: -2, Shape: Circle(0.3), Text: "G", ID: "goal",},
 ):
     pass
 
 
 puttputt_default_config = {
     "numbers": [
-        (
-            ThingFactory([Charger, Magnet, Bumper, Damper, Ball]),
-            DiscreteRangeNoise(1, 2),
-        ),
+        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), DiscreteRangeNoise(1, 2),),
         (
             ThingFactory(
-                {
-                    SandTile: 2 / 5.0,
-                    MagmaTile: 1 / 5.0,
-                    Hole: 1 / 5.0,
-                    FireTile: 1 / 5.0,
-                }
+                {SandTile: 2 / 5.0, MagmaTile: 1 / 5.0, Hole: 1 / 5.0, FireTile: 1 / 5.0,}
             ),
             DiscreteRangeNoise(1, 2),
         ),
@@ -135,25 +118,17 @@ puttputt_default_config = {
         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
         Prior(Shape, Circle(0.3), entity_type=GoalTile),
         Prior(Shape, Circle(0.4), entity_type=Hole),
-        Prior(
-            Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object
-        ),
-        Prior(
-            Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.1)), entity_type=Tile
-        ),
+        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object),
+        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.1)), entity_type=Tile),
         Prior(Mass, 1.0),
         Prior(Mobile, False),
         Prior(Mobile, True, entity_type=Ball),
         Prior(Mobile, True, entity_type=GolfBall),
         Prior(
-            Charge,
-            GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
-            entity_type=Charger,
+            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger,
         ),
         Prior(
-            Magnetism,
-            GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
-            entity_type=Magnet,
+            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet,
         ),
         Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
     ],
@@ -164,17 +139,7 @@ puttputt_random_middle_config = {
     "numbers": [
         (
             ThingFactory(
-                [
-                    Charger,
-                    Magnet,
-                    Bumper,
-                    Damper,
-                    Object,
-                    SandTile,
-                    MagmaTile,
-                    Hole,
-                    FireTile,
-                ]
+                [Charger, Magnet, Bumper, Damper, Object, SandTile, MagmaTile, Hole, FireTile,]
             ),
             1,
         ),
@@ -187,23 +152,15 @@ puttputt_random_middle_config = {
         Prior(Position, RandomTopLocation(), entity_type=GoalTile),
         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
         Prior(Shape, Circle(0.3), entity_type=GoalTile),
-        Prior(
-            Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object
-        ),
-        Prior(
-            Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile
-        ),
+        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object),
+        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
         Prior(Mass, 1.0),
         Prior(Mobile, True),
         Prior(
-            Charge,
-            GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
-            entity_type=Charger,
+            Charge, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Charger,
         ),
         Prior(
-            Magnetism,
-            GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
-            entity_type=Magnet,
+            Magnetism, GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]), entity_type=Magnet,
         ),
         Prior(Friction, UniformNoise(0.2, 1.0), entity_type=SandTile),
     ],
@@ -211,20 +168,12 @@ puttputt_random_middle_config = {
 
 
 invisiball_config = {
-    "numbers": [
-        (Charger, DiscreteRangeNoise(1, 3)),
-        (GoalTile, 1),
-        (GolfBall, 1),
-    ],
+    "numbers": [(Charger, DiscreteRangeNoise(1, 3)), (GoalTile, 1), (GolfBall, 1),],
     "priors": [
         Prior(Position, RandomMiddleLocation(), entity_type=Charger),
         Prior(Position, RandomBottomLocation(), entity_type=GolfBall),
         Prior(Position, RandomTopLocation(), entity_type=GoalTile),
-        Prior(
-            Size,
-            GaussianNoise(0.2, 0.01, clip=(0.1, 0.25)),
-            entity_type=Object,
-        ),
+        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.25)), entity_type=Object,),
         Prior(Mass, 1.0),
         Prior(Mobile, True),
         Prior(Charge, 1.0, entity_type=Charger),
@@ -251,15 +200,9 @@ class PuttPuttInitialization(ArenaInitialization):
                 has_goal = True
 
         if not has_golfball:
-            raise KeyError(
-                f"`{GolfBall}` number must be defined in this "
-                "initialization."
-            )
+            raise KeyError(f"`{GolfBall}` number must be defined in this " "initialization.")
         if not has_goal:
-            raise KeyError(
-                f"`{GoalTile}` number must be defined in this "
-                "initialization."
-            )
+            raise KeyError(f"`{GoalTile}` number must be defined in this " "initialization.")
 
         super().__init__(config=config)
 
@@ -353,8 +296,7 @@ class PuttPutt(Task):
     def golfball_id(self) -> ID:
         if not hasattr(self._initialization, "golfball_id"):
             raise AttributeError(
-                "Initialization must define `golfball_id` to "
-                "be compatible with task."
+                "Initialization must define `golfball_id` to " "be compatible with task."
             )
         ball_id = self._initialization.golfball_id
         if ball_id is None:
@@ -365,8 +307,7 @@ class PuttPutt(Task):
     def goal_id(self) -> ID:
         if not hasattr(self._initialization, "goal_id"):
             raise AttributeError(
-                "Initialization must define `goal_id` to "
-                "be compatible with task."
+                "Initialization must define `goal_id` to " "be compatible with task."
             )
         goal_id = self._initialization.goal_id
         if goal_id is None:
