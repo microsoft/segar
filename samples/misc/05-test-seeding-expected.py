@@ -7,26 +7,16 @@ import numpy as np
 import imageio
 import segar  # required to have envs registered
 
-resolution = 64
-kwargs = {
-    "num_envs": 1,
-    "num_levels": 2,
-    "framestack": 1,
-    "resolution": resolution,
-    "max_steps": 200,
-    "seed": 123,
-}
-env1 = gym.make("Segar-tilesx1-hard-rgb-v0", **kwargs)
-env2 = gym.make("Segar-tilesx1-hard-rgb-v0", **kwargs)
-env3 = gym.make("Segar-tilesx1-hard-rgb-v0", **kwargs)
+resolution = 1000
+env1 = gym.make("Pendulum-v0")
+env2 = gym.make("Pendulum-v0")
+env3 = gym.make("Pendulum-v0")
 
-# for e in [env1, env2, env3]:
-#     e.seed(123)
-# ^ this doesn't do anything
+for e in [env1, env2, env3]:
+    e.seed(123)
 
 SCALE_FACTOR = 4
 coords = []
-
 
 cv2.namedWindow("image")
 
@@ -35,15 +25,19 @@ img_buf = np.zeros((resolution, resolution * 3 + 2, 3), np.uint8)
 images = []
 GIF_frames = 500
 while 1:
-    obs1 = env1.reset()
-    obs2 = env2.reset()
-    obs3 = env3.reset()
+    _ = env1.reset()
+    _ = env2.reset()
+    _ = env3.reset()
+    obs1 = env1.render("rgb_array")
+    obs2 = env2.render("rgb_array")
+    obs3 = env3.render("rgb_array")
+
     done = False
     while 1:
         img_buf[:, :resolution, :] = obs1
         img_buf[:, resolution + 1 : resolution * 2 + 1, :] = obs2
         img_buf[:, (resolution + 1) * 2 :, :] = obs3
-        img_buf_rescaled = cv2.resize(img_buf, (0, 0), fx=SCALE_FACTOR, fy=SCALE_FACTOR)
+        img_buf_rescaled = cv2.resize(img_buf, (0, 0), fx=0.25, fy=0.25)
         if GIF_frames:
             images.append(img_buf_rescaled)
             GIF_frames -= 1
@@ -52,9 +46,12 @@ while 1:
 
         action = env1.action_space.sample()
 
-        obs1, rew1, done1, _ = env1.step(action)
-        obs2, rew2, done2, _ = env2.step(action)
-        obs3, rew3, done3, _ = env3.step(action)
+        _, rew1, done1, _ = env1.step(action)
+        _, rew2, done2, _ = env2.step(action)
+        _, rew3, done3, _ = env3.step(action)
+        obs1 = env1.render("rgb_array")
+        obs2 = env2.render("rgb_array")
+        obs3 = env3.render("rgb_array")
 
         if done1 or done2 or done3:
             break
