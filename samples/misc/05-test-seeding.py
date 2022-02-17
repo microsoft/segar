@@ -1,6 +1,4 @@
-__author__ = "R Devon Hjelm, Bogdan Mazoure, Florian Golemo"
-__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI " \
-                "Institute"
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
 import cv2
@@ -11,7 +9,7 @@ import segar
 from segar.factors import Position
 
 env1 = gym.make(
-    "Segar-empty-hard-rgb-v0",
+    "Segar-tilesx1-hard-rgb-v0",
     num_envs=1,
     num_levels=2,
     framestack=1,
@@ -29,7 +27,7 @@ env2 = gym.make(
     seed=123,
 )
 env3 = gym.make(
-    "Segar-objectsx1-hard-rgb-v0",
+    "Segar-tilesx1-hard-rgb-v0",
     num_envs=1,
     num_levels=2,
     framestack=1,

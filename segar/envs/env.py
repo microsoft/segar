@@ -4,6 +4,7 @@ __license__ = "MIT"
 from pprint import pprint
 from typing import Type
 
+import cv2
 import gym
 import numpy as np
 from gym.spaces import Box
@@ -356,7 +357,7 @@ class SEGAREnv(gym.Env):
             )
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
-        self.reset()
+        # self.reset() # this should not be called in the Env itself
 
     def step(self, action):
         # THIS EXPECTS ACTIONS TO BE A VECTOR WITH ONE ACTION FOR EACH ENV
@@ -391,7 +392,9 @@ class SEGARSingleEnv(SEGAREnv):
         action_max: float = 1,
         seed: int = 123,
         task_class: str = "PuttPutt",
+        unique_name: str = None,
     ):
+        self.unique_name = unique_name
         super().__init__(
             env_name=env_name,
             start_level=start_level,
@@ -408,6 +411,7 @@ class SEGARSingleEnv(SEGAREnv):
             seed=seed,
             task_class=task_class,
         )
+
         self.observation_space = Box(
             shape=(resolution, resolution, 3 * framestack), low=0, high=255, dtype=np.uint8
         )
@@ -426,7 +430,12 @@ class SEGARSingleEnv(SEGAREnv):
 
     def render(self, mode="human"):
         if mode == "human":
-            raise NotImplementedError("TODO")
+            name = ""
+            if self.unique_name is not None:
+                name = self.unique_name
+            # scale up observation by factor 4
+            cv2.imshow(f"viewer{name}", cv2.resize(self.last_obs, (0, 0), fx=4, fy=4))
+            cv2.waitKey(1)  # required to actually show window
         else:
             return self.last_obs
 

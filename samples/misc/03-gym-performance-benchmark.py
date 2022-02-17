@@ -1,5 +1,7 @@
-import time
+__copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
+__license__ = "MIT"
 
+import time
 import gym
 import numpy as np
 from tqdm import tqdm
