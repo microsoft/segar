@@ -28,18 +28,21 @@ import torch
 from utils import rollouts
 import pickle
 
+import palettable
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer("n_rollouts", 10, "Number of per-env rollouts.")
 flags.DEFINE_string("model_dir", "../data", "PPO weights directory")
 flags.DEFINE_integer("num_envs", 1, "Number of rollout environments")
 flags.DEFINE_boolean("sample", False, "Use a=E[pi(s)] or a~pi(s)?")
+flags.DEFINE_list("probes", ['wasserstein', 'mine'], "List of probes")
 
 
 def main(argv):
     num_envs = FLAGS.num_envs
-    probe_wasserstein = False
-    probe_mine = False
+    probe_wasserstein = 'wasserstein' in FLAGS.probes
+    probe_mine = 'mine' in FLAGS.probes
     MAX_STEPS = 100
     """
     Load the pre-trained PPO model
@@ -188,25 +191,37 @@ def main(argv):
             'set'] == 'train']['returns'].mean()).reset_index()
         columns = list(x.columns)
         columns[-1] = r'$\eta_{test}-\eta_{train}$'
+        columns[1] = 'Difficulty'
         x.columns = columns
 
+        palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors
+        
         # Conditional plot per task type /difficulty
-        sns.lmplot(
-            x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
-            y=r'$\eta_{test}-\eta_{train}$',
-            # hue='num_levels',
-            row='task',
-            col='difficulty',
-            col_order=['easy','medium','hard'],
-            data=x)
-        plt.savefig('../plots/01_Wasserstein.png')
-        plt.clf()
+        difficulties = ['Easy','Medium','Hard']
+        with sns.plotting_context("notebook", font_scale=1.5):
+            g = sns.lmplot(
+                x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
+                y=r'$\eta_{test}-\eta_{train}$',
+                hue='Difficulty',
+                # row='task',
+                col='task',
+                # col_order=['easy','medium','hard'],
+                palette=palette,
+                sharey=False,
+                data=x)
+            for ax, difficulty in zip(g.axes.flatten(), difficulties):
+                ax.set_title(difficulty )
+            plt.savefig('../plots/01_Wasserstein.png')
+            plt.clf()
 
         # Average plot with all tasks combined
-        sns.lmplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
-                   y=r'$\eta_{test}-\eta_{train}$',
-                   data=x)
-        plt.savefig('../plots/01_Wasserstein_joint.png')
+        with sns.plotting_context("notebook", font_scale=1.25):
+            g = sns.lmplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
+                    y=r'$\eta_{test}-\eta_{train}$',
+                    line_kws={'color': 'deeppink'},
+                    scatter_kws={'color': 'deeppink'},
+                    data=x)
+            plt.savefig('../plots/01_Wasserstein_joint.png')
 
     if probe_mine:
         if os.path.isfile('../plots/02_MINE.pkl'):
@@ -240,7 +255,8 @@ def main(argv):
                         ckpt_path = ckpt_path[0]
                         seed = int(ckpt_path.split('_')[-1])
 
-                        env_train = SEGAREnv(env_name,
+                        try:
+                            env_train = SEGAREnv(env_name,
                                              num_envs=num_envs,
                                              num_levels=num_levels,
                                              framestack=1,
@@ -248,81 +264,87 @@ def main(argv):
                                              max_steps=MAX_STEPS,
                                              _async=False,
                                              seed=seed)
-                        env_test = SEGAREnv(env_name,
-                                            num_envs=num_envs,
-                                            num_levels=num_test_levels,
-                                            framestack=1,
-                                            resolution=64,
-                                            max_steps=MAX_STEPS,
-                                            _async=False,
-                                            seed=seed + 1)
+                            env_test = SEGAREnv(env_name,
+                                                num_envs=num_envs,
+                                                num_levels=num_test_levels,
+                                                framestack=1,
+                                                resolution=64,
+                                                max_steps=MAX_STEPS,
+                                                _async=False,
+                                                seed=seed + 1)
 
-                        returns_train, (states_train, zs_train, actions_train,
-                                        factors_train,
-                                        task_ids_train) = rollouts(
-                                            env_train,
+                            returns_train, (states_train, zs_train, actions_train,
+                                            factors_train,
+                                            task_ids_train) = rollouts(
+                                                env_train,
+                                                loaded_state,
+                                                rng,
+                                                n_rollouts=FLAGS.n_rollouts)
+                            returns_test, (states_test, zs_test, actions_test,
+                                        factors_test, task_ids_test) = rollouts(
+                                            env_test,
                                             loaded_state,
                                             rng,
                                             n_rollouts=FLAGS.n_rollouts)
-                        returns_test, (states_test, zs_test, actions_test,
-                                       factors_test, task_ids_test) = rollouts(
-                                           env_test,
-                                           loaded_state,
-                                           rng,
-                                           n_rollouts=FLAGS.n_rollouts)
 
-                        mine_net = SimpleMLP(n_input=256 + 100, n_out=1)
-                        opt = torch.optim.Adam(mine_net.parameters(), lr=3e-4)
-                        X_train = np.array(zs_train).reshape(
-                            -1, zs_train[0].shape[-1])
-                        Z_train = np.array(factors_train).reshape(
-                            len(factors_train), -1)
-                        X_test = np.array(zs_test)[:, 0]
-                        Z_test = np.array(factors_test).reshape(
-                            len(factors_test), -1)
+                            mine_net = SimpleMLP(n_input=256 + 100, n_out=1)
+                            opt = torch.optim.Adam(mine_net.parameters(), lr=3e-4)
+                            X_train = np.array(zs_train).reshape(
+                                -1, zs_train[0].shape[-1])
+                            Z_train = np.array(factors_train).reshape(
+                                len(factors_train), -1)
+                            X_test = np.array(zs_test)[:, 0]
+                            Z_test = np.array(factors_test).reshape(
+                                len(factors_test), -1)
 
-                        mi_lb_train, mi_lb_test = MINE(mine_net, opt, X_train,
-                                                       Z_train, X_test, Z_test)
-                        
-                        mi_train_df.append(
-                            pd.DataFrame({
-                                'MI':
-                                mi_lb_train['mi/train'],
-                                'epoch':
-                                np.arange(len(mi_lb_train['mi/train'])),
-                                'task':
-                                task,
-                                'difficulty':
-                                difficulty,
-                                'num_levels':
-                                num_levels
-                            }))
-                        mi_test_df.append(
-                            pd.DataFrame({
-                                'MI':
-                                mi_lb_test['mi/test'],
-                                'epoch':
-                                np.arange(len(mi_lb_test['mi/test'])),
-                                'task':
-                                task,
-                                'difficulty':
-                                difficulty,
-                                'num_levels':
-                                num_levels
-                            }))
-                        ctr += 1
+                            mi_lb_train, mi_lb_test = MINE(mine_net, opt, X_train,
+                                                        Z_train, X_test, Z_test)
+                            
+                            mi_train_df.append(
+                                pd.DataFrame({
+                                    'MI':
+                                    mi_lb_train['mi/train'],
+                                    'epoch':
+                                    np.arange(len(mi_lb_train['mi/train'])),
+                                    'task':
+                                    task,
+                                    'difficulty':
+                                    difficulty,
+                                    'num_levels':
+                                    num_levels
+                                }))
+                            mi_test_df.append(
+                                pd.DataFrame({
+                                    'MI':
+                                    mi_lb_test['mi/test'],
+                                    'epoch':
+                                    np.arange(len(mi_lb_test['mi/test'])),
+                                    'task':
+                                    task,
+                                    'difficulty':
+                                    difficulty,
+                                    'num_levels':
+                                    num_levels
+                                }))
+                            ctr += 1
+                        except Exception as e:
+                            print('Exception encountered in simulation:')
+                            print(e)
                         
             mi_train_df = pd.concat(mi_train_df)
             mi_test_df = pd.concat(mi_test_df)
             pickle.dump((mi_train_df, mi_test_df),
                         open('../plots/02_MINE.pkl', "wb"))
 
-        
-        sns.lineplot(x='epoch',
+        palette = palettable.scientific.sequential.Acton_20.mpl_colormap
+        sns.relplot(x='epoch',
                      y='MI',
                      hue='num_levels',
                      row='task',
                      col='difficulty',
+                     col_order=['easy','medium','hard'],
+                     kind='line',
+                     palette=palette,
                      data=mi_train_df.reset_index(drop=True))
         plt.savefig('../plots/02_MINE.png')
 
