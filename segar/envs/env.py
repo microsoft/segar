@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Instit
 __license__ = "MIT"
 
 from pprint import pprint
+from typing import Type
 
 import gym
 import numpy as np
@@ -26,6 +27,7 @@ from segar.factors import (
     UniformNoise,
     RandomConvexHull,
 )
+from segar.mdps import Task
 from segar.mdps.observations import RGBObservation
 from segar.rules import Prior
 from segar.sim.location_priors import (
@@ -36,7 +38,7 @@ from segar.sim.location_priors import (
     CenterLocation,
     RandomTopRightLocation,
 )
-from segar.tasks.puttputt import GoalTile, GolfBall
+from segar.tasks.puttputt import GoalTile, GolfBall, PuttPutt, PuttPuttNegDist
 from segar.things import (
     Ball,
     Bumper,
@@ -51,6 +53,16 @@ from segar.things import (
     ThingFactory,
     Tile,
 )
+
+
+def task_str_to_class(task_class_str: str) -> Type[Task]:
+    """this is shitty but it prevents circular imports and eval()"""
+    if task_class_str == "PuttPutt":
+        return PuttPutt
+    elif task_class_str == "PuttPuttNegDist":
+        return PuttPuttNegDist
+    else:
+        raise NotImplementedError(f"Couldn't find task class {task_class_str}")
 
 
 class SEGAREnv(gym.Env):
@@ -69,6 +81,7 @@ class SEGAREnv(gym.Env):
         save_path: str = "sim.state",
         action_max: float = 2,
         seed: int = 123,
+        task_class: str = "PuttPutt",
     ):
         self.resolution = resolution
         self.action_max = action_max
@@ -322,6 +335,7 @@ class SEGAREnv(gym.Env):
                 wall_damping,
                 friction,
                 save_path,
+                task_str_to_class(task_class),
             )
 
         if not _async:
@@ -376,6 +390,7 @@ class SEGARSingleEnv(SEGAREnv):
         save_path: str = "sim.state",
         action_max: float = 1,
         seed: int = 123,
+        task_class: str = "PuttPutt",
     ):
         super().__init__(
             env_name=env_name,
@@ -391,6 +406,7 @@ class SEGARSingleEnv(SEGAREnv):
             save_path=save_path,
             action_max=action_max,
             seed=seed,
+            task_class=task_class,
         )
         self.observation_space = Box(
             shape=(resolution, resolution, 3 * framestack), low=0, high=255, dtype=np.uint8
