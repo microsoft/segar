@@ -43,9 +43,8 @@ while 1:
         if GIF_frames:
             images.append(img_buf_rescaled)
             GIF_frames -= 1
-        cv2.imshow("image", img_buf_rescaled)
-        # k = cv2.waitKey(-1) & 0xFF
-        cv2.waitKey(10)
+        cv2.imshow("image", img_buf_rescaled[:, :, ::-1])
+        cv2.waitKey(1)
 
         action = env1.action_space.sample()
 
@@ -57,5 +56,6 @@ while 1:
             break
 
         if not GIF_frames:
-            imageio.mimsave("movie.gif", images)
+            imageio.mimsave("3-parallel-envs.gif", images, fps=30)
             print("GIF saved!")
+            quit()
