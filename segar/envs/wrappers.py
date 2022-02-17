@@ -88,7 +88,7 @@ class SequentialTaskWrapper:
 
     def reset(self, task_id=None):
         self.current_env = self._pick_env(task_id)
-        obs = self.current_env.reset()
+        obs = self.current_env.reset(deterministic=True)
         self.current_step = 0
         return obs
 
@@ -140,9 +140,9 @@ class ReturnMonitor:
         self.observation_space = env.observation_space
         self.action_space = env.action_space
 
-    def reset(self):
+    def reset(self, deterministic=True):
         self.returns = 0
-        obs = self.env.reset()
+        obs = self.env.reset(deterministic)
         return obs
 
     def step(self, action):
@@ -184,8 +184,8 @@ class FrameStackWrapper:
 
         self.action_space = env.action_space
 
-    def reset(self):
-        obs = self.env.reset()
+    def reset(self, deterministic=True):
+        obs = self.env.reset(deterministic)
         for _ in range(self.n_frames):
             self.frames.append(obs)
         return self._transform_observation(self.frames)

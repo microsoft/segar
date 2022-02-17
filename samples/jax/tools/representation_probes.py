@@ -39,7 +39,7 @@ flags.DEFINE_boolean("sample", False, "Use a=E[pi(s)] or a~pi(s)?")
 def main(argv):
     num_envs = FLAGS.num_envs
     probe_wasserstein = False
-    probe_mine = True
+    probe_mine = False
     MAX_STEPS = 100
     """
     Load the pre-trained PPO model

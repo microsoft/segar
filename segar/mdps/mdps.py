@@ -135,12 +135,14 @@ class MDP(gym.Env):
         np.random.seed(seed)
         random.seed(seed)
 
-    def reset(self) -> np.ndarray:
+    def reset(self, deterministic: bool = False) -> np.ndarray:
         """Resets the MDP.
 
         If the maximum episodes per arena have been passed, randomize the
         task and observation space. This randomizes the initialization,
         reward function, and stopping conditions, where applicable and defined.
+
+        :param deterministic: Whether visual features should be resampled?
 
         :return: First observation.
         """
@@ -159,7 +161,7 @@ class MDP(gym.Env):
         if reset_arena:
             self._observation.sample()
         self._observation.reset()
-        self._renderer.reset(self.sim)
+        self._renderer.reset(deterministic, self.sim)
 
         self.num_episodes += 1
         self.num_steps = 0

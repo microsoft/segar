@@ -1,6 +1,5 @@
 __copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute")
 __license__ = "MIT"
 """For rendering into pixel-based observations.
 
@@ -29,7 +28,6 @@ class Visual:
     """Visual object for rendering things.
 
     """
-
     def __init__(
         self,
         thing: Thing,
@@ -61,9 +59,8 @@ class Visual:
             self.label_img = np.ones_like(img)
             # Add some text (useful for identifying the ball, which the
             # agent can control)
-            text_size, _ = cv2.getTextSize(
-                label, _TEXT_FACE, _TEXT_SCALE, _TEXT_THICKNESS
-            )
+            text_size, _ = cv2.getTextSize(label, _TEXT_FACE, _TEXT_SCALE,
+                                           _TEXT_THICKNESS)
             text_origin = (
                 int((self.width - text_size[0]) / 2),
                 int((self.height + text_size[1]) / 2),
@@ -106,11 +103,8 @@ class Visual:
         :param center: Optional center position.
         """
         width, height = size
-        if (
-            width == self.width
-            and height == self.height
-            and center == self.center
-        ):
+        if (width == self.width and height == self.height
+                and center == self.center):
             return
         if center is not None:
             self.center = center
@@ -120,13 +114,11 @@ class Visual:
         if self.label_img is not None:
             self.label_img = cv2.resize(self.label_img, (width, height))
         self.alpha = cv2.resize(self.alpha, (width, height)).reshape(
-            (width, height, 1)
-        )
+            (width, height, 1))
         self.reverse_alpha = 1 - self.alpha
 
-    def render(
-        self, position: tuple[float, float], visual_map: np.ndarray
-    ) -> None:
+    def render(self, position: tuple[float, float],
+               visual_map: np.ndarray) -> None:
         """Renders the visual and affordance maps.
 
         :param position: The position on the map where the visual should be
@@ -151,25 +143,21 @@ class Visual:
         _sy_max = _sy_min + (_ty_max - _ty_min)
 
         # make sure at least some part of the visual is within the map
-        if (
-            _tx_min >= map_size[0]
-            or _tx_max < 0
-            or _ty_min >= map_size[1]
-            or _ty_max < 0
-        ):
+        if (_tx_min >= map_size[0] or _tx_max < 0 or _ty_min >= map_size[1]
+                or _ty_max < 0):
             return
 
         # update visuals
-        visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] *= self.reverse_alpha[
-            _sy_min:_sy_max, _sx_min:_sx_max
-        ]
-        visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] += self.img[
-            _sy_min:_sy_max, _sx_min:_sx_max
-        ]
+        visual_map[_ty_min:_ty_max,
+                   _tx_min:_tx_max, :] *= self.reverse_alpha[_sy_min:_sy_max,
+                                                             _sx_min:_sx_max]
+        visual_map[_ty_min:_ty_max,
+                   _tx_min:_tx_max, :] += self.img[_sy_min:_sy_max,
+                                                   _sx_min:_sx_max]
         if self.label_img is not None:
-            visual_map[_ty_min:_ty_max, _tx_min:_tx_max, :] *= self.label_img[
-                _sy_min:_sy_max, _sx_min:_sx_max
-            ]
+            visual_map[_ty_min:_ty_max,
+                       _tx_min:_tx_max, :] *= self.label_img[_sy_min:_sy_max,
+                                                             _sx_min:_sx_max]
 
 
 class WallVisual:
@@ -179,7 +167,6 @@ class WallVisual:
     such as maze environments.
 
     """
-
     def resize(self, *args, **kwargs):
         pass
 
@@ -222,10 +209,8 @@ class CircleVisual(Visual):
         try:
             img = img * alpha
         except ValueError:
-            raise ValueError(
-                f"Object may be larger than arena: "
-                f"{alpha.shape} vs {img.shape}"
-            )
+            raise ValueError(f"Object may be larger than arena: "
+                             f"{alpha.shape} vs {img.shape}")
         if outline:
             cv2.circle(img, (radius, radius), radius, 0, 1, 8, 0)
         super().__init__(
@@ -295,7 +280,6 @@ class Renderer:
     """Abstract renderer class.
 
     """
-
     def __init__(
         self,
         n_channels: int,
@@ -326,23 +310,21 @@ class Renderer:
             dim_y = self.dim_y * 2
         else:
             dim_y = self.dim_y
-        self._floor = np.zeros(
-            (self.dim_x, self.dim_y, self.n_channels), dtype=img_type
-        )
-        self.img = np.zeros(
-            (self.dim_x, dim_y, self.n_channels), dtype=img_type
-        )
+        self._floor = np.zeros((self.dim_x, self.dim_y, self.n_channels),
+                               dtype=img_type)
+        self.img = np.zeros((self.dim_x, dim_y, self.n_channels),
+                            dtype=img_type)
         self.obj_visuals = []
         self.tile_visuals = []
         self._filter_factors = filter_factors or []
         self.annotation = annotation
 
     def add_text(
-        self,
-        txt: str,
-        pos: tuple[int, int] = (10, 40),
-        size: float = 0.5,
-        color: tuple[int, int, int] = (255, 255, 255),
+            self,
+            txt: str,
+            pos: tuple[int, int] = (10, 40),
+            size: float = 0.5,
+            color: tuple[int, int, int] = (255, 255, 255),
     ) -> None:
         """Adds text to current image observation.
 
@@ -382,7 +364,9 @@ class Renderer:
         """
         pass
 
-    def set_visuals(self, sim: Optional[Simulator] = None) -> None:
+    def set_visuals(self,
+                    deterministic: bool,
+                    sim: Optional[Simulator] = None) -> None:
         """ Makes the visualization objects for all of the simulator things.
 
         :param sim: Simulator to draw objects from to make visuals.
@@ -392,7 +376,7 @@ class Renderer:
         for thing in sim.things.values():
             if not isinstance(thing, Thing):
                 continue
-            vis = self.visual_mapping(thing)
+            vis = self.visual_mapping(thing, deterministic)
 
             if thing.has_factor(Floor):
                 self.tile_visuals.append(vis)
@@ -406,7 +390,7 @@ class Renderer:
         """
         self._filter_factors = filter_factors
 
-    def visual_mapping(self, thing: Thing) -> Visual:
+    def visual_mapping(self, thing: Thing, deterministic: bool) -> Visual:
         """Creates a Visual object for the corresponding thing.
 
         Must be overridden.
@@ -447,10 +431,10 @@ class Renderer:
         obj_vis.resize(self.absolute_to_pix(obj_vis.get_obj_size()))
         obj_vis.render(
             self.coordinates_to_pix(obj_vis.get_position()),
-            self.img[:, : self.dim_y],
+            self.img[:, :self.dim_y],
         )
 
-    def reset(self, sim: Simulator = None) -> None:
+    def reset(self, deterministic: bool, sim: Simulator = None) -> None:
         """Resets the renderer.
 
         Removes rendering objects and creates new one from simulator.
@@ -461,7 +445,7 @@ class Renderer:
 
         self.obj_visuals = []
         self.tile_visuals = []
-        self.set_visuals(sim)
+        self.set_visuals(deterministic, sim)
         self.make_floor()
         self.img *= 0
 
@@ -472,8 +456,8 @@ class Renderer:
             self.render_tile(tile_vis)
 
     def coordinates_to_pix(
-        self, coords: Union[np.ndarray, tuple[float, float]]
-    ) -> tuple[float, float]:
+            self, coords: Union[np.ndarray,
+                                tuple[float, float]]) -> tuple[float, float]:
         """Transforms a pair of global coordinates to pixel coordinates.
 
         :param coords: Global coordinates (x,y).
@@ -486,12 +470,10 @@ class Renderer:
         def rescale(val):
             return int(
                 np.around(
-                    (val - self.sim.boundaries[0])
-                    * self.res
-                    / self.sim.arena_size,
+                    (val - self.sim.boundaries[0]) * self.res /
+                    self.sim.arena_size,
                     0,
-                )
-            )
+                ))
 
         x_scaled = rescale(x)
         y_scaled = self.res - rescale(y)
@@ -521,12 +503,12 @@ class Renderer:
         cv2.waitKey(duration)
 
     def add_res_annotation(
-        self,
-        arr: np.ndarray,
-        results: dict[str, Any],
-        pos: tuple[int, int] = (10, 40),
-        size: float = 0.5,
-        color: tuple[int, int, int] = (255, 255, 255),
+            self,
+            arr: np.ndarray,
+            results: dict[str, Any],
+            pos: tuple[int, int] = (10, 40),
+            size: float = 0.5,
+            color: tuple[int, int, int] = (255, 255, 255),
     ) -> None:
 
         annotation_arr = np.zeros_like(arr[:, self.dim_y:])
@@ -552,7 +534,7 @@ class Renderer:
         :return: Rendered image of the environment.
         """
 
-        self.img[:, : self.dim_y] = self.floor[:]
+        self.img[:, :self.dim_y] = self.floor[:]
 
         for obj_vis in self.obj_visuals:
             self.render_object(obj_vis)
