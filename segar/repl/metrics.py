@@ -6,6 +6,7 @@ __license__ = "MIT"
 
 """
 
+from segar.repl.models import SimpleMLP
 from segar.repl.boilerplate import Trainer, data_iterator
 from segar.repl.data_loaders import make_numpy_data_loaders
 import numpy as np
@@ -14,14 +15,13 @@ import math
 import torch
 import torch.nn.functional as F
 
-
 def MINE(model, opt, X_train, Z_train, X_test, Z_test):
     train, test, _ = make_numpy_data_loaders(
         X_train=np.concatenate([X_train, Z_train], axis=1),
         y_train=np.ones(shape=X_train.shape[0]),
         X_test=np.concatenate([X_test, Z_test], axis=1),
         y_test=np.ones(shape=X_test.shape[0]))
-
+    
     def update_function(model, opt, joint, **kwargs):
         joint, labels = joint
         log_2 = math.log(2.)
@@ -55,8 +55,8 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test):
         results = {'mi': -loss.detach().cpu().item()}
         return results
 
-    def yielder(_DEVICE, inputs): return [inp.to(_DEVICE) for inp in inputs]
-
+    yielder = lambda _DEVICE, inputs: [inp.to(_DEVICE) for inp in inputs]
+    
     trainer = Trainer(model=model,
                       opt=opt,
                       train_loader=train,
@@ -65,5 +65,6 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test):
                       update_func=update_function,
                       test_func=test_function,
                       max_epochs=10)
-    train_metrics, test_metrics = trainer()
+    train_metrics, test_metrics = trainer(log_wandb=False)
+    
     return train_metrics, test_metrics

@@ -19,7 +19,6 @@ from segar.utils import append_dict, average_dict
 
 from collections import defaultdict
 
-
 _DEVICE = "cpu"
 
 
@@ -47,7 +46,6 @@ def updater(update_function: Callable) -> Callable:
         results, and features give model, input (data), and additional args.
     :return: Wrapped update function.
     """
-
     def update(
         model: torch.nn.Module,
         opt: Optimizer,
@@ -80,9 +78,10 @@ def make_optimizer(model: torch.nn.Module, learning_rate: float) -> Optimizer:
     :param learning_rate: Learning rate.
     :return: Optimizer.
     """
-    opt = torch.optim.Adam(
-        model.parameters(), lr=learning_rate, betas=(0.8, 0.999), eps=1e-8
-    )
+    opt = torch.optim.Adam(model.parameters(),
+                           lr=learning_rate,
+                           betas=(0.8, 0.999),
+                           eps=1e-8)
     return opt
 
 
@@ -92,7 +91,6 @@ def data_iterator(yielder: Callable) -> Callable:
     :param yielder: Function that yields data.
     :return: Wrapped data iterator.
     """
-
     def data_iter_(
         loader: DataLoader,
         max_iters: int = None,
@@ -172,9 +170,9 @@ class Trainer:
         """Makes a training iterator.
 
         """
-        self.train_iter = self.data_iter(
-            self.train_loader, desc=f"Training (epoch" f" {self.epochs})"
-        )
+        self.train_iter = self.data_iter(self.train_loader,
+                                         desc=f"Training (epoch"
+                                         f" {self.epochs})")
 
     def next_train(self) -> tuple[tuple[torch.Tensor], bool]:
         """Next training data.
@@ -219,7 +217,7 @@ class Trainer:
         self.model.train()
         return train_results, test_results
 
-    def __call__(self):
+    def __call__(self, log_wandb=False):
         """Main loop function.
 
         """
@@ -229,27 +227,33 @@ class Trainer:
         train_acc, test_acc = defaultdict(list), defaultdict(list)
         while True:
             inputs, next_epoch = self.next_train()
+            
             if next_epoch:
                 train_results, test_results = self.test()
                 for k in train_results.keys():
+                    if log_wandb:
+                        if test_results is None:
+                            wandb.log({f"{k}/train": train_results[k]},
+                                      step=self.epochs)
+                        else:
+                            wandb.log(
+                                {
+                                    f"{k}/train": train_results[k],
+                                    f"{k}/test": test_results[k],
+                                },
+                                step=self.epochs,
+                            )
                     if test_results is None:
-                        wandb.log(
-                            {f"{k}/train": train_results[k]}, step=self.epochs
-                        )
+                        train_acc[f"{k}/train"].append(train_results[k])
                     else:
-                        wandb.log(
-                            {
-                                f"{k}/train": train_results[k],
-                                f"{k}/test": test_results[k],
-                            },
-                            step=self.epochs,
-                        )
+                        train_acc[f"{k}/train"].append(train_results[k])
+                        test_acc[f"{k}/test"].append(test_results[k])
+                    
                 if self.vis_func is not None:
                     self.vis_func(last_inputs, features)
             else:
-                results, features = self.update_func(
-                    self.model, self.optim, inputs
-                )
+                results, features = self.update_func(self.model, self.optim,
+                                                     inputs)
                 last_inputs = inputs
             if self.epochs >= self.max_epochs:
                 break

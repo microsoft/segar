@@ -38,7 +38,7 @@ flags.DEFINE_boolean("sample", False, "Use a=E[pi(s)] or a~pi(s)?")
 
 def main(argv):
     num_envs = FLAGS.num_envs
-    probe_wasserstein = True
+    probe_wasserstein = False
     probe_mine = True
     MAX_STEPS = 100
     """
@@ -74,9 +74,9 @@ def main(argv):
     Probe 1. Compute 2-Wasserstein between task samples
     """
     if probe_wasserstein:
-        try:
+        if os.path.isfile('../plots/01_Wasserstein.pkl'):
             w2_df = pickle.load(open('../plots/01_Wasserstein.pkl', "rb"))
-        except:
+        else:
             w2_df = []
             num_test_levels = 500
             ctr = 0
@@ -85,12 +85,13 @@ def main(argv):
                     for num_levels in [1, 10, 50, 100, 200]:
                         if task == 'empty':
                             env_name = "%s-%s-rgb" % (task, difficulty)
-                            prefix = "checkpoint_%s_%s_%d" % (task, difficulty,
+                            prefix = "checkpoint_%s_%s_%d_" % (task, difficulty,
                                                               num_levels)
                         else:
                             env_name = "%sx1-%s-rgb" % (task, difficulty)
-                            prefix = "checkpoint_%sx1_%s_%d" % (
+                            prefix = "checkpoint_%sx1_%s_%d_" % (
                                 task, difficulty, num_levels)
+                        
                         loaded_state = checkpoints.restore_checkpoint(
                             FLAGS.model_dir,
                             prefix=prefix,
@@ -136,6 +137,7 @@ def main(argv):
                                                rng,
                                                n_rollouts=FLAGS.n_rollouts,
                                                sample=FLAGS.sample)
+                            
                             w2_distance = task_set_init_dist(
                                 env_test.env.envs[0].task_list,
                                 env_train.env.envs[0].task_list)
@@ -195,6 +197,7 @@ def main(argv):
             # hue='num_levels',
             row='task',
             col='difficulty',
+            col_order=['easy','medium','hard'],
             data=x)
         plt.savefig('../plots/01_Wasserstein.png')
         plt.clf()
@@ -206,10 +209,10 @@ def main(argv):
         plt.savefig('../plots/01_Wasserstein_joint.png')
 
     if probe_mine:
-        try:
-            mi_train_df, mi_train_df = pickle.load(
+        if os.path.isfile('../plots/02_MINE.pkl'):
+            mi_train_df, mi_test_df = pickle.load(
                 open('../plots/02_MINE.pkl', "rb"))
-        except:
+        else:
             num_test_levels = 500
             mi_train_df = []
             mi_test_df = []
@@ -219,11 +222,11 @@ def main(argv):
                     for num_levels in [1, 10, 50, 100, 200]:
                         if task == 'empty':
                             env_name = "%s-%s-rgb" % (task, difficulty)
-                            prefix = "checkpoint_%s_%s_%d" % (task, difficulty,
+                            prefix = "checkpoint_%s_%s_%d_" % (task, difficulty,
                                                               num_levels)
                         else:
                             env_name = "%sx1-%s-rgb" % (task, difficulty)
-                            prefix = "checkpoint_%sx1_%s_%d" % (
+                            prefix = "checkpoint_%sx1_%s_%d_" % (
                                 task, difficulty, num_levels)
                         loaded_state = checkpoints.restore_checkpoint(
                             FLAGS.model_dir,
@@ -280,6 +283,7 @@ def main(argv):
 
                         mi_lb_train, mi_lb_test = MINE(mine_net, opt, X_train,
                                                        Z_train, X_test, Z_test)
+                        
                         mi_train_df.append(
                             pd.DataFrame({
                                 'MI':
@@ -298,7 +302,7 @@ def main(argv):
                                 'MI':
                                 mi_lb_test['mi/test'],
                                 'epoch':
-                                np.arange(len(mi_lb_train['mi/test'])),
+                                np.arange(len(mi_lb_test['mi/test'])),
                                 'task':
                                 task,
                                 'difficulty':
@@ -307,19 +311,20 @@ def main(argv):
                                 num_levels
                             }))
                         ctr += 1
-
+                        
             mi_train_df = pd.concat(mi_train_df)
             mi_test_df = pd.concat(mi_test_df)
             pickle.dump((mi_train_df, mi_test_df),
                         open('../plots/02_MINE.pkl', "wb"))
 
+        
         sns.lineplot(x='epoch',
                      y='MI',
                      hue='num_levels',
                      row='task',
                      col='difficulty',
                      data=mi_train_df.reset_index(drop=True))
-        sns.savefig('../plots/02_MINE.png')
+        plt.savefig('../plots/02_MINE.png')
 
     return 0
 

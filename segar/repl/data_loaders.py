@@ -50,7 +50,10 @@ from segar.repl.static_datasets.iid_samples import IIDFromInit
 from segar.tasks.puttputt import PuttPuttInitialization, GolfBall, GoalTile
 
 import numpy as np
+<<<<<<< HEAD
+=======
 
+>>>>>>> 376eb4deb92e266cfefc206976583a0463ea64b9
 
 def create_initialization():
     """Creates a generic initialization that draws from the product of
