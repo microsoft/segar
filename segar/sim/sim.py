@@ -1066,9 +1066,7 @@ class Simulator:
     # API for thing factors
 
     def add_force(
-        self,
-        thing_id: Union[ThingID, ID],
-        force: Union[Tuple[float, float], np.ndarray],
+        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray]
     ) -> None:
         """Apply a force to an object that results in a velocity that's
         relative to the object's mass
@@ -1093,9 +1091,7 @@ class Simulator:
             raise KeyError("Force can only be added to objects with mass " "and velocity.")
 
     def add_velocity(
-        self,
-        thing_id: ThingID,
-        velocity: Union[Tuple[float, float], np.ndarray],
+        self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray]
     ) -> None:
         """Apply a velocity to an object. This is cumulative with the
             object's existing speed.
