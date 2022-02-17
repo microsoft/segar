@@ -137,6 +137,7 @@ def main(argv):
         resolution=FLAGS.resolution,
         max_steps=MAX_STEPS,
         _async=False,
+        deterministic_visuals=False,
         seed=FLAGS.seed,
         save_path=os.path.join(FLAGS.output_dir, run_name)
     )
@@ -148,6 +149,7 @@ def main(argv):
         resolution=FLAGS.resolution,
         max_steps=MAX_STEPS,
         _async=False,
+        deterministic_visuals=False,
         seed=FLAGS.seed + 1,
         save_path=os.path.join(FLAGS.output_dir, run_name)
     )

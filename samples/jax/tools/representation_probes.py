@@ -58,6 +58,7 @@ def main(argv):
                          resolution=64,
                          max_steps=MAX_STEPS,
                          _async=False,
+                         deterministic_visuals=False,
                          seed=123)
 
     n_action = dummy_env.action_space[0].shape[-1]
@@ -88,13 +89,13 @@ def main(argv):
                     for num_levels in [1, 10, 50, 100, 200]:
                         if task == 'empty':
                             env_name = "%s-%s-rgb" % (task, difficulty)
-                            prefix = "checkpoint_%s_%s_%d_" % (task, difficulty,
-                                                              num_levels)
+                            prefix = "checkpoint_%s_%s_%d_" % (
+                                task, difficulty, num_levels)
                         else:
                             env_name = "%sx1-%s-rgb" % (task, difficulty)
                             prefix = "checkpoint_%sx1_%s_%d_" % (
                                 task, difficulty, num_levels)
-                        
+
                         loaded_state = checkpoints.restore_checkpoint(
                             FLAGS.model_dir,
                             prefix=prefix,
@@ -115,6 +116,7 @@ def main(argv):
                                                  resolution=64,
                                                  max_steps=MAX_STEPS,
                                                  _async=False,
+                                                 deterministic_visuals=False,
                                                  seed=seed)
                             env_test = SEGAREnv(env_name,
                                                 num_envs=num_envs,
@@ -123,6 +125,7 @@ def main(argv):
                                                 resolution=64,
                                                 max_steps=MAX_STEPS,
                                                 _async=False,
+                                                deterministic_visuals=False,
                                                 seed=seed + 1)
                             returns_train, (states_train, zs_train,
                                             actions_train, factors_train,
@@ -140,7 +143,7 @@ def main(argv):
                                                rng,
                                                n_rollouts=FLAGS.n_rollouts,
                                                sample=FLAGS.sample)
-                            
+
                             w2_distance = task_set_init_dist(
                                 env_test.env.envs[0].task_list,
                                 env_train.env.envs[0].task_list)
@@ -195,9 +198,9 @@ def main(argv):
         x.columns = columns
 
         palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors
-        
+
         # Conditional plot per task type /difficulty
-        difficulties = ['Easy','Medium','Hard']
+        tasks = ['Empty', 'Objects', 'Tiles']
         with sns.plotting_context("notebook", font_scale=1.5):
             g = sns.lmplot(
                 x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
@@ -208,19 +211,22 @@ def main(argv):
                 # col_order=['easy','medium','hard'],
                 palette=palette,
                 sharey=False,
+                ci=75,
                 data=x)
-            for ax, difficulty in zip(g.axes.flatten(), difficulties):
-                ax.set_title(difficulty )
+            for ax, task in zip(g.axes.flatten(), tasks):
+                ax.set_title(task)
+            # sns.move_legend(g, "lower center", bbox_to_anchor=(.5, 1), ncol=3)
+            # plt.tight_layout()
             plt.savefig('../plots/01_Wasserstein.png')
             plt.clf()
 
         # Average plot with all tasks combined
         with sns.plotting_context("notebook", font_scale=1.25):
             g = sns.lmplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
-                    y=r'$\eta_{test}-\eta_{train}$',
-                    line_kws={'color': 'deeppink'},
-                    scatter_kws={'color': 'deeppink'},
-                    data=x)
+                           y=r'$\eta_{test}-\eta_{train}$',
+                           line_kws={'color': 'deeppink'},
+                           scatter_kws={'color': 'deeppink'},
+                           data=x)
             plt.savefig('../plots/01_Wasserstein_joint.png')
 
     if probe_mine:
@@ -237,8 +243,8 @@ def main(argv):
                     for num_levels in [1, 10, 50, 100, 200]:
                         if task == 'empty':
                             env_name = "%s-%s-rgb" % (task, difficulty)
-                            prefix = "checkpoint_%s_%s_%d_" % (task, difficulty,
-                                                              num_levels)
+                            prefix = "checkpoint_%s_%s_%d_" % (
+                                task, difficulty, num_levels)
                         else:
                             env_name = "%sx1-%s-rgb" % (task, difficulty)
                             prefix = "checkpoint_%sx1_%s_%d_" % (
@@ -257,13 +263,14 @@ def main(argv):
 
                         try:
                             env_train = SEGAREnv(env_name,
-                                             num_envs=num_envs,
-                                             num_levels=num_levels,
-                                             framestack=1,
-                                             resolution=64,
-                                             max_steps=MAX_STEPS,
-                                             _async=False,
-                                             seed=seed)
+                                                 num_envs=num_envs,
+                                                 num_levels=num_levels,
+                                                 framestack=1,
+                                                 resolution=64,
+                                                 max_steps=MAX_STEPS,
+                                                 _async=False,
+                                                 deterministic_visuals=False,
+                                                 seed=seed)
                             env_test = SEGAREnv(env_name,
                                                 num_envs=num_envs,
                                                 num_levels=num_test_levels,
@@ -271,24 +278,27 @@ def main(argv):
                                                 resolution=64,
                                                 max_steps=MAX_STEPS,
                                                 _async=False,
+                                                deterministic_visuals=False,
                                                 seed=seed + 1)
 
-                            returns_train, (states_train, zs_train, actions_train,
-                                            factors_train,
+                            returns_train, (states_train, zs_train,
+                                            actions_train, factors_train,
                                             task_ids_train) = rollouts(
                                                 env_train,
                                                 loaded_state,
                                                 rng,
                                                 n_rollouts=FLAGS.n_rollouts)
                             returns_test, (states_test, zs_test, actions_test,
-                                        factors_test, task_ids_test) = rollouts(
-                                            env_test,
-                                            loaded_state,
-                                            rng,
-                                            n_rollouts=FLAGS.n_rollouts)
+                                           factors_test,
+                                           task_ids_test) = rollouts(
+                                               env_test,
+                                               loaded_state,
+                                               rng,
+                                               n_rollouts=FLAGS.n_rollouts)
 
                             mine_net = SimpleMLP(n_input=256 + 100, n_out=1)
-                            opt = torch.optim.Adam(mine_net.parameters(), lr=3e-4)
+                            opt = torch.optim.Adam(mine_net.parameters(),
+                                                   lr=3e-4)
                             X_train = np.array(zs_train).reshape(
                                 -1, zs_train[0].shape[-1])
                             Z_train = np.array(factors_train).reshape(
@@ -297,9 +307,10 @@ def main(argv):
                             Z_test = np.array(factors_test).reshape(
                                 len(factors_test), -1)
 
-                            mi_lb_train, mi_lb_test = MINE(mine_net, opt, X_train,
-                                                        Z_train, X_test, Z_test)
-                            
+                            mi_lb_train, mi_lb_test = MINE(
+                                mine_net, opt, X_train, Z_train, X_test,
+                                Z_test)
+
                             mi_train_df.append(
                                 pd.DataFrame({
                                     'MI':
@@ -330,7 +341,7 @@ def main(argv):
                         except Exception as e:
                             print('Exception encountered in simulation:')
                             print(e)
-                        
+
             mi_train_df = pd.concat(mi_train_df)
             mi_test_df = pd.concat(mi_test_df)
             pickle.dump((mi_train_df, mi_test_df),
@@ -338,14 +349,14 @@ def main(argv):
 
         palette = palettable.scientific.sequential.Acton_20.mpl_colormap
         sns.relplot(x='epoch',
-                     y='MI',
-                     hue='num_levels',
-                     row='task',
-                     col='difficulty',
-                     col_order=['easy','medium','hard'],
-                     kind='line',
-                     palette=palette,
-                     data=mi_train_df.reset_index(drop=True))
+                    y='MI',
+                    hue='num_levels',
+                    row='task',
+                    col='difficulty',
+                    col_order=['easy', 'medium', 'hard'],
+                    kind='line',
+                    palette=palette,
+                    data=mi_train_df.reset_index(drop=True))
         plt.savefig('../plots/02_MINE.png')
 
     return 0

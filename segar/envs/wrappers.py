@@ -1,6 +1,5 @@
 __copyright__ = (
-    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
-)
+    "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute")
 __license__ = "MIT"
 
 from collections import deque
@@ -14,6 +13,7 @@ from segar.mdps import MDP
 from segar.mdps.observations import AllStateObservation
 from segar.tasks import PuttPuttInitialization, PuttPutt
 from segar import get_sim
+from segar.mdps.observations import RGBObservation
 
 from segar.sim import Simulator
 
@@ -21,31 +21,32 @@ from segar.sim import Simulator
 class SequentialTaskWrapper:
     def __init__(
         self,
-        obs,
-        init_config,
-        config,
-        action_range,
-        num_levels,
-        max_steps,
-        framestack=1,
-        seed=None,
-        wall_damping=0.025,
-        friction=0.05,
-        save_path="sim.state",
+        obs: RGBObservation,
+        init_config: dict,
+        config: dict,
+        action_range: float,
+        num_levels: int,
+        max_steps: int,
+        framestack: int = 1,
+        deterministic_visuals: bool = False,
+        seed: int = None,
+        wall_damping: float = 0.025,
+        friction: float = 0.05,
+        save_path: str = "sim.state",
     ):
         if seed is not None:
             print("Setting env seed to %d" % seed)
             np.random.seed(seed)
             random.seed(seed)
         self._max_steps = max_steps
+        self.deterministic_visuals = deterministic_visuals
 
         self.task_list = []
         self.mdp_list = []
         for i in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
-            task = PuttPutt(
-                action_range=action_range, initialization=initialization
-            )
+            task = PuttPutt(action_range=action_range,
+                            initialization=initialization)
             sim = Simulator(
                 state_buffer_length=50,
                 wall_damping=wall_damping,
@@ -56,8 +57,7 @@ class SequentialTaskWrapper:
             task.set_sim(sim)
             task.sample()
             mdp = FrameStackWrapper(
-                ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack
-            )
+                ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack)
             self.task_list.append(task)
             self.mdp_list.append(mdp)
 
@@ -88,7 +88,7 @@ class SequentialTaskWrapper:
 
     def reset(self, task_id=None):
         self.current_env = self._pick_env(task_id)
-        obs = self.current_env.reset(deterministic=True)
+        obs = self.current_env.reset(deterministic=self.deterministic_visuals)
         self.current_step = 0
         return obs
 
@@ -101,11 +101,8 @@ class SequentialTaskWrapper:
             print("Ignoring simulator exception:")
             print(e)
         self.current_step += 1
-        success = int(
-            done
-            and (self.current_step < self._max_steps)
-            and self.sim.things["golfball"].Alive.value
-        )
+        success = int(done and (self.current_step < self._max_steps)
+                      and self.sim.things["golfball"].Alive.value)
         done = done or (self.current_step > self._max_steps)
         if done:
             next_obs = self.reset()
@@ -116,9 +113,9 @@ class SequentialTaskWrapper:
 
     def _pick_env(self, task_id=None):
         if task_id is None:
-            self.task_id = np.random.randint(
-                low=0, high=self.n_envs, size=(1,)
-            ).item()
+            self.task_id = np.random.randint(low=0,
+                                             high=self.n_envs,
+                                             size=(1, )).item()
         else:
             self.task_id = task_id
         return self.mdp_list[self.task_id]

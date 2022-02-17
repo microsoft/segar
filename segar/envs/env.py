@@ -70,6 +70,7 @@ class SEGAREnv(gym.Env):
         friction: float = 0.05,
         save_path: str = "sim.state",
         action_max: float = 2,
+        deterministic_visuals: bool = False,
         seed: int = 123,
     ):
         self.resolution = resolution
@@ -459,7 +460,7 @@ class SEGAREnv(gym.Env):
         )
         print("==Distribution config==")
         pprint(init_config)
-
+        
         def make_env():
             return SequentialTaskWrapper(
                 obs,
@@ -469,6 +470,7 @@ class SEGAREnv(gym.Env):
                 num_levels,
                 max_steps,
                 framestack,
+                deterministic_visuals,
                 seed,
                 wall_damping,
                 friction,
