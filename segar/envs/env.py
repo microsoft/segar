@@ -2,7 +2,9 @@ __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Instit
 __license__ = "MIT"
 
 from pprint import pprint
+from typing import Type
 
+import cv2
 import gym
 import numpy as np
 from gym.spaces import Box
@@ -26,6 +28,7 @@ from segar.factors import (
     UniformNoise,
     RandomConvexHull,
 )
+from segar.mdps import Task
 from segar.mdps.observations import RGBObservation
 from segar.rules import Prior
 from segar.sim.location_priors import (
@@ -36,7 +39,7 @@ from segar.sim.location_priors import (
     CenterLocation,
     RandomTopRightLocation,
 )
-from segar.tasks.puttputt import GoalTile, GolfBall
+from segar.tasks.puttputt import GoalTile, GolfBall, PuttPutt, PuttPuttNegDist
 from segar.things import (
     Ball,
     Bumper,
@@ -51,6 +54,16 @@ from segar.things import (
     ThingFactory,
     Tile,
 )
+
+
+def task_str_to_class(task_class_str: str) -> Type[Task]:
+    """this is shitty but it prevents circular imports and eval()"""
+    if task_class_str == "PuttPutt":
+        return PuttPutt
+    elif task_class_str == "PuttPuttNegDist":
+        return PuttPuttNegDist
+    else:
+        raise NotImplementedError(f"Couldn't find task class {task_class_str}")
 
 
 class SEGAREnv(gym.Env):
@@ -69,6 +82,7 @@ class SEGAREnv(gym.Env):
         save_path: str = "sim.state",
         action_max: float = 2,
         seed: int = 123,
+        task_class: str = "PuttPutt",
     ):
         self.resolution = resolution
         self.action_max = action_max
@@ -92,65 +106,65 @@ class SEGAREnv(gym.Env):
                     "numbers": [(GoalTile, 1), (GolfBall, 1)],
                     "priors": [
                         Prior(Position, CenterLocation(), entity_type=GolfBall),
-                        Prior(Position, RandomTopRightLocation(), entity_type=GoalTile,),
+                        Prior(Position, RandomTopRightLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                     ],
                 }
             elif task_distr == "medium":
                 init_config = {
                     "numbers": [(GoalTile, 1), (GolfBall, 1)],
                     "priors": [
-                        Prior(Position, RandomBottomLocation(), entity_type=GolfBall,),
+                        Prior(Position, RandomBottomLocation(), entity_type=GolfBall),
                         Prior(Position, RandomTopLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                     ],
                 }
             elif task_distr == "hard":
                 init_config = {
                     "numbers": [(GoalTile, 1), (GolfBall, 1)],
                     "priors": [
-                        Prior(Position, RandomUniformLocation(), entity_type=GolfBall,),
-                        Prior(Position, RandomUniformLocation(), entity_type=GoalTile,),
+                        Prior(Position, RandomUniformLocation(), entity_type=GolfBall),
+                        Prior(Position, RandomUniformLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                     ],
                 }
         elif task_name == "objects":
             if task_distr == "easy":
                 init_config = {
                     "numbers": [
-                        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), k,),
+                        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), k),
                         (GoalTile, 1),
                         (GolfBall, 1),
                     ],
                     "priors": [
                         Prior(Position, CenterLocation(), entity_type=GolfBall),
                         Prior(Position, RandomTopLocation(), entity_type=Object),
-                        Prior(Position, RandomTopRightLocation(), entity_type=GoalTile,),
+                        Prior(Position, RandomTopRightLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                     ],
                 }
             elif task_distr == "medium":
                 init_config = {
                     "numbers": [
-                        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), k,),
+                        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), k),
                         (GoalTile, 1),
                         (GolfBall, 1),
                     ],
                     "priors": [
-                        Prior(Position, RandomBottomLocation(), entity_type=GolfBall,),
-                        Prior(Position, RandomMiddleLocation(), entity_type=Object,),
+                        Prior(Position, RandomBottomLocation(), entity_type=GolfBall),
+                        Prior(Position, RandomMiddleLocation(), entity_type=Object),
                         Prior(Position, RandomTopLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                         Prior(
                             Charge,
                             GaussianMixtureNoise(means=[-1.0, 1.0], stds=[0.1, 0.1]),
@@ -176,17 +190,17 @@ class SEGAREnv(gym.Env):
             elif task_distr == "hard":
                 init_config = {
                     "numbers": [
-                        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), k,),
+                        (ThingFactory([Charger, Magnet, Bumper, Damper, Ball]), k),
                         (GoalTile, 1),
                         (GolfBall, 1),
                     ],
                     "priors": [
-                        Prior(Position, RandomUniformLocation(), entity_type=GolfBall,),
-                        Prior(Position, RandomUniformLocation(), entity_type=Object,),
-                        Prior(Position, RandomUniformLocation(), entity_type=GoalTile,),
+                        Prior(Position, RandomUniformLocation(), entity_type=GolfBall),
+                        Prior(Position, RandomUniformLocation(), entity_type=Object),
+                        Prior(Position, RandomUniformLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object,),
+                        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object),
                         Prior(Mass, 1.0),
                         Prior(Mobile, True),
                         Prior(
@@ -232,10 +246,10 @@ class SEGAREnv(gym.Env):
                     "priors": [
                         Prior(Position, CenterLocation(), entity_type=GolfBall),
                         Prior(Position, RandomTopLocation(), entity_type=Tile),
-                        Prior(Position, RandomTopRightLocation(), entity_type=GoalTile,),
+                        Prior(Position, RandomTopRightLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                         Prior(Mass, 1.0),
                         Prior(Mobile, True),
                         Prior(Friction, UniformNoise(0.5, 0.55), entity_type=Tile),
@@ -260,12 +274,12 @@ class SEGAREnv(gym.Env):
                         (GolfBall, 1),
                     ],
                     "priors": [
-                        Prior(Position, RandomBottomLocation(), entity_type=GolfBall,),
+                        Prior(Position, RandomBottomLocation(), entity_type=GolfBall),
                         Prior(Position, RandomMiddleLocation(), entity_type=Tile),
                         Prior(Position, RandomTopLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile,),
+                        Prior(Size, GaussianNoise(1.0, 0.01, clip=(0.5, 1.5)), entity_type=Tile),
                         Prior(Mass, 1.0),
                         Prior(Mobile, True),
                         Prior(Friction, UniformNoise(0.5, 0.55), entity_type=Tile),
@@ -290,12 +304,12 @@ class SEGAREnv(gym.Env):
                         (GolfBall, 1),
                     ],
                     "priors": [
-                        Prior(Position, RandomUniformLocation(), entity_type=GolfBall,),
-                        Prior(Position, RandomUniformLocation(), entity_type=Object,),
-                        Prior(Position, RandomUniformLocation(), entity_type=GoalTile,),
+                        Prior(Position, RandomUniformLocation(), entity_type=GolfBall),
+                        Prior(Position, RandomUniformLocation(), entity_type=Tile),
+                        Prior(Position, RandomUniformLocation(), entity_type=GoalTile),
                         Prior(Shape, RandomConvexHull(0.3), entity_type=Tile),
                         Prior(Shape, Circle(0.4), entity_type=GoalTile),
-                        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Object,),
+                        Prior(Size, GaussianNoise(0.2, 0.01, clip=(0.1, 0.3)), entity_type=Tile),
                         Prior(Mass, 1.0),
                         Prior(Mobile, True),
                         Prior(Friction, UniformNoise(0.4, 1.0), entity_type=Tile),
@@ -305,9 +319,7 @@ class SEGAREnv(gym.Env):
         else:
             raise NotImplementedError("Env not yet implemented")
 
-        config = dict(
-            max_steps_per_episode=max_steps, episodes_per_arena=float("inf"), sub_steps=5,
-        )
+        config = dict(max_steps_per_episode=max_steps, episodes_per_arena=float("inf"), sub_steps=5)
         print("==Distribution config==")
         pprint(init_config)
 
@@ -324,6 +336,7 @@ class SEGAREnv(gym.Env):
                 wall_damping,
                 friction,
                 save_path,
+                task_str_to_class(task_class),
             )
 
         if not _async:
@@ -344,7 +357,7 @@ class SEGAREnv(gym.Env):
             )
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
-        self.reset()
+        # self.reset() # this should not be called in the Env itself
 
     def step(self, action):
         # THIS EXPECTS ACTIONS TO BE A VECTOR WITH ONE ACTION FOR EACH ENV
@@ -378,7 +391,10 @@ class SEGARSingleEnv(SEGAREnv):
         save_path: str = "sim.state",
         action_max: float = 1,
         seed: int = 123,
+        task_class: str = "PuttPutt",
+        unique_name: str = None,
     ):
+        self.unique_name = unique_name
         super().__init__(
             env_name=env_name,
             start_level=start_level,
@@ -393,9 +409,11 @@ class SEGARSingleEnv(SEGAREnv):
             save_path=save_path,
             action_max=action_max,
             seed=seed,
+            task_class=task_class,
         )
+
         self.observation_space = Box(
-            shape=(resolution, resolution, 3 * framestack), low=0, high=255, dtype=np.uint8,
+            shape=(resolution, resolution, 3 * framestack), low=0, high=255, dtype=np.uint8
         )
         self.action_space = Box(-self.action_max, self.action_max, shape=(2,), dtype=np.float32)
 
@@ -412,7 +430,12 @@ class SEGARSingleEnv(SEGAREnv):
 
     def render(self, mode="human"):
         if mode == "human":
-            raise NotImplementedError("TODO")
+            name = ""
+            if self.unique_name is not None:
+                name = self.unique_name
+            # scale up observation by factor 4
+            cv2.imshow(f"viewer{name}", cv2.resize(self.last_obs, (0, 0), fx=4, fy=4))
+            cv2.waitKey(1)  # required to actually show window
         else:
             return self.last_obs
 

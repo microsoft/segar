@@ -4,11 +4,13 @@ __license__ = "MIT"
 from collections import deque
 
 import random
+from typing import Type
+
 import numpy as np
 from gym.spaces import Box
 
 from segar.factors import Charge, Magnetism, Position, Friction
-from segar.mdps import MDP
+from segar.mdps import MDP, Task
 from segar.mdps.observations import AllStateObservation
 from segar.tasks import PuttPuttInitialization, PuttPutt
 from segar import get_sim
@@ -30,6 +32,7 @@ class SequentialTaskWrapper:
         wall_damping=0.025,
         friction=0.05,
         save_path="sim.state",
+        task_class: Type[Task] = PuttPutt,
     ):
         if seed is not None:
             print("Setting env seed to %d" % seed)
@@ -38,10 +41,10 @@ class SequentialTaskWrapper:
         self._max_steps = max_steps
 
         self.task_list = []
-        self.mdp_list = []
+        self.mdp_list: list[FrameStackWrapper] = []
         for i in range(num_levels):
             initialization = PuttPuttInitialization(config=init_config)
-            task = PuttPutt(action_range=action_range, initialization=initialization)
+            task = task_class(action_range=action_range, initialization=initialization)
             sim = Simulator(
                 state_buffer_length=50,
                 wall_damping=wall_damping,
@@ -86,6 +89,9 @@ class SequentialTaskWrapper:
         self.current_step = 0
         return obs
 
+    def _get_current_sim(self) -> Simulator:
+        return self.current_env.env.env.sim
+
     def step(self, action):
         try:
             next_obs, rew, done, info = self.current_env.step(action)
@@ -98,14 +104,14 @@ class SequentialTaskWrapper:
         success = int(
             done
             and (self.current_step < self._max_steps)
-            and self.sim.things["golfball"].Alive.value
+            and self._get_current_sim().things["golfball"].Alive.value
         )
         done = done or (self.current_step > self._max_steps)
         if done:
             next_obs = self.reset()
             info["success"] = success
         info["task_id"] = self.task_id
-        info["latent_features"] = self.sobs(self.current_env.env.env.sim.state)
+        info["latent_features"] = self.sobs(self._get_current_sim().state)
         return next_obs.copy(), rew, done, info
 
     def _pick_env(self, task_id=None):
@@ -126,7 +132,7 @@ class SequentialTaskWrapper:
 
 class ReturnMonitor:
     def __init__(self, env):
-        self.env = env
+        self.env: MDP = env
         self.returns = 0
 
         self.observation_space = env.observation_space
@@ -158,7 +164,7 @@ class ReturnMonitor:
 
 class FrameStackWrapper:
     def __init__(self, env, n_frames):
-        self.env = env
+        self.env: ReturnMonitor = env
         self.n_frames = n_frames
         self.frames = deque([], maxlen=n_frames)
 
