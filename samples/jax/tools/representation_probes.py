@@ -5,6 +5,7 @@ __license__ = "MIT"
 
 import glob
 import os
+import itertools
 
 import jax
 import jax.numpy as jnp
@@ -36,13 +37,14 @@ flags.DEFINE_integer("n_rollouts", 10, "Number of per-env rollouts.")
 flags.DEFINE_string("model_dir", "../data", "PPO weights directory")
 flags.DEFINE_integer("num_envs", 1, "Number of rollout environments")
 flags.DEFINE_boolean("sample", False, "Use a=E[pi(s)] or a~pi(s)?")
-flags.DEFINE_list("probes", ['wasserstein', 'mine'], "List of probes")
+flags.DEFINE_list("probes", ['wasserstein', 'mine', 'ks'], "List of probes")
 
 
 def main(argv):
     num_envs = FLAGS.num_envs
     probe_wasserstein = 'wasserstein' in FLAGS.probes
     probe_mine = 'mine' in FLAGS.probes
+    probe_ks = 'ks' in FLAGS.probes
     MAX_STEPS = 100
     """
     Load the pre-trained PPO model
@@ -229,6 +231,10 @@ def main(argv):
                            data=x)
             plt.savefig('../plots/01_Wasserstein_joint.png')
 
+    """
+    Probe 2. Compute MINE lower-bound on MI between agent's state representation
+    and latent factors.
+    """
     if probe_mine:
         if os.path.isfile('../plots/02_MINE.pkl'):
             mi_train_df, mi_test_df = pickle.load(
@@ -359,6 +365,188 @@ def main(argv):
                     data=mi_train_df.reset_index(drop=True))
         plt.savefig('../plots/02_MINE.png')
 
+    """
+    Probe 3. Compute Kolmogorov-Smirnov statistic between pairs of latent
+    factors' true CDFs.
+    """
+    if probe_ks:
+        if os.path.isfile('../plots/04_KS.pkl'):
+            ks_df = pickle.load(open('../plots/04_KS.pkl', "rb"))
+        else:
+            ks_df = []
+            num_test_levels = 500
+            ctr = 0
+            for task in ['empty', 'tiles', 'objects']:
+                for difficulty in ['easy', 'medium', 'hard']:
+                    for num_levels in [1, 10, 50, 100, 200]:
+                        if task == 'empty':
+                            env_name = "%s-%s-rgb" % (task, difficulty)
+                            prefix = "checkpoint_%s_%s_%d_" % (
+                                task, difficulty, num_levels)
+                        else:
+                            env_name = "%sx1-%s-rgb" % (task, difficulty)
+                            prefix = "checkpoint_%sx1_%s_%d_" % (
+                                task, difficulty, num_levels)
+
+                        loaded_state = checkpoints.restore_checkpoint(
+                            FLAGS.model_dir,
+                            prefix=prefix,
+                            target=train_state_ppo)
+                        ckpt_path = glob.glob(
+                            os.path.join(FLAGS.model_dir, prefix + '*'))
+                        if not len(ckpt_path):
+                            print(prefix)
+                            continue
+                        ckpt_path = ckpt_path[0]
+                        seed = int(ckpt_path.split('_')[-1])
+
+                        try:
+                            env_train = SEGAREnv(env_name,
+                                                 num_envs=num_envs,
+                                                 num_levels=num_levels,
+                                                 framestack=1,
+                                                 resolution=64,
+                                                 max_steps=MAX_STEPS,
+                                                 _async=False,
+                                                 deterministic_visuals=False,
+                                                 seed=seed)
+                            env_test = SEGAREnv(env_name,
+                                                num_envs=num_envs,
+                                                num_levels=num_test_levels,
+                                                framestack=1,
+                                                resolution=64,
+                                                max_steps=MAX_STEPS,
+                                                _async=False,
+                                                deterministic_visuals=False,
+                                                seed=seed + 1)
+                            returns_train, (states_train, zs_train,
+                                            actions_train, factors_train,
+                                            task_ids_train) = rollouts(
+                                                env_train,
+                                                loaded_state,
+                                                rng,
+                                                n_rollouts=FLAGS.n_rollouts,
+                                                sample=FLAGS.sample)
+                            returns_test, (states_test, zs_test, actions_test,
+                                           factors_test,
+                                           task_ids_test) = rollouts(
+                                               env_test,
+                                               loaded_state,
+                                               rng,
+                                               n_rollouts=FLAGS.n_rollouts,
+                                               sample=FLAGS.sample)
+                            factors_test=env_test.env.envs[0].task_list[0]._initialization.get_dists_from_init()
+                            factors_train=env_train.env.envs[0].task_list[0]._initialization.get_dists_from_init()
+                            thing_factor_sets = []
+
+                            def factor_cdf(factor_list):
+                                support = []
+                                p = []
+                                for thing, factors in factor_list.items():
+                                    for factor, value in factors.items():
+                                        if value.scipy_dist is not None:
+                                            p.append(value.scipy_dist.cdf)
+                                            support.append(value.scipy_dist.support())
+                                            
+                                def cdf(X):
+                                    acc = 1.
+                                    for F, x in zip(p,X):
+                                        acc *= F(x)
+                                    return acc
+
+                                return cdf, support
+                            LOW = -100.
+                            HIGH = 100.
+                            n_atoms = 10
+                            cdf_test, support_test= factor_cdf(factors_test)
+                            cdf_train, support_train = factor_cdf(factors_train)
+                            support = []
+                            for s_test, s_train in zip(support_test, support_train):
+                                lo = max(max(s_test[0], s_train[0]), LOW)
+                                hi =  min(min(s_test[1], s_train[1]), HIGH)
+                                support.append(np.linspace(lo, hi, n_atoms))
+                            support = list(itertools.product(*support))
+                            x_max = 0.
+                            delta_max = 0.
+                            for x in support:
+                                delta = np.abs(cdf_test(x)-cdf_train(x))
+                                if delta > delta_max:
+                                    delta_max = delta
+                                    x_max = x
+                            ks_distance = delta_max
+                            import ipdb;ipdb.set_trace()
+                            ks_df.append(
+                                pd.DataFrame({
+                                    'returns':
+                                    np.concatenate(
+                                        [returns_train, returns_test], axis=0),
+                                    'set':
+                                    ['train'
+                                     for _ in range(FLAGS.n_rollouts)] +
+                                    ['test' for _ in range(FLAGS.n_rollouts)],
+                                    # r'$\eta_{test}-\eta_{train}$': [summary],
+                                    r'$\sup_z||\mathbb{P}_{test}-\mathbb{P}_{train}||$':
+                                    ks_distance,
+                                    'task':
+                                    task,
+                                    'difficulty':
+                                    difficulty,
+                                    'num_levels':
+                                    num_levels
+                                }))
+                            print('W2(train levels, test levels)=%.5f' %
+                                  ks_distance)
+                            ctr += 1
+                        except Exception as e:
+                            print('Exception encountered in simulation:')
+                            print(e)
+            
+            ks_df = pd.concat(ks_df)
+            pickle.dump(ks_df, open('../plots/04_KS.pkl', "wb"))
+
+        ks_df = ks_df.reset_index(drop=True)
+
+        x = ks_df.groupby([
+            'task', 'difficulty', 'num_levels',
+            r'$\sup_z||\mathbb{P}_{test}-\mathbb{P}_{train}||$'
+        ]).apply(lambda x: x[x['set'] == 'test']['returns'].mean() - x[x[
+            'set'] == 'train']['returns'].mean()).reset_index()
+        columns = list(x.columns)
+        columns[-1] = r'$\eta_{test}-\eta_{train}$'
+        columns[1] = 'Difficulty'
+        x.columns = columns
+
+        palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors
+
+        # # Conditional plot per task type /difficulty
+        # tasks = ['Empty', 'Objects', 'Tiles']
+        # with sns.plotting_context("notebook", font_scale=1.5):
+        #     g = sns.lmplot(
+        #         x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
+        #         y=r'$\eta_{test}-\eta_{train}$',
+        #         hue='Difficulty',
+        #         # row='task',
+        #         col='task',
+        #         # col_order=['easy','medium','hard'],
+        #         palette=palette,
+        #         sharey=False,
+        #         ci=75,
+        #         data=x)
+        #     for ax, task in zip(g.axes.flatten(), tasks):
+        #         ax.set_title(task)
+        #     # sns.move_legend(g, "lower center", bbox_to_anchor=(.5, 1), ncol=3)
+        #     # plt.tight_layout()
+        #     plt.savefig('../plots/01_Wasserstein.png')
+        #     plt.clf()
+
+        # # Average plot with all tasks combined
+        # with sns.plotting_context("notebook", font_scale=1.25):
+        #     g = sns.lmplot(x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
+        #                    y=r'$\eta_{test}-\eta_{train}$',
+        #                    line_kws={'color': 'deeppink'},
+        #                    scatter_kws={'color': 'deeppink'},
+        #                    data=x)
+        #     plt.savefig('../plots/01_Wasserstein_joint.png')
     return 0
 
 
