@@ -435,46 +435,51 @@ def main(argv):
                                                rng,
                                                n_rollouts=FLAGS.n_rollouts,
                                                sample=FLAGS.sample)
-                            factors_test=env_test.env.envs[0].task_list[0]._initialization.get_dists_from_init()
-                            factors_train=env_train.env.envs[0].task_list[0]._initialization.get_dists_from_init()
-                            thing_factor_sets = []
+                            n, m = len(env_test.env.envs[0].task_list), len(env_train.env.envs[0].task_list)
+                            ks_distance = np.zeros((n,m))
+                            for i, test_task in enumerate(env_test.env.envs[0].task_list):
+                                for j, train_task in enumerate(env_train.env.envs[0].task_list):
+                                    factors_test=test_task._initialization.get_dists_from_init()
+                                    factors_train=train_task._initialization.get_dists_from_init()
+                                    thing_factor_sets = []
 
-                            def factor_cdf(factor_list):
-                                support = []
-                                p = []
-                                for thing, factors in factor_list.items():
-                                    for factor, value in factors.items():
-                                        if value.scipy_dist is not None:
-                                            p.append(value.scipy_dist.cdf)
-                                            support.append(value.scipy_dist.support())
-                                            
-                                def cdf(X):
-                                    acc = 1.
-                                    for F, x in zip(p,X):
-                                        acc *= F(x)
-                                    return acc
+                                    def factor_cdf(factor_list):
+                                        support = []
+                                        p = []
+                                        for thing, factors in factor_list.items():
+                                            for factor, value in factors.items():
+                                                if value.scipy_dist is not None:
+                                                    p.append(value.scipy_dist.cdf)
+                                                    support.append(value.scipy_dist.support())
+                                                    
+                                        def cdf(X):
+                                            acc = 1.
+                                            for F, x in zip(p,X):
+                                                acc *= F(x)
+                                            return acc
 
-                                return cdf, support
-                            LOW = -100.
-                            HIGH = 100.
-                            n_atoms = 10
-                            cdf_test, support_test= factor_cdf(factors_test)
-                            cdf_train, support_train = factor_cdf(factors_train)
-                            support = []
-                            for s_test, s_train in zip(support_test, support_train):
-                                lo = max(max(s_test[0], s_train[0]), LOW)
-                                hi =  min(min(s_test[1], s_train[1]), HIGH)
-                                support.append(np.linspace(lo, hi, n_atoms))
-                            support = list(itertools.product(*support))
-                            x_max = 0.
-                            delta_max = 0.
-                            for x in support:
-                                delta = np.abs(cdf_test(x)-cdf_train(x))
-                                if delta > delta_max:
-                                    delta_max = delta
-                                    x_max = x
-                            ks_distance = delta_max
-                            import ipdb;ipdb.set_trace()
+                                        return cdf, support
+                                    LOW = -100.
+                                    HIGH = 100.
+                                    n_atoms = 10
+                                    cdf_test, support_test= factor_cdf(factors_test)
+                                    cdf_train, support_train = factor_cdf(factors_train)
+                                    support = []
+                                    for s_test, s_train in zip(support_test, support_train):
+                                        lo = max(max(s_test[0], s_train[0]), LOW)
+                                        hi =  min(min(s_test[1], s_train[1]), HIGH)
+                                        support.append(np.linspace(lo, hi, n_atoms))
+                                    support = list(itertools.product(*support))
+                                    x_max = 0.
+                                    delta_max = 0.
+                                    for x in support:
+                                        delta = np.abs(cdf_test(x)-cdf_train(x))
+                                        if delta > delta_max:
+                                            delta_max = delta
+                                            x_max = x
+                                    ks_distance[i,j] = delta_max
+                            
+                            ks_distance = np.mean(ks_distance)
                             ks_df.append(
                                 pd.DataFrame({
                                     'returns':
@@ -494,7 +499,7 @@ def main(argv):
                                     'num_levels':
                                     num_levels
                                 }))
-                            print('W2(train levels, test levels)=%.5f' %
+                            print('L_inf(train levels, test levels)=%.5f' %
                                   ks_distance)
                             ctr += 1
                         except Exception as e:
