@@ -178,7 +178,7 @@ We informally say that a representation generalizes well from a training to a te
 # Installation
 - Create and activate a conda virtual environment:
   ```
-  conda create -n segar pip python=3.6
+  conda create -n segar pip python=3.9
   conda activate segar
   ```
 - Clone the current repo and install it in editable mode:
