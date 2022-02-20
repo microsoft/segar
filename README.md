@@ -74,7 +74,7 @@ In our opinion, this status quo is for the following reasons:
   between observable and unobservable features.  
   
 Thus, a key step towards making progress towards representation learning in 
-sequential decision-making scenarios is creating a set benchmarks that would 
+sequential decision-making scenarios is creating a set of benchmarks that would 
 enable controlled, informative experiments in this research ares. 
 **The Sandbox Environment for Generalizable Agent Research**, the environment suite we present here, serves exactly 
 that purpose.
@@ -189,7 +189,7 @@ We informally say that a representation generalizes well from a training to a te
   ```
 - For running RL samples (using rllib):
   ```
-  pip install -e .[rl]
+  pip install -e '.[rl]'
   ```
 
 
