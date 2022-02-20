@@ -28,7 +28,7 @@ a distance between training and test task distributions.
 ![Billiards](resources/readme-images/billiards_example.gif)
 ![Invisiball](resources/readme-images/invisiball_example.gif)
 
-Details on code and tutorials can be found [here](https://github.com/microsoft/roboputtputt/tree/main/segar).
+Details on code and tutorials can be found [here](https://github.com/microsoft/segar/tree/main/segar).
 
 ## Background and Motivation
 Throughout most of ML history, progress in areas that deal 
@@ -52,7 +52,7 @@ In our opinion, this status quo is for the following reasons:
 - Successful decision-making in RL and robotics often relies on knowing 
   latent features such as object mass as fragility. Such **statically 
   unobservable features** can't be detected from a single image, because 
-  they are only weakly reflected in object appearance, or not all.
+  they are only weakly reflected in object appearance, or not at all.
   
 - Many representation learning techniques, and even representations such as 
   pretrained ResNet, that have been tried in RL and robotics were 
@@ -74,7 +74,7 @@ In our opinion, this status quo is for the following reasons:
   between observable and unobservable features.  
   
 Thus, a key step towards making progress towards representation learning in 
-sequential decision-making scenarios is creating a benchmarks that would 
+sequential decision-making scenarios is creating a set benchmarks that would 
 enable controlled, informative experiments in this research ares. 
 **The Sandbox Environment for Generalizable Agent Research**, the environment suite we present here, serves exactly 
 that purpose.
@@ -108,8 +108,8 @@ representation learning questions the researchers are interested in**. Namely:
       can leverage low-level visual cues to "cheat" at tasks that were 
       intended to require higher-level reasoning. In SEGAR, the visual 
       features are treated as a transparent and controllable variable in 
-      building experiments, such that the research can control how the 
-      underlying factors are expresses in terms of pixels, if at all.
+      building experiments, such that the researcher can control how the 
+      underlying factors are expressed in terms of pixels, if at all.
 
 * __SEGAR allows defining training and test task distributions for generalization experiments__. Such experiments are a major motivation behind SEGAR's design,
   and SEGAR makes them easy to set up by specifying distributions over generative factors' values for training and test tasks. In popular benchmarks such as
@@ -183,13 +183,13 @@ We informally say that a representation generalizes well from a training to a te
   ```
 - Clone the current repo and install it in editable mode:
   ```
-  git clone https://github.com/microsoft/roboputtputt.git
-  cd roboputtputt
+  git clone https://github.com/microsoft/segar.git
+  cd segar
   pip install -e .
   ```
 - For running RL samples (using rllib):
   ```
-  pip install -e '.[rl]'
+  pip install -e .[rl]
   ```
 
 

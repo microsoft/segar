@@ -32,7 +32,7 @@ observations = RGBObservation(resolution=256, config=vis_config)
 
 Next, let's make the PuttPutt initialization and task. There are some
 convenient configs useful for setting up the initialization object. These
-can be found at [puttputt.py](https://github.com/microsoft/roboputtputt/blob/main/segar/tasks/puttputt.py)
+can be found at [puttputt.py](https://github.com/microsoft/segar/blob/main/segar/tasks/puttputt.py)
 for more details.
 
 
@@ -71,7 +71,7 @@ Image(open('../../resources/readme-images/segar/tasks/puttputt_sample.gif', 'rb'
 Note this is what your agent sees. Note that we drew a initialization
 configuation from a preset, we can define our own, for instance if we want
 the golf ball and goal in different locations. The
-[initialization module](https://github.com/microsoft/roboputtputt/blob/main/segar/mdps/initializations.py)
+[initialization module](https://github.com/microsoft/segar/blob/main/segar/mdps/initializations.py)
 has a convenient typing for arena locations:
 
 ```python
