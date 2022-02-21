@@ -7,7 +7,7 @@ spaces.
 ### Rendering basics
 
 To set up a renderer, just create the corresponding rendering object.
-Currently, RPP supports color-based rendering, which assigns a color to each
+Currently, SEGAR supports color-based rendering, which assigns a color to each
  type of object or tile, and a pattern-based renderer, which uses a
  generative model conditioned on the underlying factors.
 
@@ -129,7 +129,7 @@ of visual features from a fixed baseline.
 
 ### Obscuring factors in visual features.
 
-RPP renderers also are capable of obscuring visual features, such that they
+SEGAR renderers also are capable of obscuring visual features, such that they
 wont be visible to the agent.
 
 

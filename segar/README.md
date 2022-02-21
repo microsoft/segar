@@ -1,7 +1,7 @@
 # The Sandbox Environment for Generalizable Agent Research Code and Tutorials
 
 **The Sandbox Environment for Generalizable Agent Research** (SEGAR) is a suite of research tools for doing *Interactive 
-Representation Learning* (IReL). IReL is the study of the interplay between 
+Representation Learning* (IRepL). IRepL is the study of the interplay between 
 representation learning and interactions. As a study, two key outcomes of 
 IReL are answers to *why* and *how* interactions improve representations. 
 IReL is distinct from Reinforcement Learning (RL) and Representation 
@@ -32,6 +32,7 @@ Project code documentation can be found [here](https://animated-train-17411965.p
 
 The simulator is a core component of the SEGAR research suite.
 It controls:
+
 * The underlying factors of the environment: the objects and tiles along
 with their affordances
 * The dynamics, conditioned on those objects and tiles, e.g., magnetism via
@@ -42,7 +43,7 @@ As such, the simulator is *separated* from the semantics of the MDP, the
 task, the reward, etc. Its job is to only to manage the underlying factors
 and to simulate physics.
 
-For a detailed tutorial see [Simulator Tutorial](https://github.com/microsoft/roboputtputt/tree/main/segar/sim).
+For a detailed tutorial see [Simulator Tutorial](https://github.com/microsoft/segar/tree/main/segar/sim).
 
 ## The MDP
 
@@ -59,18 +60,18 @@ controlling what states correspond to reward, what observations the agent
 sees, etc.
 * __MDP objects__ put this all together and coordinate all of the components.
 
-For a detailed tutorial see [MDP Tutorial](https://github.com/microsoft/roboputtputt/tree/main/segar/mdps).
+For a detailed tutorial see [MDP Tutorial](https://github.com/microsoft/segar/tree/main/segar/mdps).
 
 ## Configurations
 Configurations provide convenience for  creating environments, as well as 
 provide a way to sample and compare environments from distributions.
 
-For a detailed tutorial see [Configuration Tutorial](https://github.com/microsoft/roboputtputt/tree/main/segar/config).
+For a detailed tutorial see [Configuration Tutorial](https://github.com/microsoft/segar/tree/main/segar/configs).
 
 ## Built-in Tasks
 Several built-in tasks are available in SEGAR: PuttPutt, Invisiball, and 
 Billiards.
-For a detailed tutorial see [Tasks Tutorial](https://github.com/microsoft/roboputtputt/tree/main/segar/tasks).
+For a detailed tutorial see [Tasks Tutorial](https://github.com/microsoft/segar/tree/main/segar/tasks).
 
 ## Rendering
 # Rendering Tutorial
@@ -80,7 +81,7 @@ for generating visual features. We did this because we believe that making
 the visual features such allows the researcher to make better conclusions w.
 r.t. agents and models trained on pixels.
 
-For a detailed tutorial see [Tasks Tutorial](https://github.com/microsoft/roboputtputt/tree/main/segar/rendering).
+For a detailed tutorial see [Tasks Tutorial](https://github.com/microsoft/segar/tree/main/segar/rendering).
 
 ## Running RL agents
 TODO
