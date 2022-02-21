@@ -1,4 +1,4 @@
-This tutorial covers using the simulator in RPP.
+This tutorial covers using the simulator in SEGAR.
 
 
 ```python
@@ -12,9 +12,88 @@ from segar.sim import Simulator
 pp = pprint.PrettyPrinter(indent=4)
 ```
 
+
+    ---------------------------------------------------------------------------
+
+    ModuleNotFoundError                       Traceback (most recent call last)
+
+    C:\ProgramData\Anaconda3\envs\segar\lib\site-packages\numpy\core\__init__.py in <module>
+         21 try:
+    ---> 22     from . import multiarray
+         23 except ImportError as exc:
+
+
+    C:\ProgramData\Anaconda3\envs\segar\lib\site-packages\numpy\core\multiarray.py in <module>
+         11 
+    ---> 12 from . import overrides
+         13 from . import _multiarray_umath
+
+
+    C:\ProgramData\Anaconda3\envs\segar\lib\site-packages\numpy\core\overrides.py in <module>
+          6 
+    ----> 7 from numpy.core._multiarray_umath import (
+          8     add_docstring, implement_array_function, _get_implementing_args)
+
+
+    ModuleNotFoundError: No module named 'numpy.core._multiarray_umath'
+
+    
+    During handling of the above exception, another exception occurred:
+
+
+    ImportError                               Traceback (most recent call last)
+
+    ~\AppData\Local\Temp/ipykernel_19580/3788499703.py in <module>
+          1 import pprint
+          2 
+    ----> 3 import numpy as np
+          4 
+          5 from segar.sim import Simulator
+
+
+    C:\ProgramData\Anaconda3\envs\segar\lib\site-packages\numpy\__init__.py in <module>
+        138     from . import _distributor_init
+        139 
+    --> 140     from . import core
+        141     from .core import *
+        142     from . import compat
+
+
+    C:\ProgramData\Anaconda3\envs\segar\lib\site-packages\numpy\core\__init__.py in <module>
+         46 """ % (sys.version_info[0], sys.version_info[1], sys.executable,
+         47         __version__, exc)
+    ---> 48     raise ImportError(msg)
+         49 finally:
+         50     for envkey in env_added:
+
+
+    ImportError: 
+    
+    IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+    
+    Importing the numpy C-extensions failed. This error can happen for
+    many reasons, often due to issues with your setup or how NumPy was
+    installed.
+    
+    We have compiled some common reasons and troubleshooting tips at:
+    
+        https://numpy.org/devdocs/user/troubleshooting-importerror.html
+    
+    Please note and check the following:
+    
+      * The Python version is: Python3.9 from "C:\ProgramData\Anaconda3\envs\segar\python.exe"
+      * The NumPy version is: "1.19.5"
+    
+    and make sure that they are the versions you expect.
+    Please carefully study the documentation linked above for further help.
+    
+    Original error was: No module named 'numpy.core._multiarray_umath'
+
+
+
 ## The simulator
 
-The simulator is a core component of the RPP research suite.
+The simulator is a core component of the SEGAR research suite.
 It controls:
 * The underlying factors of the environment: the objects and tiles along
 with their affordances
@@ -26,7 +105,7 @@ As such, the simulator is *separated* from the semantics of the MDP, the
 task, the reward, etc. Its job is to only to manage the underlying factors
 and to simulate physics.
 
-Creating a simulator is the first step in using RPP:
+Creating a simulator is the first step in using SEGAR:
 
 
 ```python
@@ -84,12 +163,12 @@ pp.pprint(sim.thing_states[0])
 
 
 The state contains all attributes necessary to intantiate an object, but a
-number of these will be useful for building MDPs (see the `rpp/mdps/README.md`
+number of these will be useful for building MDPs (see the `segar/mdps/README.md`
 for more details).
 
 It's good to be able to see the state of objects, but visualization can be
 very useful to see what's going on. For this, we borrow a renderer from the
-rendering module (see `rpp/rendering/README.md` for details).
+rendering module (see `segar/rendering/README.md` for details).
 
 
 ```python
@@ -395,6 +474,7 @@ imshow(image)
 Now let's get things really moving. There are some convenient functions in
 the tools module for generating and viewing trajectories.
 
+
 ```python
 from IPython.display import Image
 
@@ -403,8 +483,8 @@ from segar.tools.sample_trajectories import rollout_sim_only, save_gif
 renderer.reset(sim)
 trajectories, imgs = rollout_sim_only(sim, renderer=renderer)
 
-save_gif(imgs, out_path='../../resources/readme-images/segar/sim/trajectory_sample.gif')
-Image(open('../../resources/readme-images/segar/sim/trajectory_sample.gif', 'rb').read())
+save_gif(imgs, out_path='_ipynb_assets/trajectory_sample.gif')
+Image(open('_ipynb_assets/trajectory_sample.gif','rb').read())
 ```
 
 
@@ -435,12 +515,13 @@ pp.pprint(sim.rules)
 
 The rules can be added and removed from the sim. Let's remove Lorentz law, which controls how objects move according to charge and magnetism:
 
+
 ```python
 sim.remove_rule('lorentz_law')
 trajectories, imgs = rollout_sim_only(sim, renderer=renderer)
 
-save_gif(imgs, out_path='../../resources/readme-images/segar/sim/trajectory_sample2.gif')
-Image(open('../../resources/readme-images/segar/sim/trajectory_sample2.gif', 'rb').read())
+save_gif(imgs, out_path='_ipynb_assets/trajectory_sample2.gif')
+Image(open('_ipynb_assets/trajectory_sample2.gif','rb').read())
 ```
 
 
