@@ -56,8 +56,8 @@ mdp = MDP(observations, puttputt)
 
 imgs, trajectories = rollout(mdp)
 
-save_gif(imgs, out_path='_ipynb_assets/puttputt_sample.gif')
-Image(open('_ipynb_assets/puttputt_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/puttputt_sample.gif')
+Image(open('../../resources/readme-images/segar/tasks/puttputt_sample.gif','rb').read())
 ```
 
 
@@ -105,7 +105,7 @@ mdp_right = MDP(observations, puttputt_right)
 
 for i in range(3):
     imgs, trajectories = rollout(mdp_left)
-    out_path = f'_ipynb_assets/puttputt_left_{i}.gif'
+    out_path = f'../../resources/readme-images/segar/tasks/puttputt_left_{i}.gif'
     save_gif(imgs, out_path=out_path)
     display(Image(open(out_path,'rb').read()))
 ```
@@ -143,7 +143,7 @@ All on the left. Now for the right.
 ```python
 for i in range(3):
     imgs, trajectories = rollout(mdp_right)
-    out_path = f'_ipynb_assets/puttputt_right_{i}.gif'
+    out_path = f'../../resources/readme-images/segar/tasks/puttputt_right_{i}.gif'
     save_gif(imgs, out_path=out_path)
     display(Image(open(out_path,'rb').read()))
 ```
@@ -187,8 +187,8 @@ mdp = MDP(observations, invisiball)
 
 imgs, trajectories = rollout(mdp)
 
-save_gif(imgs, out_path='_ipynb_assets/invisiball_sample.gif')
-Image(open('_ipynb_assets/invisiball_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/invisiball_sample.gif')
+Image(open('../../resources/readme-images/segar/tasks/invisiball_sample.gif','rb').read())
 ```
 
 
@@ -221,8 +221,8 @@ mdp = MDP(observations, billiards)
 
 imgs, trajectories = rollout(mdp)
 
-save_gif(imgs, out_path='_ipynb_assets/billiards_sample.gif')
-Image(open('_ipynb_assets/billiards_sample.gif','rb').read())
+save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/billiards_sample.gif')
+Image(open('../../resources/readme-images/segar/tasks/billiards_sample.gif','rb').read())
 ```
 
     {'numbers': [(CueBall, 1)], 'priors': [Size <- GaussianNoise (if is CueBall), Size <- 0.2 (if is Ball), Mass <- 1.0 (if is Ball), Size <- 0.3 (if is Hole), Position <- RandomBottomLocation (if is CueBall)]}

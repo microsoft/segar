@@ -434,8 +434,8 @@ while not done:
     action = np.array((0., 0.))  # There's no "agent" so do nothing.
     render_observation()
 
-save_gif(trajectory, out_path=f'{ASSET_DIR}//trajectory_sample.gif')
-Image(open('_ipynb_assets/trajectory_sample.gif','rb').read())
+save_gif(trajectory, out_path=f'../../resources/readme-images/segar/mdps/trajectory_sample.gif')
+Image(open('../../resources/readme-images/segar/mdps/trajectory_sample.gif','rb').read())
 ```
 
 
