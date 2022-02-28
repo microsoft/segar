@@ -8,6 +8,7 @@ import jax.numpy as jnp
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
 from samples.jax.algo import select_action
+import numpy as np
 
 
 def rollouts(env: Env,
@@ -36,6 +37,9 @@ def rollouts(env: Env,
             maybe_epinfo = info.get('returns')
             latent_features = info.get('latent_features')
             task_id = info.get('task_id')
+            latent_features = latent_features[~np.all(np.isclose(
+                latent_features, np.zeros_like(latent_features)),
+                                                      axis=1)]
             factors.append(latent_features)
             task_ids.append(task_id)
             if maybe_epinfo:

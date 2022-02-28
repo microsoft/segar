@@ -97,83 +97,83 @@ def main(argv):
                             env_name = "%sx1-%s-rgb" % (task, difficulty)
                             prefix = "checkpoint_%sx1_%s_%d_" % (
                                 task, difficulty, num_levels)
-
-                        loaded_state = checkpoints.restore_checkpoint(
-                            FLAGS.model_dir,
-                            prefix=prefix,
-                            target=train_state_ppo)
                         ckpt_path = glob.glob(
                             os.path.join(FLAGS.model_dir, prefix + '*'))
                         if not len(ckpt_path):
                             print(prefix)
                             continue
-                        ckpt_path = ckpt_path[0]
-                        seed = int(ckpt_path.split('_')[-1])
-
-                        try:
-                            env_train = SEGAREnv(env_name,
-                                                 num_envs=num_envs,
-                                                 num_levels=num_levels,
-                                                 framestack=1,
-                                                 resolution=64,
-                                                 max_steps=MAX_STEPS,
-                                                 _async=False,
-                                                 deterministic_visuals=False,
-                                                 seed=seed)
-                            env_test = SEGAREnv(env_name,
-                                                num_envs=num_envs,
-                                                num_levels=num_test_levels,
-                                                framestack=1,
-                                                resolution=64,
-                                                max_steps=MAX_STEPS,
-                                                _async=False,
-                                                deterministic_visuals=False,
-                                                seed=seed + 1)
-                            returns_train, (states_train, zs_train,
-                                            actions_train, factors_train,
-                                            task_ids_train) = rollouts(
-                                                env_train,
+                        for ckpt in ckpt_path:
+                            seed = int(ckpt.split('_')[-1])
+                            prefix = prefix+str(seed)
+                            loaded_state = checkpoints.restore_checkpoint(
+                                FLAGS.model_dir,
+                                prefix=prefix,
+                                target=train_state_ppo)
+                            
+                            try:
+                                env_train = SEGAREnv(env_name,
+                                                    num_envs=num_envs,
+                                                    num_levels=num_levels,
+                                                    framestack=1,
+                                                    resolution=64,
+                                                    max_steps=MAX_STEPS,
+                                                    _async=False,
+                                                    deterministic_visuals=False,
+                                                    seed=seed)
+                                env_test = SEGAREnv(env_name,
+                                                    num_envs=num_envs,
+                                                    num_levels=num_test_levels,
+                                                    framestack=1,
+                                                    resolution=64,
+                                                    max_steps=MAX_STEPS,
+                                                    _async=False,
+                                                    deterministic_visuals=False,
+                                                    seed=seed + 1)
+                                returns_train, (states_train, zs_train,
+                                                actions_train, factors_train,
+                                                task_ids_train) = rollouts(
+                                                    env_train,
+                                                    loaded_state,
+                                                    rng,
+                                                    n_rollouts=FLAGS.n_rollouts,
+                                                    sample=FLAGS.sample)
+                                returns_test, (states_test, zs_test, actions_test,
+                                            factors_test,
+                                            task_ids_test) = rollouts(
+                                                env_test,
                                                 loaded_state,
                                                 rng,
                                                 n_rollouts=FLAGS.n_rollouts,
                                                 sample=FLAGS.sample)
-                            returns_test, (states_test, zs_test, actions_test,
-                                           factors_test,
-                                           task_ids_test) = rollouts(
-                                               env_test,
-                                               loaded_state,
-                                               rng,
-                                               n_rollouts=FLAGS.n_rollouts,
-                                               sample=FLAGS.sample)
 
-                            w2_distance = task_set_init_dist(
-                                env_test.env.envs[0].task_list,
-                                env_train.env.envs[0].task_list)
-                            w2_df.append(
-                                pd.DataFrame({
-                                    'returns':
-                                    np.concatenate(
-                                        [returns_train, returns_test], axis=0),
-                                    'set':
-                                    ['train'
-                                     for _ in range(FLAGS.n_rollouts)] +
-                                    ['test' for _ in range(FLAGS.n_rollouts)],
-                                    # r'$\eta_{test}-\eta_{train}$': [summary],
-                                    r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$':
-                                    w2_distance,
-                                    'task':
-                                    task,
-                                    'difficulty':
-                                    difficulty,
-                                    'num_levels':
-                                    num_levels
-                                }))
-                            print('W2(train levels, test levels)=%.5f' %
-                                  w2_distance)
-                            ctr += 1
-                        except Exception as e:
-                            print('Exception encountered in simulation:')
-                            print(e)
+                                w2_distance = task_set_init_dist(
+                                    env_test.env.envs[0].task_list,
+                                    env_train.env.envs[0].task_list)
+                                w2_df.append(
+                                    pd.DataFrame({
+                                        'returns':
+                                        np.concatenate(
+                                            [returns_train, returns_test], axis=0),
+                                        'set':
+                                        ['train'
+                                        for _ in range(FLAGS.n_rollouts)] +
+                                        ['test' for _ in range(FLAGS.n_rollouts)],
+                                        # r'$\eta_{test}-\eta_{train}$': [summary],
+                                        r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$':
+                                        w2_distance,
+                                        'task':
+                                        task,
+                                        'difficulty':
+                                        difficulty,
+                                        'num_levels':
+                                        num_levels
+                                    }))
+                                print('W2(train levels, test levels)=%.5f' %
+                                    w2_distance)
+                                ctr += 1
+                            except Exception as e:
+                                print('Exception encountered in simulation:')
+                                print(e)
 
             w2_df = pd.concat(w2_df)
             pickle.dump(w2_df, open('../plots/01_Wasserstein.pkl', "wb"))
@@ -437,8 +437,9 @@ def main(argv):
                                                sample=FLAGS.sample)
                             n, m = len(env_test.env.envs[0].task_list), len(env_train.env.envs[0].task_list)
                             ks_distance = np.zeros((n,m))
-                            for i, test_task in enumerate(env_test.env.envs[0].task_list):
-                                for j, train_task in enumerate(env_train.env.envs[0].task_list):
+                            # Pick up to 100 levels bc otherwise becomes too slow
+                            for i, test_task in enumerate(env_test.env.envs[0].task_list[:100]):
+                                for j, train_task in enumerate(env_train.env.envs[0].task_list[:100]):
                                     factors_test=test_task._initialization.get_dists_from_init()
                                     factors_train=train_task._initialization.get_dists_from_init()
                                     thing_factor_sets = []
