@@ -108,7 +108,11 @@ class SequentialTaskWrapper:
             next_obs = self.reset()
             info["success"] = success
         info["task_id"] = self.task_id
-        info["latent_features"] = self.sobs(self.current_env.env.env.sim.state)
+        latent_features = self.sobs(self.current_env.env.env.sim.state)
+        latent_features = latent_features[~np.all(np.isclose(
+                latent_features, np.zeros_like(latent_features)),
+                                                      axis=-1)]
+        info["latent_features"] = latent_features
         return next_obs.copy(), rew, done, info
 
     def _pick_env(self, task_id=None):
