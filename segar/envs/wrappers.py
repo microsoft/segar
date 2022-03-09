@@ -109,9 +109,6 @@ class SequentialTaskWrapper:
             info["success"] = success
         info["task_id"] = self.task_id
         latent_features = self.sobs(self.current_env.env.env.sim.state)
-        latent_features = latent_features[~np.all(np.isclose(
-                latent_features, np.zeros_like(latent_features)),
-                                                      axis=-1)]
         info["latent_features"] = latent_features
         return next_obs.copy(), rew, done, info
 
