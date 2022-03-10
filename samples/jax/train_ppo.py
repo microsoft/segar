@@ -60,6 +60,7 @@ flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
 flags.DEFINE_integer("framestack", 1, "Number of frames to stack")
 flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
+flags.DEFINE_list("factor_delete_list", ['mass'], "List of factors to remove from observations.")
 # PPO
 flags.DEFINE_float("max_grad_norm", 10, "Max grad norm")
 flags.DEFINE_float("gamma", 0.999, "Gamma")
@@ -138,6 +139,7 @@ def main(argv):
         max_steps=MAX_STEPS,
         _async=False,
         deterministic_visuals=False,
+        factor_delete_list=FLAGS.factor_delete_list,
         seed=FLAGS.seed,
         save_path=os.path.join(FLAGS.output_dir, run_name)
     )
@@ -150,10 +152,11 @@ def main(argv):
         max_steps=MAX_STEPS,
         _async=False,
         deterministic_visuals=False,
+        factor_delete_list=FLAGS.factor_delete_list,
         seed=FLAGS.seed + 1,
         save_path=os.path.join(FLAGS.output_dir, run_name)
     )
-    n_action = env.action_space[0].shape[-1]
+    n_action = env.action_space.shape[-1]
 
     # Create PPO model, optimizer and buffer
     model = TwinHeadModel(

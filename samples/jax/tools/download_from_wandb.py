@@ -26,7 +26,7 @@ def main(argv):
 
     for run in tqdm.tqdm(runs):
         params = json.loads(run.json_config)
-        if 'large_run' not in params['run_id']['value']:
+        if 'more_seeds' not in params['run_id']['value']:
             continue
 
         env_name = params['env_name']['value']
