@@ -13,21 +13,33 @@ import jax.numpy as jnp
 import numpy as np
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
+
+import dm_pix as pix
 """
 Inspired by code from Flax:
 https://github.com/google/flax/blob/main/examples/ppo/ppo_lib.py
 """
 
+"""
+Helper methods
+"""
 
-def mse_loss(params: flax.core.frozen_dict.FrozenDict, apply_fn: Callable,
-             X: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
-    X = jax.lax.stop_gradient(
-        X)  # prevent latent factors to backprop into representation
-    y_hat = apply_fn(params, X)
-    # mimic batchnorm1d
-    y = y / jnp.stack([jnp.linalg.norm(y, axis=1)] * y.shape[1]).transpose()
-    predictor_loss = jnp.sum((y - y_hat)**2, 1).mean()
-    return predictor_loss, (y - y_hat)**2
+@partial(jax.jit)
+def flatten_dims(x: jnp.ndarray):
+    return x.swapaxes(0, 1).reshape(x.shape[0] * x.shape[1], *x.shape[2:])
+
+
+def random_crop(obs, rng, n_augs=1):
+    augs = []
+    for _ in range(n_augs):
+        rng, key = jax.random.split(rng)
+        augs.append(
+            pix.random_crop(key=key,
+                            image=jnp.pad(obs,
+                                          [[0, 0], [2, 2], [2, 2], [0, 0]],
+                                          'edge'),
+                            crop_sizes=obs.shape))
+    return augs
 
 
 def compute_grad_norm(grads: flax.core.frozen_dict.FrozenDict) -> jnp.ndarray:
@@ -49,6 +61,25 @@ def extract_latent_factors(infos: dict):
         latent_features.append(info['latent_features'].reshape(-1))
     latent_features = jnp.stack(latent_features)
     return latent_features
+
+
+"""
+Losses:
+- MSE
+- PPO
+- CURL
+"""
+
+
+def mse_loss(params: flax.core.frozen_dict.FrozenDict, apply_fn: Callable,
+             X: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
+    X = jax.lax.stop_gradient(
+        X)  # prevent latent factors to backprop into representation
+    y_hat = apply_fn(params, X)
+    # mimic batchnorm1d
+    y = y / jnp.stack([jnp.linalg.norm(y, axis=1)] * y.shape[1]).transpose()
+    predictor_loss = jnp.sum((y - y_hat)**2, 1).mean()
+    return predictor_loss, (y - y_hat)**2
 
 
 def loss_actor_and_critic(params_model: flax.core.frozen_dict.FrozenDict,
@@ -89,6 +120,25 @@ def loss_actor_and_critic(params_model: flax.core.frozen_dict.FrozenDict,
 
     return total_loss, (value_loss, loss_actor, ent, value_pred.mean(),
                         target.mean(), gae.mean(), log_prob.mean())
+
+
+def loss_curl(params_model: flax.core.frozen_dict.FrozenDict,
+              apply_fn: Callable[..., Any], state_1: jnp.ndarray,
+              state_2: jnp.ndarray, key: PRNGKey) -> jnp.ndarray:
+    state_1 = state_1.astype(jnp.float32) / 255.
+    state_2 = state_2.astype(jnp.float32) / 255.
+
+    _, _, (z1, bilinear) = apply_fn(params_model, state_1, None)
+    _, _, (z2, bilinear) = apply_fn(params_model, state_2, None)
+
+    # CURL loss
+    logits = jnp.einsum("ai,bj,ij->ab", z1, z2, bilinear)
+    labels = jnp.arange(logits.shape[0])
+    curl_loss = -jnp.log(
+        jnp.take_along_axis(logits, jnp.expand_dims(labels, 1), 1)[:,
+                                                                   0]).mean()
+
+    return curl_loss, (curl_loss)
 
 
 @partial(jax.jit, static_argnames=("sample"))
@@ -142,11 +192,6 @@ def get_transition(
                  np.array(value), task_ids, latent_factors)
     return (train_state, next_state, latent_factors, batch, new_key, reward,
             done, info)
-
-
-@partial(jax.jit)
-def flatten_dims(x: jnp.ndarray):
-    return x.swapaxes(0, 1).reshape(x.shape[0] * x.shape[1], *x.shape[2:])
 
 
 @partial(jax.jit,
@@ -226,5 +271,65 @@ def update_ppo(train_state: TrainState, batch: Tuple, num_envs: int,
     avg_metrics_dict['gae_val'] += gae_val.mean()
     avg_metrics_dict['log_prob'] += log_prob.mean()
     avg_metrics_dict['action_norm'] += jnp.linalg.norm(action, axis=1).mean()
+
+    return avg_metrics_dict, train_state, rng
+
+
+@partial(jax.jit,
+         static_argnames=("num_envs", "n_steps", "n_minibatch", "epoch_ppo",
+                          "clip_eps", "entropy_coeff", "critic_coeff"))
+def update_curl(train_state: TrainState, batch: Tuple, num_envs: int,
+                n_steps: int, n_minibatch: int, epoch_ppo: int,
+                clip_eps: float, entropy_coeff: float, critic_coeff: float,
+                rng: PRNGKey) -> Tuple[dict, TrainState, PRNGKey]:
+    """
+    CURL aux loss, performs data augmentation inside this function.
+    """
+    (state, action, reward, log_pi_old, value, target, gae, task_ids,
+     latent_factors) = batch
+
+    size_batch = num_envs * n_steps
+    assert size_batch % n_minibatch == 0
+    size_minibatch = size_batch // n_minibatch
+
+    idxes = jnp.arange(num_envs * n_steps)
+    idxes_policy = []
+    for _ in range(epoch_ppo):
+        rng, key = jax.random.split(rng)
+        idxes = jax.random.permutation(rng, idxes)
+        idxes_policy.append(idxes)
+    idxes_policy = jnp.array(idxes_policy).reshape(-1, size_minibatch)
+    key, rng2 = jax.random.split(rng)
+
+    avg_metrics_dict = defaultdict(int)
+
+    state = flatten_dims(state)
+    action = flatten_dims(action)
+
+    state_1, state_2 = random_crop(state, rng, n_augs=2)
+
+    if latent_factors is not None:
+        latent_factors = flatten_dims(latent_factors)
+
+    def scan(train_state, idx):
+        key, rng = jax.random.split(rng2)
+        if latent_factors is not None:
+            latent_factors_ = latent_factors[idx]
+        else:
+            latent_factors_ = latent_factors
+        grad_fn = jax.value_and_grad(loss_curl, has_aux=True)
+        total_loss, grads = grad_fn(train_state.params,
+                                    train_state.apply_fn,
+                                    state_1=state_1[idx],
+                                    state_2=state_2[idx],
+                                    key=key)
+        grads = jax.tree_util.tree_map(jnp.nan_to_num, grads)
+        train_state = train_state.apply_gradients(grads=grads)
+        return train_state, total_loss
+
+    train_state, total_loss = jax.lax.scan(scan, train_state, idxes_policy)
+    total_loss, (curl_loss) = total_loss
+
+    avg_metrics_dict['curl_loss'] += curl_loss.mean()
 
     return avg_metrics_dict, train_state, rng

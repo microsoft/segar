@@ -2,7 +2,7 @@ from models import MLP, TwinHeadModel
 from jax.random import PRNGKey
 from buffer import Batch
 from algo import (extract_latent_factors, get_transition, mse_loss,
-                  select_action, update_ppo)
+                  select_action, update_ppo, update_curl)
 from segar.envs.env import SEGAREnv
 import glob
 import importlib
@@ -38,7 +38,6 @@ def setup_packages():
 
 setup_packages()
 
-
 try:
     from azureml.core.run import Run
 except Exception as e:
@@ -60,7 +59,8 @@ flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
 flags.DEFINE_integer("framestack", 1, "Number of frames to stack")
 flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
-flags.DEFINE_list("factor_delete_list", ['mass'], "List of factors to remove from observations.")
+flags.DEFINE_list("factor_delete_list", ['mass'],
+                  "List of factors to remove from observations.")
 # PPO
 flags.DEFINE_float("max_grad_norm", 10, "Max grad norm")
 flags.DEFINE_float("gamma", 0.999, "Gamma")
@@ -72,6 +72,8 @@ flags.DEFINE_float("clip_eps", 0.2, "Clipping range")
 flags.DEFINE_float("gae_lambda", 0.95, "GAE lambda")
 flags.DEFINE_float("entropy_coeff", 3e-4, "Entropy loss coefficient")
 flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
+# Representation learning objectives
+flags.DEFINE_string("rep_learn", "", "Aux losses: CURL")
 # Ablations
 flags.DEFINE_boolean(
     "probe_latent_factors",
@@ -130,33 +132,32 @@ def main(argv):
     # Test environments always have the same number of test levels for
     # fair comparison across runs
     MAX_STEPS = 100
-    env = SEGAREnv(
-        FLAGS.env_name,
-        num_envs=FLAGS.num_envs,
-        num_levels=FLAGS.num_train_levels,
-        framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=MAX_STEPS,
-        _async=False,
-        deterministic_visuals=False,
-        factor_delete_list=FLAGS.factor_delete_list,
-        seed=FLAGS.seed,
-        save_path=os.path.join(FLAGS.output_dir, run_name)
-    )
-    env_test = SEGAREnv(
-        FLAGS.env_name,
-        num_envs=1,
-        num_levels=FLAGS.num_test_levels,
-        framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=MAX_STEPS,
-        _async=False,
-        deterministic_visuals=False,
-        factor_delete_list=FLAGS.factor_delete_list,
-        seed=FLAGS.seed + 1,
-        save_path=os.path.join(FLAGS.output_dir, run_name)
-    )
-    n_action = env.action_space.shape[-1]
+    env = SEGAREnv(FLAGS.env_name,
+                   num_envs=FLAGS.num_envs,
+                   num_levels=FLAGS.num_train_levels,
+                   framestack=FLAGS.framestack,
+                   resolution=FLAGS.resolution,
+                   max_steps=MAX_STEPS,
+                   _async=False,
+                   deterministic_visuals=False,
+                   factor_delete_list=FLAGS.factor_delete_list,
+                   seed=FLAGS.seed,
+                   save_path=os.path.join(FLAGS.output_dir, run_name))
+    env_test = SEGAREnv(FLAGS.env_name,
+                        num_envs=1,
+                        num_levels=FLAGS.num_test_levels,
+                        framestack=FLAGS.framestack,
+                        resolution=FLAGS.resolution,
+                        max_steps=MAX_STEPS,
+                        _async=False,
+                        deterministic_visuals=False,
+                        factor_delete_list=FLAGS.factor_delete_list,
+                        seed=FLAGS.seed + 1,
+                        save_path=os.path.join(FLAGS.output_dir, run_name))
+    try:
+        n_action = env.action_space.shape[-1]
+    except:
+        n_action = env.action_space[0].shape[-1]
 
     # Create PPO model, optimizer and buffer
     model = TwinHeadModel(
@@ -165,6 +166,7 @@ def main(argv):
         prefix_actor="policy",
         action_scale=1.0,
         add_latent_factors=FLAGS.add_latent_factors,
+        rep_learn=FLAGS.rep_learn,
     )
 
     state = env.reset()
@@ -271,6 +273,20 @@ def main(argv):
                 key,
             )
 
+            if FLAGS.rep_learn == 'curl':
+                metric_dict_aux, train_state, key = update_curl(
+                    train_state,
+                    data,
+                    FLAGS.num_envs,
+                    FLAGS.n_steps,
+                    FLAGS.n_minibatch,
+                    FLAGS.epoch_ppo,
+                    FLAGS.clip_eps,
+                    FLAGS.entropy_coeff,
+                    FLAGS.critic_coeff,
+                    key,
+                )
+
             # Optionally, predict latent factors from observation
             if FLAGS.probe_latent_factors:
                 X = train_state.apply_fn(
@@ -295,6 +311,8 @@ def main(argv):
                 factor_train_buf.append(per_factor_error)
 
             batch.reset()
+
+            metric_dict = {**metric_dict, **metric_dict_aux}
 
             renamed_dict = {}
             for k, v in metric_dict.items():

@@ -15,7 +15,6 @@ tfb = tfp.bijectors
 
 LOG_STD_MIN = -3.0
 LOG_STD_MAX = 2.0
-
 """
 These regulate default inits for conv, pre-linear and pre-ReLU layers
 """
@@ -120,6 +119,7 @@ class TwinHeadModel(nn.Module):
     prefix_critic: str = "critic"
     prefix_actor: str = "policy"
     activation: str = 'tanh'
+    rep_learn: str = ''
 
     def setup(self):
         if self.activation == 'relu':
@@ -196,7 +196,14 @@ class TwinHeadModel(nn.Module):
                 [tfb.Scale(scale=self.action_scale),
                  tfb.Tanh()]))
 
-        return v, pi, z
+        # Aux losses part
+        if self.rep_learn == 'curl':
+            extra = self.param(
+                'bilinear',
+                default_mlp_init(),  # Initialization function
+                (z.shape[-1], z.shape[-1]))
+
+        return v, pi, (z, extra)
 
     def encode(self, x):
         return self.encoder(x)
