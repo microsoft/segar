@@ -8,6 +8,7 @@ import jax.numpy as jnp
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
 from samples.jax.algo import select_action
+import numpy as np
 
 
 def rollouts(env: Env,
