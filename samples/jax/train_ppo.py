@@ -2,7 +2,7 @@ from models import MLP, TwinHeadModel
 from jax.random import PRNGKey
 from buffer import Batch
 from algo import (extract_latent_factors, get_transition, mse_loss,
-                  select_action, update_ppo, update_curl)
+                  select_action, update_ppo, update_curl, state_update)
 from segar.envs.env import SEGAREnv
 import glob
 import importlib
@@ -74,6 +74,7 @@ flags.DEFINE_float("entropy_coeff", 3e-4, "Entropy loss coefficient")
 flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
 # Representation learning objectives
 flags.DEFINE_string("rep_learn", "", "Aux losses: CURL")
+flags.DEFINE_float("tau_ema", 0.01, "EMA smoothing")
 # Ablations
 flags.DEFINE_boolean(
     "probe_latent_factors",
@@ -168,6 +169,15 @@ def main(argv):
         add_latent_factors=FLAGS.add_latent_factors,
         rep_learn=FLAGS.rep_learn,
     )
+    
+    target = TwinHeadModel(
+        action_dim=n_action,
+        prefix_critic="vfunction",
+        prefix_actor="policy",
+        action_scale=1.0,
+        add_latent_factors=FLAGS.add_latent_factors,
+        rep_learn=FLAGS.rep_learn,
+    )
 
     state = env.reset()
     state_test = env_test.reset()
@@ -176,8 +186,10 @@ def main(argv):
             env.env.action_space.sample())
         latent_factors = extract_latent_factors(info)
         params_model = model.init(key, state, latent_factors)
+        params_target = target.init(key, state, latent_factors)
     else:
         params_model = model.init(key, state, None)
+        params_target = target.init(key, state, None)
         latent_factors = None
 
     tx = optax.chain(optax.clip_by_global_norm(FLAGS.max_grad_norm),
@@ -185,6 +197,11 @@ def main(argv):
     train_state = TrainState.create(apply_fn=model.apply,
                                     params=params_model,
                                     tx=tx)
+    tx_target = optax.chain(optax.clip_by_global_norm(FLAGS.max_grad_norm),
+                     optax.adam(FLAGS.lr, eps=1e-5))
+    train_state_target = TrainState.create(apply_fn=target.apply,
+                                    params=params_target,
+                                    tx=tx_target)
 
     # Optionally, create an MLP to probe latent factors
     if FLAGS.probe_latent_factors:
@@ -272,10 +289,11 @@ def main(argv):
                 FLAGS.critic_coeff,
                 key,
             )
-
+            metric_dict_aux = {}
             if FLAGS.rep_learn == 'curl':
                 metric_dict_aux, train_state, key = update_curl(
                     train_state,
+                    train_state_target,
                     data,
                     FLAGS.num_envs,
                     FLAGS.n_steps,
@@ -318,6 +336,11 @@ def main(argv):
             for k, v in metric_dict.items():
                 renamed_dict["metrics/%s" % k] = v
             wandb.log(renamed_dict, step=FLAGS.num_envs * step)
+
+            train_state_target = state_update(train_state,
+                                          train_state_target,
+                                          key='',
+                                          tau=FLAGS.tau_ema)
 
             wandb.log(
                 {

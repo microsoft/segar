@@ -202,6 +202,8 @@ class TwinHeadModel(nn.Module):
                 'bilinear',
                 default_mlp_init(),  # Initialization function
                 (z.shape[-1], z.shape[-1]))
+        else:
+            extra = None
 
         return v, pi, (z, extra)
 

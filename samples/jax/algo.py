@@ -13,16 +13,17 @@ import jax.numpy as jnp
 import numpy as np
 from flax.training.train_state import TrainState
 from jax.random import PRNGKey
+import flax.linen as nn
 
 import dm_pix as pix
 """
 Inspired by code from Flax:
 https://github.com/google/flax/blob/main/examples/ppo/ppo_lib.py
 """
-
 """
 Helper methods
 """
+
 
 @partial(jax.jit)
 def flatten_dims(x: jnp.ndarray):
@@ -61,6 +62,33 @@ def extract_latent_factors(infos: dict):
         latent_features.append(info['latent_features'].reshape(-1))
     latent_features = jnp.stack(latent_features)
     return latent_features
+
+
+def state_update(online_state, target_state, key: str = '', tau: float = 1.):
+    """ Update key weights as tau * online + (1-tau) * target
+    """
+    if key == '':
+        p_o = online_state.params['params']
+        p_t = target_state.params['params']
+    else:
+        p_o = online_state.params['params'][key]
+        p_t = target_state.params['params'][key]
+    new_weights = target_update(p_o, p_t, tau)
+    if key != '':
+        new_weights = target_state.params['params'].copy(
+            add_or_replace={key: new_weights})
+    new_params = target_state.params.copy(
+        add_or_replace={'params': new_weights})
+
+    target_state = target_state.replace(params=new_params)
+    return target_state
+
+
+def target_update(online, target, tau: float):
+    new_target_params = jax.tree_multimap(
+        lambda p, tp: p * tau + tp * (1 - tau), online, target)
+
+    return new_target_params
 
 
 """
@@ -123,20 +151,27 @@ def loss_actor_and_critic(params_model: flax.core.frozen_dict.FrozenDict,
 
 
 def loss_curl(params_model: flax.core.frozen_dict.FrozenDict,
-              apply_fn: Callable[..., Any], state_1: jnp.ndarray,
+              apply_fn: Callable[..., Any],
+              params_target: flax.core.frozen_dict.FrozenDict,
+              apply_fn_target: Callable[..., Any], state_1: jnp.ndarray,
               state_2: jnp.ndarray, key: PRNGKey) -> jnp.ndarray:
     state_1 = state_1.astype(jnp.float32) / 255.
     state_2 = state_2.astype(jnp.float32) / 255.
 
     _, _, (z1, bilinear) = apply_fn(params_model, state_1, None)
-    _, _, (z2, bilinear) = apply_fn(params_model, state_2, None)
+    _, _, (z2, _) = apply_fn_target(params_target, state_2, None)
+    z2 = jax.lax.stop_gradient(z2)
 
     # CURL loss
     logits = jnp.einsum("ai,bj,ij->ab", z1, z2, bilinear)
-    labels = jnp.arange(logits.shape[0])
-    curl_loss = -jnp.log(
-        jnp.take_along_axis(logits, jnp.expand_dims(labels, 1), 1)[:,
-                                                                   0]).mean()
+    logits = logits - jnp.max(logits, axis=1)
+    logits = nn.log_softmax(logits, axis=1)
+
+    n_classes = logits.shape[0]
+    # one_hot_labels = jax.nn.one_hot(jnp.arange(n_classes), num_classes=n_classes)
+    one_hot_labels = jnp.eye(n_classes)
+    
+    curl_loss =  -jnp.mean(jnp.sum(one_hot_labels * logits, axis=-1))
 
     return curl_loss, (curl_loss)
 
@@ -278,9 +313,10 @@ def update_ppo(train_state: TrainState, batch: Tuple, num_envs: int,
 @partial(jax.jit,
          static_argnames=("num_envs", "n_steps", "n_minibatch", "epoch_ppo",
                           "clip_eps", "entropy_coeff", "critic_coeff"))
-def update_curl(train_state: TrainState, batch: Tuple, num_envs: int,
-                n_steps: int, n_minibatch: int, epoch_ppo: int,
-                clip_eps: float, entropy_coeff: float, critic_coeff: float,
+def update_curl(train_state: TrainState, train_state_target: TrainState,
+                batch: Tuple, num_envs: int, n_steps: int, n_minibatch: int,
+                epoch_ppo: int, clip_eps: float, entropy_coeff: float,
+                critic_coeff: float,
                 rng: PRNGKey) -> Tuple[dict, TrainState, PRNGKey]:
     """
     CURL aux loss, performs data augmentation inside this function.
@@ -320,6 +356,8 @@ def update_curl(train_state: TrainState, batch: Tuple, num_envs: int,
         grad_fn = jax.value_and_grad(loss_curl, has_aux=True)
         total_loss, grads = grad_fn(train_state.params,
                                     train_state.apply_fn,
+                                    train_state_target.params,
+                                    train_state_target.apply_fn,
                                     state_1=state_1[idx],
                                     state_2=state_2[idx],
                                     key=key)
