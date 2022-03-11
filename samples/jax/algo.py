@@ -32,14 +32,15 @@ def flatten_dims(x: jnp.ndarray):
 
 def random_crop(obs, rng, n_augs=1):
     augs = []
+    # obs_ = jnp.pad(obs,[[0, 0], [2, 2], [2, 2], [0, 0]],'edge')
+    obs_shape = obs.shape
+    crop_shape = (obs.shape[0], int(obs.shape[1]*0.8),int(obs.shape[2]*0.8), obs.shape[3])
     for _ in range(n_augs):
         rng, key = jax.random.split(rng)
         augs.append(
-            pix.random_crop(key=key,
-                            image=jnp.pad(obs,
-                                          [[0, 0], [2, 2], [2, 2], [0, 0]],
-                                          'edge'),
-                            crop_sizes=obs.shape))
+            jax.image.resize(pix.random_crop(key=key,
+                            image=obs,
+                            crop_sizes=crop_shape), shape=obs_shape, method="linear"))
     return augs
 
 
@@ -164,14 +165,15 @@ def loss_curl(params_model: flax.core.frozen_dict.FrozenDict,
 
     # CURL loss
     logits = jnp.einsum("ai,bj,ij->ab", z1, z2, bilinear)
-    logits = logits - jnp.max(logits, axis=1)
+    # logits = logits - jnp.max(logits, axis=1)
     logits = nn.log_softmax(logits, axis=1)
 
     n_classes = logits.shape[0]
     # one_hot_labels = jax.nn.one_hot(jnp.arange(n_classes), num_classes=n_classes)
     one_hot_labels = jnp.eye(n_classes)
     
-    curl_loss =  -jnp.mean(jnp.sum(one_hot_labels * logits, axis=-1))
+    curl_loss = -jnp.mean(jnp.sum(one_hot_labels * logits, axis=-1))
+    import ipdb;ipdb.set_trace()
 
     return curl_loss, (curl_loss)
 

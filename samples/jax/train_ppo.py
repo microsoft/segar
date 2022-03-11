@@ -53,6 +53,7 @@ FLAGS = flags.FLAGS
 # Task
 flags.DEFINE_string("env_name", "empty-easy-rgb", "Env name")
 flags.DEFINE_integer("seed", 1, "Random seed.")
+flags.DEFINE_boolean("jit", True, "Jit?")
 flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
 flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
@@ -98,6 +99,8 @@ flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 
 
 def main(argv):
+    if not FLAGS.jit:
+        jax.config.update('jax_disable_jit', True)
     # Setting all rnadom seeds
     if FLAGS.seed == -1:
         seed = np.random.randint(100000000)
