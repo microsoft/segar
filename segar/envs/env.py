@@ -55,6 +55,14 @@ from segar.things import (
 )
 
 
+def parse_factor_lst(lst):
+    factor_lst = []
+    for el in lst:
+        if el == 'mass':
+            factor_lst.append(Mass)
+    return factor_lst
+
+
 class SEGAREnv(gym.Env):
     def __init__(
         self,
@@ -71,6 +79,7 @@ class SEGAREnv(gym.Env):
         save_path: str = "sim.state",
         action_max: float = 2,
         deterministic_visuals: bool = False,
+        factor_delete_list: list = [],
         seed: int = 123,
     ):
         self.resolution = resolution
@@ -89,7 +98,7 @@ class SEGAREnv(gym.Env):
                 "visual", "linear_ae", dist_name="baseline"
             )
             obs = RGBObservation(
-                resolution=self.resolution, config=visual_config
+                resolution=self.resolution, config=visual_config, filter_factors=parse_factor_lst(factor_delete_list)
             )
 
         init_config = {}
@@ -480,16 +489,12 @@ class SEGAREnv(gym.Env):
         if not _async:
             print("Making sync envs.")
             self.env = gym.vector.SyncVectorEnv(
-                [make_env for _ in range(num_envs)],
-                observation_space=self.observation_space,
-                action_space=self.action_space,
+                [make_env for _ in range(num_envs)]
             )
         else:
             print("Making async envs.")
             self.env = gym.vector.AsyncVectorEnv(
                 [make_env for _ in range(num_envs)],
-                observation_space=self.observation_space,
-                action_space=self.action_space,
                 shared_memory=True,
                 daemon=True,
             )

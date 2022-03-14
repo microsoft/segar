@@ -2,7 +2,7 @@ from models import MLP, TwinHeadModel
 from jax.random import PRNGKey
 from buffer import Batch
 from algo import (extract_latent_factors, get_transition, mse_loss,
-                  select_action, update_ppo)
+                  select_action, update_ppo, update_curl, state_update)
 from segar.envs.env import SEGAREnv
 import glob
 import importlib
@@ -38,7 +38,6 @@ def setup_packages():
 
 setup_packages()
 
-
 try:
     from azureml.core.run import Run
 except Exception as e:
@@ -54,12 +53,15 @@ FLAGS = flags.FLAGS
 # Task
 flags.DEFINE_string("env_name", "empty-easy-rgb", "Env name")
 flags.DEFINE_integer("seed", 1, "Random seed.")
+flags.DEFINE_boolean("jit", True, "Jit?")
 flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
 flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
 flags.DEFINE_integer("framestack", 1, "Number of frames to stack")
 flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
+flags.DEFINE_list("factor_delete_list", ['mass'],
+                  "List of factors to remove from observations.")
 # PPO
 flags.DEFINE_float("max_grad_norm", 10, "Max grad norm")
 flags.DEFINE_float("gamma", 0.999, "Gamma")
@@ -71,6 +73,10 @@ flags.DEFINE_float("clip_eps", 0.2, "Clipping range")
 flags.DEFINE_float("gae_lambda", 0.95, "GAE lambda")
 flags.DEFINE_float("entropy_coeff", 3e-4, "Entropy loss coefficient")
 flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
+# Representation learning objectives
+flags.DEFINE_string("rep_learn", "", "Aux losses: CURL")
+flags.DEFINE_float("tau_ema", 0.01, "EMA smoothing")
+flags.DEFINE_float("update_ema", 5, "Target update (every X grad steps)")
 # Ablations
 flags.DEFINE_boolean(
     "probe_latent_factors",
@@ -94,6 +100,8 @@ flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 
 
 def main(argv):
+    if not FLAGS.jit:
+        jax.config.update('jax_disable_jit', True)
     # Setting all rnadom seeds
     if FLAGS.seed == -1:
         seed = np.random.randint(100000000)
@@ -129,31 +137,32 @@ def main(argv):
     # Test environments always have the same number of test levels for
     # fair comparison across runs
     MAX_STEPS = 100
-    env = SEGAREnv(
-        FLAGS.env_name,
-        num_envs=FLAGS.num_envs,
-        num_levels=FLAGS.num_train_levels,
-        framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=MAX_STEPS,
-        _async=False,
-        deterministic_visuals=False,
-        seed=FLAGS.seed,
-        save_path=os.path.join(FLAGS.output_dir, run_name)
-    )
-    env_test = SEGAREnv(
-        FLAGS.env_name,
-        num_envs=1,
-        num_levels=FLAGS.num_test_levels,
-        framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=MAX_STEPS,
-        _async=False,
-        deterministic_visuals=False,
-        seed=FLAGS.seed + 1,
-        save_path=os.path.join(FLAGS.output_dir, run_name)
-    )
-    n_action = env.action_space[0].shape[-1]
+    env = SEGAREnv(FLAGS.env_name,
+                   num_envs=FLAGS.num_envs,
+                   num_levels=FLAGS.num_train_levels,
+                   framestack=FLAGS.framestack,
+                   resolution=FLAGS.resolution,
+                   max_steps=MAX_STEPS,
+                   _async=False,
+                   deterministic_visuals=False,
+                   factor_delete_list=FLAGS.factor_delete_list,
+                   seed=FLAGS.seed,
+                   save_path=os.path.join(FLAGS.output_dir, run_name))
+    env_test = SEGAREnv(FLAGS.env_name,
+                        num_envs=1,
+                        num_levels=FLAGS.num_test_levels,
+                        framestack=FLAGS.framestack,
+                        resolution=FLAGS.resolution,
+                        max_steps=MAX_STEPS,
+                        _async=False,
+                        deterministic_visuals=False,
+                        factor_delete_list=FLAGS.factor_delete_list,
+                        seed=FLAGS.seed + 1,
+                        save_path=os.path.join(FLAGS.output_dir, run_name))
+    try:
+        n_action = env.action_space.shape[-1]
+    except:
+        n_action = env.action_space[0].shape[-1]
 
     # Create PPO model, optimizer and buffer
     model = TwinHeadModel(
@@ -162,6 +171,16 @@ def main(argv):
         prefix_actor="policy",
         action_scale=1.0,
         add_latent_factors=FLAGS.add_latent_factors,
+        rep_learn=FLAGS.rep_learn,
+    )
+    
+    target = TwinHeadModel(
+        action_dim=n_action,
+        prefix_critic="vfunction",
+        prefix_actor="policy",
+        action_scale=1.0,
+        add_latent_factors=FLAGS.add_latent_factors,
+        rep_learn=FLAGS.rep_learn,
     )
 
     state = env.reset()
@@ -171,8 +190,10 @@ def main(argv):
             env.env.action_space.sample())
         latent_factors = extract_latent_factors(info)
         params_model = model.init(key, state, latent_factors)
+        params_target = target.init(key, state, latent_factors)
     else:
         params_model = model.init(key, state, None)
+        params_target = target.init(key, state, None)
         latent_factors = None
 
     tx = optax.chain(optax.clip_by_global_norm(FLAGS.max_grad_norm),
@@ -180,6 +201,11 @@ def main(argv):
     train_state = TrainState.create(apply_fn=model.apply,
                                     params=params_model,
                                     tx=tx)
+    tx_target = optax.chain(optax.clip_by_global_norm(FLAGS.max_grad_norm),
+                     optax.adam(FLAGS.lr, eps=1e-5))
+    train_state_target = TrainState.create(apply_fn=target.apply,
+                                    params=params_target,
+                                    tx=tx_target)
 
     # Optionally, create an MLP to probe latent factors
     if FLAGS.probe_latent_factors:
@@ -215,6 +241,8 @@ def main(argv):
     success_test_buf = deque(maxlen=10)
 
     sample_episode_acc = [state[0]]
+
+    grad_steps = 0
 
     for step in range(1, int(FLAGS.train_steps // FLAGS.num_envs + 1)):
         # Pick action according to PPO policy and update state
@@ -254,6 +282,7 @@ def main(argv):
 
         # Train once the batch is full
         if (step * FLAGS.num_envs) % (FLAGS.n_steps + 1) == 0:
+            grad_steps += 1
             data = batch.get()
             metric_dict, train_state, key = update_ppo(
                 train_state,
@@ -267,6 +296,21 @@ def main(argv):
                 FLAGS.critic_coeff,
                 key,
             )
+            metric_dict_aux = {}
+            if FLAGS.rep_learn == 'curl':
+                metric_dict_aux, train_state, key = update_curl(
+                    train_state,
+                    train_state_target,
+                    data,
+                    FLAGS.num_envs,
+                    FLAGS.n_steps,
+                    FLAGS.n_minibatch,
+                    FLAGS.epoch_ppo,
+                    FLAGS.clip_eps,
+                    FLAGS.entropy_coeff,
+                    FLAGS.critic_coeff,
+                    key,
+                )
 
             # Optionally, predict latent factors from observation
             if FLAGS.probe_latent_factors:
@@ -292,6 +336,8 @@ def main(argv):
                 factor_train_buf.append(per_factor_error)
 
             batch.reset()
+
+            metric_dict = {**metric_dict, **metric_dict_aux}
 
             renamed_dict = {}
             for k, v in metric_dict.items():
@@ -334,6 +380,11 @@ def main(argv):
             #                 sample_episode_acc, fps=4, format="gif")
             #         },
             #         step=FLAGS.num_envs * step)
+
+        if (grad_steps) % (FLAGS.update_ema + 1) == 0:
+            train_state_target = state_update(train_state,
+                                          train_state_target,
+                                          tau=FLAGS.tau_ema)
 
     # At the end of training, save model locally and on W&B
     model_dir = os.path.join(FLAGS.output_dir, run_name, "model_weights")
