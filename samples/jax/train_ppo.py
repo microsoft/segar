@@ -76,6 +76,7 @@ flags.DEFINE_float("critic_coeff", 0.1, "Value loss coefficient")
 # Representation learning objectives
 flags.DEFINE_string("rep_learn", "", "Aux losses: CURL")
 flags.DEFINE_float("tau_ema", 0.01, "EMA smoothing")
+flags.DEFINE_float("update_ema", 5, "Target update (every X grad steps)")
 # Ablations
 flags.DEFINE_boolean(
     "probe_latent_factors",
@@ -241,6 +242,8 @@ def main(argv):
 
     sample_episode_acc = [state[0]]
 
+    grad_steps = 0
+
     for step in range(1, int(FLAGS.train_steps // FLAGS.num_envs + 1)):
         # Pick action according to PPO policy and update state
         action_test, _, _, _, key = select_action(
@@ -279,6 +282,7 @@ def main(argv):
 
         # Train once the batch is full
         if (step * FLAGS.num_envs) % (FLAGS.n_steps + 1) == 0:
+            grad_steps += 1
             data = batch.get()
             metric_dict, train_state, key = update_ppo(
                 train_state,
@@ -340,11 +344,6 @@ def main(argv):
                 renamed_dict["metrics/%s" % k] = v
             wandb.log(renamed_dict, step=FLAGS.num_envs * step)
 
-            train_state_target = state_update(train_state,
-                                          train_state_target,
-                                          key='',
-                                          tau=FLAGS.tau_ema)
-
             wandb.log(
                 {
                     "returns/eprew_train":
@@ -381,6 +380,11 @@ def main(argv):
             #                 sample_episode_acc, fps=4, format="gif")
             #         },
             #         step=FLAGS.num_envs * step)
+
+        if (grad_steps) % (FLAGS.update_ema + 1) == 0:
+            train_state_target = state_update(train_state,
+                                          train_state_target,
+                                          tau=FLAGS.tau_ema)
 
     # At the end of training, save model locally and on W&B
     model_dir = os.path.join(FLAGS.output_dir, run_name, "model_weights")

@@ -65,23 +65,12 @@ def extract_latent_factors(infos: dict):
     return latent_features
 
 
-def state_update(online_state, target_state, key: str = '', tau: float = 1.):
+def state_update(online_state, target_state, tau: float = 1.):
     """ Update key weights as tau * online + (1-tau) * target
     """
-    if key == '':
-        p_o = online_state.params['params']
-        p_t = target_state.params['params']
-    else:
-        p_o = online_state.params['params'][key]
-        p_t = target_state.params['params'][key]
-    new_weights = target_update(p_o, p_t, tau)
-    if key != '':
-        new_weights = target_state.params['params'].copy(
-            add_or_replace={key: new_weights})
-    new_params = target_state.params.copy(
-        add_or_replace={'params': new_weights})
-
-    target_state = target_state.replace(params=new_params)
+    new_weights = target_update(online_state.params, target_state.params, tau)
+    
+    target_state = target_state.replace(params=new_weights)
     return target_state
 
 
@@ -173,7 +162,6 @@ def loss_curl(params_model: flax.core.frozen_dict.FrozenDict,
     one_hot_labels = jnp.eye(n_classes)
     
     curl_loss = -jnp.mean(jnp.sum(one_hot_labels * logits, axis=-1))
-    import ipdb;ipdb.set_trace()
 
     return curl_loss, (curl_loss)
 
