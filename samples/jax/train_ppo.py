@@ -2,7 +2,7 @@ from models import MLP, TwinHeadModel
 from jax.random import PRNGKey
 from buffer import Batch
 from algo import (extract_latent_factors, get_transition, mse_loss,
-                  select_action, update_ppo, update_curl, state_update)
+                  select_action, update_ppo, update_curl, update_spr, state_update)
 from segar.envs.env import SEGAREnv
 import glob
 import importlib
@@ -110,6 +110,13 @@ def main(argv):
     np.random.seed(seed)
     key = PRNGKey(seed)
 
+    # Return performance metric for HP tuning
+    try:
+        run_logger = Run.get_context()
+    except Exception as e:
+        print("Failed to import AzureML")
+        print(e)
+
     # If W&B is to be used - set job and group names
     if FLAGS.wandb_key is not None:
         os.environ["WANDB_API_KEY"] = FLAGS.wandb_key
@@ -185,6 +192,7 @@ def main(argv):
 
     state = env.reset()
     state_test = env_test.reset()
+    dummy_action = jnp.zeros(shape=(len(state), n_action))
     if FLAGS.add_latent_factors:
         next_state, reward, done, info = env.step(
             env.env.action_space.sample())
@@ -192,8 +200,8 @@ def main(argv):
         params_model = model.init(key, state, latent_factors)
         params_target = target.init(key, state, latent_factors)
     else:
-        params_model = model.init(key, state, None)
-        params_target = target.init(key, state, None)
+        params_model = model.init(key, state, None, dummy_action)
+        params_target = target.init(key, state, None, dummy_action)
         latent_factors = None
 
     tx = optax.chain(optax.clip_by_global_norm(FLAGS.max_grad_norm),
@@ -311,6 +319,20 @@ def main(argv):
                     FLAGS.critic_coeff,
                     key,
                 )
+            if FLAGS.rep_learn == 'spr':
+                metric_dict_aux, train_state, key = update_spr(
+                    train_state,
+                    train_state_target,
+                    data,
+                    FLAGS.num_envs,
+                    FLAGS.n_steps,
+                    FLAGS.n_minibatch,
+                    FLAGS.epoch_ppo,
+                    FLAGS.clip_eps,
+                    FLAGS.entropy_coeff,
+                    FLAGS.critic_coeff,
+                    key,
+                )
 
             # Optionally, predict latent factors from observation
             if FLAGS.probe_latent_factors:
@@ -365,6 +387,12 @@ def main(argv):
                 safe_mean([x for x in returns_test_buf]),
             ))
 
+            try:
+                run_logger.log("test_returns",
+                       safe_mean([x for x in returns_train_buf]))
+            except:
+                pass
+
             # Optionally, log a GIF of the agent's trajectory during training
 
             # if FLAGS.log_episodes:
@@ -403,15 +431,6 @@ def main(argv):
         ckpt = glob.glob(model_dir + "/checkpoint_*")[0]
         artifact.add_file(ckpt)
         run.log_artifact(artifact)
-
-    # Return performance metric for HP tuning
-    try:
-        run_logger = Run.get_context()
-        run_logger.log("test_returns",
-                       safe_mean([x for x in returns_train_buf]))
-    except Exception as e:
-        print("Failed to import AzureML")
-        print(e)
 
     return 0
 

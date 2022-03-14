@@ -155,8 +155,20 @@ class TwinHeadModel(nn.Module):
                                    kernel_init=default_mlp_init(),
                                    name="log_std_2")
 
+        if self.rep_learn == "spr":
+            self.action_net = nn.Dense(256,
+                                    kernel_init=default_mlp_init(),
+                                    name="spr_action_1")
+            self.project_net = nn.Dense(256,
+                                kernel_init=default_mlp_init(),
+                                name="spr_1")
+            self.predict_net = nn.Dense(256,
+                                kernel_init=default_mlp_init(),
+                                name="spr_2")
+            
+
     @nn.compact
-    def __call__(self, x, latent_factors):
+    def __call__(self, x, latent_factors, actions=None):
         """
         Classical PPO with IMPALA encoder and optionally with augmented latent
         representation using true factor embeddings.
@@ -202,6 +214,15 @@ class TwinHeadModel(nn.Module):
                 'bilinear',
                 default_mlp_init(),  # Initialization function
                 (z.shape[-1], z.shape[-1]))
+        elif self.rep_learn == 'spr':
+            if actions is not None:
+                z_action = self.activation_fn(self.action_net(actions))
+            else:
+                z_action = jnp.zeros(shape=(len(z), 256))
+            z_tmp = jnp.concatenate([z, z_action], axis=1)
+            z_tilde = self.activation_fn(self.project_net(z_tmp))
+            z_hat = self.activation_fn(self.predict_net(z_tilde))
+            extra = (z_tilde, z_hat)
         else:
             extra = None
 

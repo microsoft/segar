@@ -88,6 +88,17 @@ Losses:
 - CURL
 """
 
+def l2_normalize(A, axis=-1, eps=1e-4):
+    return A * jax.lax.rsqrt((A * A).sum(axis=axis, keepdims=True) + eps)
+
+
+def cos_loss(p, z):
+    # z = jax.lax.stop_gradient(z)
+    p = l2_normalize(p, axis=1)
+    z = l2_normalize(z, axis=1)
+    # dist = 2 - 2 * jnp.sum(p * z, axis=1)
+    return jnp.mean(jnp.sum((p-z)**2,axis=-1),axis=0)
+
 
 def mse_loss(params: flax.core.frozen_dict.FrozenDict, apply_fn: Callable,
              X: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
@@ -164,6 +175,22 @@ def loss_curl(params_model: flax.core.frozen_dict.FrozenDict,
     curl_loss = -jnp.mean(jnp.sum(one_hot_labels * logits, axis=-1))
 
     return curl_loss, (curl_loss)
+
+
+def loss_spr(params_model: flax.core.frozen_dict.FrozenDict,
+              apply_fn: Callable[..., Any],
+              params_target: flax.core.frozen_dict.FrozenDict,
+              apply_fn_target: Callable[..., Any], state_t: jnp.ndarray,
+              state_tp1: jnp.ndarray, action_t: jnp.ndarray, key: PRNGKey) -> jnp.ndarray:
+    state_t = state_t.astype(jnp.float32) / 255.
+    state_tp1 = state_tp1.astype(jnp.float32) / 255.
+
+    _, _, (zt, (z_tilde_t, z_hat_t)) =  apply_fn(params_model, state_t, None, action_t)
+    _, _, (zt, (z_tilde_tp1, z_hat_tp1)) =  apply_fn_target(params_target, state_tp1, None, None)
+
+    spr_loss = cos_loss(z_hat_t, z_tilde_tp1)
+
+    return spr_loss, (spr_loss)
 
 
 @partial(jax.jit, static_argnames=("sample"))
@@ -359,5 +386,69 @@ def update_curl(train_state: TrainState, train_state_target: TrainState,
     total_loss, (curl_loss) = total_loss
 
     avg_metrics_dict['curl_loss'] += curl_loss.mean()
+
+    return avg_metrics_dict, train_state, rng
+
+
+@partial(jax.jit,
+         static_argnames=("num_envs", "n_steps", "n_minibatch", "epoch_ppo",
+                          "clip_eps", "entropy_coeff", "critic_coeff"))
+def update_spr(train_state: TrainState, train_state_target: TrainState,
+                batch: Tuple, num_envs: int, n_steps: int, n_minibatch: int,
+                epoch_ppo: int, clip_eps: float, entropy_coeff: float,
+                critic_coeff: float,
+                rng: PRNGKey) -> Tuple[dict, TrainState, PRNGKey]:
+    """
+    SPR aux loss, performs data augmentation inside this function.
+    """
+    (state, action, reward, log_pi_old, value, target, gae, task_ids,
+     latent_factors) = batch
+
+    size_batch = num_envs * n_steps
+    assert size_batch % n_minibatch == 0
+    size_minibatch = size_batch // n_minibatch
+
+    idxes = jnp.arange(size_batch)
+
+    avg_metrics_dict = defaultdict(int)
+
+    if latent_factors is not None:
+        latent_factors = flatten_dims(latent_factors)
+
+    for _ in range(epoch_ppo):
+        rng, key = jax.random.split(rng)
+        for mb in range(n_minibatch):
+            idx = idxes[mb * size_minibatch:(mb+1)*size_minibatch]
+
+            states_t = flatten_dims(state[:-1, idx])
+            actions_t = flatten_dims(action[:-1, idx])
+            states_tp1 = flatten_dims(state[1:, idx])
+            # actions_tp1 = flatten_dims(action[1:, idx])
+
+            states_t = random_crop(states_t, key, n_augs=1)[0]
+            _, key = jax.random.split(key)
+            states_tp1 = random_crop(states_tp1, key, n_augs=1)[0]
+            _, key = jax.random.split(key)
+
+            if latent_factors is not None:
+                latent_factors_ = latent_factors[idx]
+            else:
+                latent_factors_ = latent_factors
+
+            grad_fn = jax.value_and_grad(loss_spr, has_aux=True)
+            total_loss, grads = grad_fn(train_state.params,
+                                        train_state.apply_fn,
+                                        train_state_target.params,
+                                        train_state_target.apply_fn,
+                                        state_t=states_t,
+                                        state_tp1=states_tp1,
+                                        action_t=actions_t,
+                                        key=key)
+            grads = jax.tree_util.tree_map(jnp.nan_to_num, grads)
+            train_state = train_state.apply_gradients(grads=grads)
+
+    total_loss, (spr_loss) = total_loss
+
+    avg_metrics_dict['spr_loss'] += spr_loss.mean()
 
     return avg_metrics_dict, train_state, rng
