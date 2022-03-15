@@ -7,7 +7,7 @@ SEGAR provides two implementations of PPO: a parallelized PPO built on top of Ra
 
 ## Running MiniPPO on SEGAR
 
-To run MiniPPO on a sample RPP task, execute the following command:
+To run MiniPPO on a sample SEGAR task, execute the following command:
 
 ```
 python train_ppo.py --env_name="emptyx0-easy-rgb" --train_steps=1_000_000 \

@@ -32,7 +32,7 @@ observations = RGBObservation(resolution=256, config=vis_config)
 
 Next, let's make the PuttPutt initialization and task. There are some
 convenient configs useful for setting up the initialization object. These
-can be found at [puttputt.py](https://github.com/microsoft/roboputtputt/blob/main/segar/tasks/puttputt.py)
+can be found at [puttputt.py](https://github.com/microsoft/segar/blob/main/segar/tasks/puttputt.py)
 for more details.
 
 
@@ -46,6 +46,7 @@ puttputt = PuttPutt(initialization=initialization)
 
 Now build the MDP, initialize, and generate some trajectories.
 
+
 ```python
 from IPython.display import Image, display
 
@@ -56,7 +57,7 @@ mdp = MDP(observations, puttputt)
 imgs, trajectories = rollout(mdp)
 
 save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/puttputt_sample.gif')
-Image(open('../../resources/readme-images/segar/tasks/puttputt_sample.gif', 'rb').read())
+Image(open('../../resources/readme-images/segar/tasks/puttputt_sample.gif','rb').read())
 ```
 
 
@@ -71,8 +72,9 @@ Image(open('../../resources/readme-images/segar/tasks/puttputt_sample.gif', 'rb'
 Note this is what your agent sees. Note that we drew a initialization
 configuation from a preset, we can define our own, for instance if we want
 the golf ball and goal in different locations. The
-[initialization module](https://github.com/microsoft/roboputtputt/blob/main/segar/mdps/initializations.py)
+[initialization module](https://github.com/microsoft/segar/blob/main/segar/mdps/initializations.py)
 has a convenient typing for arena locations:
+
 
 ```python
 from copy import deepcopy
@@ -102,10 +104,10 @@ puttputt_right = PuttPutt(initialization=initialization_right)
 mdp_right = MDP(observations, puttputt_right)
 
 for i in range(3):
- imgs, trajectories = rollout(mdp_left)
- out_path = f'../../resources/readme-images/segar/tasks/puttputt_left_{i}.gif'
- save_gif(imgs, out_path=out_path)
- display(Image(open(out_path, 'rb').read()))
+    imgs, trajectories = rollout(mdp_left)
+    out_path = f'../../resources/readme-images/segar/tasks/puttputt_left_{i}.gif'
+    save_gif(imgs, out_path=out_path)
+    display(Image(open(out_path,'rb').read()))
 ```
 
     [Position <- RandomMiddleLocation, Position <- RandomBottomLocation (if is GolfBall), Position <- RandomTopLocation (if is GoalTile), Shape <- RandomConvexHull(p=[[-0.43854748 -0.11083382]
@@ -137,12 +139,13 @@ for i in range(3):
 
 All on the left. Now for the right.
 
+
 ```python
 for i in range(3):
- imgs, trajectories = rollout(mdp_right)
- out_path = f'../../resources/readme-images/segar/tasks/puttputt_right_{i}.gif'
- save_gif(imgs, out_path=out_path)
- display(Image(open(out_path, 'rb').read()))
+    imgs, trajectories = rollout(mdp_right)
+    out_path = f'../../resources/readme-images/segar/tasks/puttputt_right_{i}.gif'
+    save_gif(imgs, out_path=out_path)
+    display(Image(open(out_path,'rb').read()))
 ```
 
 
@@ -170,6 +173,7 @@ Invisiball is a variant of PuttPutt, but with two differences:
 * There are always Charger objects. This is because we need to guarantee
 some long-range forces are in play.
 
+
 ```python
 from segar.tasks.puttputt import Invisiball
 
@@ -184,7 +188,7 @@ mdp = MDP(observations, invisiball)
 imgs, trajectories = rollout(mdp)
 
 save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/invisiball_sample.gif')
-Image(open('../../resources/readme-images/segar/tasks/invisiball_sample.gif', 'rb').read())
+Image(open('../../resources/readme-images/segar/tasks/invisiball_sample.gif','rb').read())
 ```
 
 
@@ -200,6 +204,7 @@ Image(open('../../resources/readme-images/segar/tasks/invisiball_sample.gif', 'r
 
 Billiards is what you would expect: control the cue ball, get the balls into
  the holes, avoid scratching.
+
 
 ```python
 from segar.tasks.billiards import Billiards, BilliardsInitialization
@@ -217,7 +222,7 @@ mdp = MDP(observations, billiards)
 imgs, trajectories = rollout(mdp)
 
 save_gif(imgs, out_path='../../resources/readme-images/segar/tasks/billiards_sample.gif')
-Image(open('../../resources/readme-images/segar/tasks/billiards_sample.gif', 'rb').read())
+Image(open('../../resources/readme-images/segar/tasks/billiards_sample.gif','rb').read())
 ```
 
     {'numbers': [(CueBall, 1)], 'priors': [Size <- GaussianNoise (if is CueBall), Size <- 0.2 (if is Ball), Mass <- 1.0 (if is Ball), Size <- 0.3 (if is Hole), Position <- RandomBottomLocation (if is CueBall)]}
