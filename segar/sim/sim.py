@@ -114,9 +114,7 @@ FactorOrder = tuple[list[Type[Factor]], ...]
 
 
 class Simulator:
-    """The simulator.
-
-    """
+    """The simulator."""
 
     def __init__(
         self,
@@ -265,9 +263,7 @@ class Simulator:
         self._valid_ep_rules = None
 
     def reset(self) -> None:
-        """Resets all of the object, tiles, and walls.
-
-        """
+        """Resets all of the object, tiles, and walls."""
 
         self._things.clear()
         self._sorted_things = None
@@ -369,9 +365,7 @@ class Simulator:
         return self._walls
 
     def sort_things(self) -> None:
-        """Sorts the thing dictionary according to the Order factor.
-
-        """
+        """Sorts the thing dictionary according to the Order factor."""
         sim_things = self.things_with_factor(Order)
         unordered_things = self.things_without_factor(Order)
         sorted_things = dict(
@@ -451,7 +445,7 @@ class Simulator:
         return dict((tid, thing.state) for tid, thing in self.things.items())
 
     def change_thing_state(
-        self, thing_id: Union[ThingID, ID], factor_type: Type[Factor], value: Any,
+        self, thing_id: Union[ThingID, ID], factor_type: Type[Factor], value: Any
     ) -> None:
         """Change an thing state.
 
@@ -600,7 +594,7 @@ class Simulator:
         things_to_apply_on = things_to_apply_on or self.things.values()
 
         rules_and_args = self.get_valid_rules(
-            rules_to_apply=rules_to_apply, things_to_apply_on=things_to_apply_on,
+            rules_to_apply=rules_to_apply, things_to_apply_on=things_to_apply_on
         )
         final_outcomes = self.get_final_outcomes(rules_and_args)
 
@@ -1072,9 +1066,9 @@ class Simulator:
     # API for thing factors
 
     def add_force(
-        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray],
+        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray]
     ) -> None:
-        """ Apply a force to an object that results in a velocity that's
+        """Apply a force to an object that results in a velocity that's
         relative to the object's mass
 
         Results in a change to the object's velocity.
@@ -1097,9 +1091,9 @@ class Simulator:
             raise KeyError("Force can only be added to objects with mass " "and velocity.")
 
     def add_velocity(
-        self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray],
+        self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray]
     ) -> None:
-        """ Apply a velocity to an object. This is cumulative with the
+        """Apply a velocity to an object. This is cumulative with the
             object's existing speed.
 
         (e.g. if the object's current velocity is (1,.5), then adding (-1, 0)
@@ -1400,18 +1394,14 @@ class Simulator:
 
     @timeit
     def _pre_collision_step(self):
-        """Calculates dynamics and then steps forward.
-
-        """
+        """Calculates dynamics and then steps forward."""
         # this is as cryptic as it gets... this calls the 4 methods of every
         # object in order
         self._update_histories()
         self.apply_rules()
 
     def limit_velocities(self) -> None:
-        """Clips velocity norm according to the global max.
-
-        """
+        """Clips velocity norm according to the global max."""
         for thing in self.things.values():
             if thing.has_factor(Velocity):
                 v = thing[Velocity]
@@ -1424,9 +1414,7 @@ class Simulator:
 
     @timeit
     def step(self):
-        """ Execute a single simulation step.
-
-        """
+        """Execute a single simulation step."""
 
         # Update all the factors except Position
         self._pre_collision_step()
@@ -1465,9 +1453,7 @@ class Simulator:
 
 
 def states_are_equal(s1, s2):
-    """Checks if two state dictionaries are equal.
-
-    """
+    """Checks if two state dictionaries are equal."""
     if s1.keys() != s2.keys():
         return False
     for k in s1.keys():

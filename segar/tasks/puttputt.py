@@ -391,3 +391,13 @@ class Invisiball(PuttPutt):
         """
         self.sim.add_force(self.golfball_id, force)
         self.sim.change_thing_state(self.golfball_id, Visible, False)
+
+
+class PuttPuttNegDist(PuttPutt):
+    def reward(self, state: dict) -> float:
+        """same as original but with neg dist, not neg squared dist"""
+        ball_state = state["things"][self.golfball_id]
+        dead_reward = dead_reward_fn(ball_state, self._dead_reward)
+        distance = self.sim.l2_distance(self.golfball_id, self.goal_id)
+        distance_reward = -distance
+        return dead_reward + distance_reward

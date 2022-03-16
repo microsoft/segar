@@ -69,29 +69,40 @@ def load_sim_from_file(path):
 task_names = ["empty", "objects", "tiles"]
 difficulties = ["easy", "medium", "hard"]
 observations = ["rgb"]
+task_classes = [("v0", "PuttPutt"), ("v1", "PuttPuttNegDist")]
 
-for task in task_names:
-    for difficulty in difficulties:
-        for observation in observations:
-            for n_entities in [1, 2, 3]:
-                if task == "empty" and n_entities == 1:
-                    env_name = f"Segar-{task}-{difficulty}-{observation}-v0"
-                    # print(env_name)
-                    register(
-                        id=env_name,
-                        entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": f"{task}-{difficulty}-{observation}"},
-                        max_episode_steps=100,
-                    )
-                elif task != "empty":
-                    env_name = f"Segar-{task}x{n_entities}-{difficulty}-" f"{observation}-v0"
-                    # print(env_name)
-                    register(
-                        id=env_name,
-                        entry_point="segar.envs:SEGARSingleEnv",
-                        kwargs={"env_name": f"{task}x{n_entities}-{difficulty}-" f"{observation}"},
-                        max_episode_steps=100,
-                    )
+for task_version, task_class in task_classes:
+    for task in task_names:
+        for difficulty in difficulties:
+            for observation in observations:
+                for n_entities in [1, 2, 3]:
+                    if task == "empty" and n_entities == 1:
+                        env_name = f"Segar-{task}-{difficulty}-{observation}-{task_version}"
+                        # print(env_name)
+                        register(
+                            id=env_name,
+                            entry_point="segar.envs:SEGARSingleEnv",
+                            kwargs={
+                                "env_name": f"{task}-{difficulty}-{observation}",
+                                "task_class": task_class,
+                            },
+                            max_episode_steps=100,
+                        )
+                    elif task != "empty":
+                        env_name = (
+                            f"Segar-{task}x{n_entities}-{difficulty}-"
+                            f"{observation}-{task_version}"
+                        )
+                        # print(env_name)
+                        register(
+                            id=env_name,
+                            entry_point="segar.envs:SEGARSingleEnv",
+                            kwargs={
+                                "env_name": f"{task}x{n_entities}-{difficulty}-" f"{observation}",
+                                "task_class": task_class,
+                            },
+                            max_episode_steps=100,
+                        )
 
 # Current Envs (update as needed)
 # Segar-empty-easy-rgb-v0
@@ -115,3 +126,25 @@ for task in task_names:
 # Segar-tilesx1-hard-rgb-v0
 # Segar-tilesx2-hard-rgb-v0
 # Segar-tilesx3-hard-rgb-v0
+
+# Segar-empty-easy-rgb-v1
+# Segar-empty-medium-rgb-v1
+# Segar-empty-hard-rgb-v1
+# Segar-objectsx1-easy-rgb-v1
+# Segar-objectsx2-easy-rgb-v1
+# Segar-objectsx3-easy-rgb-v1
+# Segar-objectsx1-medium-rgb-v1
+# Segar-objectsx2-medium-rgb-v1
+# Segar-objectsx3-medium-rgb-v1
+# Segar-objectsx1-hard-rgb-v1
+# Segar-objectsx2-hard-rgb-v1
+# Segar-objectsx3-hard-rgb-v1
+# Segar-tilesx1-easy-rgb-v1
+# Segar-tilesx2-easy-rgb-v1
+# Segar-tilesx3-easy-rgb-v1
+# Segar-tilesx1-medium-rgb-v1
+# Segar-tilesx2-medium-rgb-v1
+# Segar-tilesx3-medium-rgb-v1
+# Segar-tilesx1-hard-rgb-v1
+# Segar-tilesx2-hard-rgb-v1
+# Segar-tilesx3-hard-rgb-v1
