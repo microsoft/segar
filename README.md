@@ -4,88 +4,85 @@
 [![Test environments](https://github.com/microsoft/segar/actions/workflows/test_environments.yml/badge.svg)](https://github.com/microsoft/segar/actions/workflows/test_environments.yml)
 
 # Overview
-**The Sandbox Environment for Generalizable Agent Research** (SEGAR) is a suite of research tools for studying *Interactive 
-Representation Learning* (IRepL). IRepL is the study of the interplay between an agent's 
-representation learning in an environment and the agent's interactions with this environment. 
-As a field of study, IRepL researches two key questions: *why* and *how* do interactions help representation learning (RepL)?
-IRepL is distinct from but related to Reinforcement Learning (RL), focusing on how 
-advances in RL can benefit representation learning and visa versa. 
-
-The Sandbox Environment for Generalizable Agent Research provides a setting for studying IRepL in the context of visual observations.
-It comes with a physics simulator that models dynamics under phenomena such 
-as charge, magnetism, collisions, etc.
-As such, SEGAR is relevant to researching RepL and RL for robotics , 
-although we anticipate lessons learned with SEGAR to be useful in a number of 
-domains.
-SEGAR gives an experiment designer rich control over defining benchmark MDPs, making it easy to construct 
-custom environments and tasks. Finally, SEGAR was *designed with generalization in mind*, so the generative factors of 
-SEGAR environments (such as the charge, mass, or position of objects) can be 
-distributional. 
-This allows an experimenter to set and quantify generalization difficulty in terms of 
-a distance between training and test task distributions.
+**The Sandbox Environment for Generalizable Agent Research** (SEGAR) is a suite of research 
+tools for studying generalization in settings that involve Learning from Interactive Data (LfID). 
+LfID broadly is any settings where an agent is trained on interactive data to perform 
+optimally on a sequential decision-making task, including offline / online RL, IL, Goal-Conditioned 
+RL, Meta-RL, etc, and we believe SEGAR will be useful in any of these settings.
+SEGAR comes with the following features:
+- A controllable physics simulator that can be used to model dynamics under a 
+flexible set of physical phenomena the designer chooses, such as those involving charge, magnetism, 
+collisions, etc.
+- The experiment designer has rich control over defining benchmark MDPs, making it easy to
+construct custom environments and tasks. 
+- Providing transparent and intuitive control over variation in the environment, implemented in 
+  a way to allow the researcher to precisely specify the settings that an agent is trained or tested in.
+- Control is in terms of distributions of parameters that determine that task, which also makes it possible to quantitatively measure between tasks, sets of tasks, and 
+their distributions.
+- Adds much needed accountability to LfID generalization research, as these measures can be 
+used to directly gauge the nature and difficulty of the generalization tasks.
 
 ![Putt Putt](resources/readme-images/puttputt_example.gif)
 ![Billiards](resources/readme-images/billiards_example.gif)
 ![Invisiball](resources/readme-images/invisiball_example.gif)
 
-Details on code and tutorials can be found [here](https://github.com/microsoft/segar/tree/main/segar).
+Details on code and tutorials can be found 
+[here](https://github.com/microsoft/segar/tree/main/segar).
 
 ## Background and Motivation
-Throughout most of ML history, progress in areas that deal 
-with high-dimensional weakly structured inputs -- chiefly computer vision 
-(CV) and natural language processing (NLP) -- has relied on feature 
-engineering. 
-A major role of constructing low-dimensional features has been in 
-*generalizing* knowledge across tasks, thereby enabling successful 
-use of CV and NLP technology even in settings with scarce task-specific 
-data. 
-Deep learning has revolutionized CV and NLP by supplanting feature 
-engineering with its more scalable and data-driven version, 
-*representation learning*. 
+In settings that involve training on i.i.d. data, such as classification, regression, generation 
+tasks, etc, regardless of the domain of the problem, generalization is a central criteria to an 
+algorithm's success.
+Success of resulting models hinges on good performance across variation in the data, whether 
+representing in-distribution or out-of-distribution tasks.
 
+i.i.d. supervised learning settings rely heavily on annotation for formulation of experiments to 
+create splits that are representative of some task the designer has in mind.
+Beyond the common criteria of generalizing from a limited number of training examples, 
+annotation can challenge a model's ability to generalize from a few examples (e.g., few-shot 
+learning), from no examples (e.g., zero-shot learning), etc.
 
-Encouraged by the impact of representation learning on CV, researchers have 
-been attempting to replicate it in two related areas -- robotics and RL with visual observations. Despite some successes, the effect of 
-representation learning on these fields has been more modest. 
-In our opinion, this status quo is for the following reasons:
+For interactive settings like RL or IL, annotation is far less available nor used.
+Benchmarks such as Procgen, Robosuite, CausalWorld, etc all carry different traits that make it 
+substantially easier to evaluate whether algorithms generate generalizable agents or not than 
+the most popular benchmark of all, Atari.
+However, we believe that existing benchmarks are missing one or more of the existing 
+critical or useful features:
 
-- Successful decision-making in RL and robotics often relies on knowing 
-  latent features such as object mass as fragility. Such **statically 
-  unobservable features** can't be detected from a single image, because 
-  they are only weakly reflected in object appearance, or not at all.
+- Access to and control over all underlying factors of the environment, their distributions, and 
+their samples.
+- Access to and control over all transition functions or rules of the environment.
+- An interface for creating interactive tasks that is intuitive, extensible, and customizable.
+- A simulator that is inexpensive to run on accessible hardware. 
+- A framework for measuring experiments, such as on distributions between sets of tasks (e.g., 
+  across train/test sets).
   
-- Many representation learning techniques, and even representations such as 
-  pretrained ResNet, that have been tried in RL and robotics were 
-  transplanted without modification from computer vision literature and 
-  operated on individual static images. As a result, these approaches fail 
-  to extract crucial statically unobservable features.
-  
-- **Interactive representation learning** (IRepL) exploits 
-  *multimodality* in robotics and RL data by extracting features from 
-  sequences of observation images and actions and, in principle, can derive 
-  statically unobservable features. However, despite a lot of recent IRepL literature, IRepL research is still in its infancy. Connections 
-  between changes in statically unobservable features and representation 
-  generalization are poorly understood as well.
-  
-- Progress towards such an understanding has been checked by the lack of 
-  benchmarks where researchers can vary the values of crucial unobservable 
-  features across tasks in a controlled fashion, measure the effect of 
-  these changes on generalization, and play with the degree of correlation 
-  between observable and unobservable features.  
-  
-Thus, a key step towards making progress towards representation learning in 
-sequential decision-making scenarios is creating a set of benchmarks that would 
-enable controlled, informative experiments in this research ares. 
-**The Sandbox Environment for Generalizable Agent Research**, the environment suite we present here, serves exactly 
-that purpose.
+We developed the SEGAR to bring all of these components into one place.
+SEGAR is designed to be customizable and community-driven, allowing for measurable 
+extensibility on generalization experimentation.
+While SEGAR is customizable, it comes with a built-in "physics", such as those involving charge,
+magnetism, collisions, etc., as well as built-in tasks for studying generalization and measures 
+on those tasks which we believe to be a useful start for evaluating generalization experiments 
+in LfID.
+It provides a simple API for creating and evaluating experiments for research towards 
+generalizable agents along numerous axes, from the structure of the state space, the rules by 
+which states change, what and how the agent sees (e.g., visual features for pixel-based 
+observations, partial observability, etc), and the overall task structure.
+Finally, as we believe that studying the representation of interactive agents will be crucial 
+towards developing better algorithms that yield generalizable agents, we provide built-in 
+measures on the agent's representation as well based on the mutual information between its 
+representations and the underlying factors.
+Note that, while we provide these built-in tasks and measures, SEGAR is designed from the 
+ground up to be customizable and extensible in nearly any way, allowing the research community 
+to design new tasks with novel components and measures.
 
 ## What does SEGAR offer that isn't already offered in benchmark *X*?
 
 There are a number of interesting and useful benchmarks available for 
 training representations through interaction. SEGAR's key distinguishing feature -- which we 
-believe to be crucial for making substantial progress in IRepL -- is **giving researchers full 
-control over constructing the training and test task distributions for answering specific 
-representation learning questions the researchers are interested in**. Namely:
+believe to be crucial for making substantial progress in generalization in LfID -- is **giving 
+researchers full  control over constructing the training and test task distributions for 
+answering specific representation learning questions the researchers are interested in**. Namely:
 
 * __SEGAR allows an experiment designer to inspect and modify all components of an environment MDP.__ This includes:
 
@@ -118,48 +115,21 @@ representation learning questions the researchers are interested in**. Namely:
 
 * __SEGAR is lightweight__. Some physics-based benchmark suites, e.g., [dm_control](https://github.com/deepmind/dm_control), also provide a significant degree of control
   over environment design. However, 3D physics simulation makes them computationally expensive. SEGAR is based on the insight that most questions
-  about representation learning from images are applicable just as well in a set of lightweight 2D environments that can be tested on quickly to make progress in IRepL and related areas.
+  about representation learning from images are applicable just as well in a set of lightweight 
+  2D environments that can be tested on quickly to make progress in generalization and related 
+  areas.
 
 
 
 ## Research Questions and Topics
 
 
-### When and how does interactivity help in representation learning?
+### How can we train generalizable agents?
 
-- What properties of an environment and a task in it determine whether we need to
-  infer statically unobservable state features (and hence use IRepL)? 
-
-- What properties of a task distribution necessitate learning *all* statically unobservable features in the MDP's generative model, such as masses and charges of all objects?
-
-- Does *interactive* RepL provide an edge to models ultimately meant for *static* tasks such as 
-  classification and segmentation, versus traditional RepL methods that use static i.
-  i.d. data?
-  
-- How do representations trained on static data differ from those learned 
-  from interactive data?
-  
-
-
-### How can IRepL help in RL?
-
-- Can we develop better algorithms for learning statically unobservable 
-  features relevant to sequential decision-making?
-  
-- How can we most effectively learn the part of the underlying causal graph of the MDP, including statically unobservable variables, relevant to learning (near-)optimal policies?
-
-- How can we exploit RepL to learn better policies, better interventions, and 
-  better exploration policies for agent learning?
-
-- What are the roles of priors in unsupervised representation learning when 
-  data is drawn from interactions that depend on said representations?
-
-- How can IRepL make the most use of *offline* interaction data and thereby help offline RL algorithms?
-
-
-### How can IRepL help with generalization?
-
-We informally say that a representation generalizes well from a training to a test task distribution if it allows learning (or transferring, in the case of zero-shot generalization) a near-optimal test distribution policy that is linear in the representation's features. Some of the relevant questions that SEGAR facilitates studying are: 
+We informally say that a representation generalizes well from a training to a test task 
+distribution if it allows learning (or transferring, in the case of zero-shot generalization) a 
+near-optimal test distribution policy that is linear in the representation's features. Some of 
+the relevant questions that SEGAR facilitates studying are: 
 
 - How do we learn representations that generalize across specific kinds 
   of differences between training and test task distributions?
@@ -169,9 +139,39 @@ We informally say that a representation generalizes well from a training to a te
   across various differences between training and test task distributions?
 
 - What properties of training and test task distribution determine whether we need to
-  infer statically unobservable state features (and hence use IRepL)? E.g., inferring 
-  the charge of colliding metal balls may or may not be important for a generalizable representation for predicting their future positions,
-  depending on how small their masses can be in the test task distribution.
+  infer statically unobservable state features? E.g., inferring the charge of colliding metal 
+  balls may or may not be important for a generalizable representation for predicting their 
+  future positions, depending on how small their masses can be in the test task distribution.
+
+
+### When and how does interactivity help in representation learning and visa-versa?
+
+- What properties of an environment and a task in it determine whether we need to
+  infer statically unobservable state features? 
+
+- What properties of a task distribution necessitate learning *all* statically unobservable 
+  features in the MDP's generative model, such as masses and charges of all objects?
+
+- Does *interactive* RepL provide an edge to models ultimately meant for *static* tasks such as 
+  classification and segmentation, versus traditional RepL methods that use static i.
+  i.d. data?
+  
+- How do representations trained on static data differ from those learned 
+  from interactive data?
+
+- Can we develop better algorithms for learning statically unobservable 
+  features relevant to sequential decision-making?
+  
+- How can we most effectively learn the part of the underlying causal graph of the MDP,
+  including statically unobservable variables, relevant to learning (near-)optimal policies?
+
+- How can we exploit RepL to learn better policies, better interventions, and 
+  better exploration policies for agent learning?
+
+- What are the roles of priors in unsupervised representation learning when 
+  data is drawn from interactions that depend on said representations?
+
+
 
   
 
@@ -181,12 +181,18 @@ We informally say that a representation generalizes well from a training to a te
   conda create -n segar pip python=3.9
   conda activate segar
   ```
-- Clone the current repo and install it in editable mode:
+
+- Install from PyPI for the public release:
+  ```
+  pip install segar
+  ```
+- Or clone the current repo and install it for the latest release:
   ```
   git clone https://github.com/microsoft/segar.git
   cd segar
   pip install -e .
   ```
+
 - For running RL samples (using rllib):
   ```
   pip install -e '.[rl]'
