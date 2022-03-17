@@ -46,6 +46,7 @@ def main(argv):
     probe_mine = 'mine' in FLAGS.probes
     probe_ks = 'ks' in FLAGS.probes
     probe_mass = 'mass' in FLAGS.probes
+    probe_spr = 'spr' in FLAGS.probes
     MAX_STEPS = 100
     """
     Load the pre-trained PPO model
@@ -607,11 +608,11 @@ def main(argv):
                             for fs in [1, 4]:
                                 if task == 'empty':
                                     env_name = "%s-%s-rgb" % (task, difficulty)
-                                    prefix = "checkpoint_%s_%s_%d_%s_%d" % (
+                                    prefix = "checkpoint_%s_%s_%d_%s_%d_" % (
                                         task, difficulty, num_levels, mass, fs)
                                 else:
                                     env_name = "%sx1-%s-rgb" % (task, difficulty)
-                                    prefix = "checkpoint_%sx1_%s_%d_%s_%d" % (
+                                    prefix = "checkpoint_%sx1_%s_%d_%s_%d_" % (
                                         task, difficulty, num_levels, mass, fs)
                                 ckpt_path = glob.glob(
                                     os.path.join(FLAGS.model_dir, prefix + '*'))
@@ -630,7 +631,7 @@ def main(argv):
                                         env_train = SEGAREnv(env_name,
                                                             num_envs=num_envs,
                                                             num_levels=num_levels,
-                                                            framestack=1,
+                                                            framestack=fs,
                                                             resolution=64,
                                                             max_steps=MAX_STEPS,
                                                             _async=False,
@@ -639,7 +640,7 @@ def main(argv):
                                         env_test = SEGAREnv(env_name,
                                                             num_envs=num_envs,
                                                             num_levels=num_test_levels,
-                                                            framestack=1,
+                                                            framestack=fs,
                                                             resolution=64,
                                                             max_steps=MAX_STEPS,
                                                             _async=False,
@@ -660,7 +661,9 @@ def main(argv):
                                                         loaded_state,
                                                         rng,
                                                         n_rollouts=FLAGS.n_rollouts)
-
+                                        zs_train = [z[0] for z in zs_train]
+                                        zs_test = [z[0] for z in zs_test]
+                                        
                                         X_train = np.array(zs_train).reshape(
                                             -1, zs_train[0].shape[-1])
                                         Z_train = np.array(factors_train).reshape(
@@ -682,22 +685,26 @@ def main(argv):
                                         mi_lb_train, mi_lb_test = MINE(
                                             mine_net, opt, X_train, Z_train, X_test,
                                             Z_test, max_epochs=25)
-
+                                        # import ipdb;ipdb.set_trace()
                                         mi_df.append(
                                             pd.DataFrame({
+                                                'returns':
+                                        np.concatenate(
+                                            [returns_train, returns_test],
+                                            axis=0),
                                                 'JSD_MI':
-                                                np.concatenate([mi_lb_train['jsd_mi/train'], mi_lb_test['jsd_mi/test']], 0),
+                                                np.concatenate([[mi_lb_train['jsd_mi/train'][-1] for _ in range(FLAGS.n_rollouts)], [mi_lb_test['jsd_mi/test'][-1] for _ in range(FLAGS.n_rollouts)] ], 0),
                                                 'JSD_loss':
-                                                np.concatenate([mi_lb_train['jsd_loss/train'], mi_lb_test['jsd_loss/test']], 0),
+                                                 np.concatenate([[mi_lb_train['jsd_loss/train'][-1] for _ in range(FLAGS.n_rollouts)], [mi_lb_test['jsd_loss/test'][-1] for _ in range(FLAGS.n_rollouts)] ], 0),
                                                 'set': [
-                                                    'train'
-                                                    for _ in range(len(mi_lb_train['jsd_mi/train']))
-                                                ] + [
-                                                    'test'
-                                                    for _ in range(len(mi_lb_train['jsd_mi/train']))
-                                                ],
+                                            'train'
+                                            for _ in range(FLAGS.n_rollouts)
+                                        ] + [
+                                            'test'
+                                            for _ in range(FLAGS.n_rollouts)
+                                        ],
                                                 'epoch':
-                                                np.concatenate([np.arange(len(mi_lb_train['jsd_mi/train'])),np.arange(len(mi_lb_test['jsd_mi/test']))], 0),
+                                                np.concatenate([np.arange(FLAGS.n_rollouts),np.arange(FLAGS.n_rollouts)], 0),
                                                 'task':
                                                 task,
                                                 'difficulty':
@@ -718,15 +725,28 @@ def main(argv):
             pickle.dump(mi_df,
                         open('../plots/06_MINE_%s.pkl'%plot_suffix, "wb"))
         
-        import ipdb;ipdb.set_trace()
-        y1 = mi_df[(mi_df['set']=='test') & (mi_df['seed']==1) & (mi_df['epoch']==24)].reset_index(drop=True)
-        y2 = mi_df[(mi_df['set']=='train') & (mi_df['seed']==1) & (mi_df['epoch']==24)].reset_index(drop=True)
-        z1 = pd.concat([x.groupby(['task','Difficulty','num_levels']).apply(lambda x:x.iloc[0]).reset_index(drop=True), y1[['JSD_MI','JSD_loss', 'set']]], axis=1)
-        z2 = pd.concat([x.groupby(['task','Difficulty','num_levels']).apply(lambda x:x.iloc[0]).reset_index(drop=True), y2[['JSD_MI','JSD_loss', 'set']]], axis=1)
+        x = mi_df.groupby([
+            'task', 'difficulty', 'num_levels'
+        ]).apply(lambda x: x[x['set'] == 'test']['returns'].mean() - x[x[
+            'set'] == 'train']['returns'].mean()).reset_index()
+        columns = list(x.columns)
+        columns[-1] = r'$\eta_{test}-\eta_{train}$'
+        columns[1] = 'difficulty'
+        x.columns = columns
+
+        y1 = mi_df[(mi_df['set']=='test') & (mi_df['seed']==123) & (mi_df['epoch']==9)].reset_index(drop=True)
+        y2 = mi_df[(mi_df['set']=='train') & (mi_df['seed']==123) & (mi_df['epoch']==9)].reset_index(drop=True)
+        x = x.groupby(['task','difficulty','num_levels']).apply(lambda x:x.iloc[0]).reset_index(drop=True)
+        
+        z1 =  x.merge(y1, on=['task','difficulty','num_levels'])
+        z2 =  x.merge(y2, on=['task','difficulty','num_levels'])
+        #z2 = pd.concat([x.groupby(['task','Difficulty','num_levels']).apply(lambda x:x.iloc[0]).reset_index(drop=True), y2[['JSD_MI','JSD_loss', 'set', 'framestack', 'show_mass']]], axis=1)
         z = pd.concat([z1,z2],axis=0)
         cols = list(z.columns)
+        
+        #import ipdb;ipdb.set_trace()
         cols[5] = r'$\mathcal{I}_{JS}[\phi(s),z]$'
-        cols[-1] = 'Set'
+        cols[7] = 'Set'
         z.columns = cols
 
         palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors
@@ -736,27 +756,200 @@ def main(argv):
                            y=r'$\eta_{test}-\eta_{train}$',
                         # y=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
                            hue='Set',
-                        #    col='num_levels',
+                           col='framestack',
+                           row='show_mass',
 
                         #    line_kws={'color': 'deeppink'},
                         #    scatter_kws={'color': 'deeppink'},
                            palette=palette,
                            data=z)
-            plt.savefig('../plots/02_MINE_joint_%s.png'%plot_suffix)
+            plt.savefig('../plots/06_MINE_joint_fs_mass.png')
             plt.clf()
 
-        palette = palettable.scientific.sequential.Acton_20.mpl_colormap
-        sns.relplot(x='epoch',
-                    y='JSD_MI',
-                    hue='num_levels',
-                    row='task',
-                    col='difficulty',
-                    col_order=['easy', 'medium', 'hard'],
-                    kind='line',
-                    palette=palette,
-                    data=mi_df[(mi_df['set']=='test') & (mi_df['seed']==1)].reset_index(drop=True)
-                    )
-        plt.savefig('../plots/02_MINE_%s.png'%plot_suffix)
+    """
+    Probe 5. Compute MINE when using CURL / SPR.
+    """
+    mass = "mass"
+    fs = 1
+    if probe_spr:
+        if os.path.isfile('../plots/07_MINE_SPR_CURL.pkl'):
+            mi_df = pickle.load(
+                open('../plots/07_MINE_SPR_CURL.pkl', "rb"))
+        else:
+            num_test_levels = 500
+            mi_df = []
+            ctr = 0
+            for task in ['empty', 'tiles', 'objects']:
+                for difficulty in ['easy', 'medium', 'hard']:
+                    for num_levels in [1, 10, 25]:
+                        for algo in ['SPR', 'CURL']:
+                            if algo == 'SPR':
+                                if task == 'empty':
+                                    env_name = "%s-%s-rgb" % (task, difficulty)
+                                    prefix = "checkpoint_%s_%s_%d_%s_%d_" % (
+                                        task, difficulty, num_levels, mass, fs)
+                                else:
+                                    env_name = "%sx1-%s-rgb" % (task, difficulty)
+                                    prefix = "checkpoint_%sx1_%s_%d_%s_%d_" % (
+                                        task, difficulty, num_levels, mass, fs)
+                            else:
+                                if task == 'empty':
+                                    env_name = "%s-%s-rgb" % (task, difficulty)
+                                    prefix = "checkpoint_%s_%s_%d_" % (
+                                        task, difficulty, num_levels)
+                                else:
+                                    env_name = "%sx1-%s-rgb" % (task, difficulty)
+                                    prefix = "checkpoint_%sx1_%s_%d_" % (
+                                        task, difficulty, num_levels)
+                            ckpt_path = glob.glob(
+                                os.path.join(FLAGS.model_dir, algo, prefix + '*'))
+                            if not len(ckpt_path):
+                                print(prefix)
+                                continue
+                            for ckpt in ckpt_path:
+                                seed = int(ckpt.split('_')[-1])
+                                prefix = prefix + str(seed)
+                                loaded_state = checkpoints.restore_checkpoint(
+                                    FLAGS.model_dir,
+                                    prefix=prefix,
+                                    target=train_state_ppo)
+
+                                try:
+                                    env_train = SEGAREnv(env_name,
+                                                        num_envs=num_envs,
+                                                        num_levels=num_levels,
+                                                        framestack=fs,
+                                                        resolution=64,
+                                                        max_steps=MAX_STEPS,
+                                                        _async=False,
+                                                        deterministic_visuals=False,
+                                                        seed=seed)
+                                    env_test = SEGAREnv(env_name,
+                                                        num_envs=num_envs,
+                                                        num_levels=num_test_levels,
+                                                        framestack=fs,
+                                                        resolution=64,
+                                                        max_steps=MAX_STEPS,
+                                                        _async=False,
+                                                        deterministic_visuals=False,
+                                                        seed=seed + 1)
+
+                                    returns_train, (states_train, zs_train,
+                                                    actions_train, factors_train,
+                                                    task_ids_train) = rollouts(
+                                                        env_train,
+                                                        loaded_state,
+                                                        rng,
+                                                        n_rollouts=FLAGS.n_rollouts)
+                                    returns_test, (states_test, zs_test, actions_test,
+                                                factors_test,
+                                                task_ids_test) = rollouts(
+                                                    env_test,
+                                                    loaded_state,
+                                                    rng,
+                                                    n_rollouts=FLAGS.n_rollouts)
+                                    zs_train = [z[0] for z in zs_train]
+                                    zs_test = [z[0] for z in zs_test]
+                                    
+                                    X_train = np.array(zs_train).reshape(
+                                        -1, zs_train[0].shape[-1])
+                                    Z_train = np.array(factors_train).reshape(
+                                        len(factors_train), -1)
+                                    X_test = np.array(zs_test)[:, 0]
+                                    Z_test = np.array(factors_test).reshape(
+                                        len(factors_test), -1)
+                                    
+                                    factor_mask = Z_train.var(0) > 0.
+                                    Z_train = Z_train[:, factor_mask]
+                                    Z_test = Z_test[:, factor_mask]
+
+                                    mine_net = SimpleMLP(n_input=256 +
+                                                        Z_train.shape[-1],
+                                                        n_out=1)
+                                    opt = torch.optim.Adam(mine_net.parameters(),
+                                                        lr=3e-4)
+
+                                    mi_lb_train, mi_lb_test = MINE(
+                                        mine_net, opt, X_train, Z_train, X_test,
+                                        Z_test, max_epochs=25)
+                                    # import ipdb;ipdb.set_trace()
+                                    mi_df.append(
+                                        pd.DataFrame({
+                                            'returns':
+                                    np.concatenate(
+                                        [returns_train, returns_test],
+                                        axis=0),
+                                            'JSD_MI':
+                                            np.concatenate([[mi_lb_train['jsd_mi/train'][-1] for _ in range(FLAGS.n_rollouts)], [mi_lb_test['jsd_mi/test'][-1] for _ in range(FLAGS.n_rollouts)] ], 0),
+                                            'JSD_loss':
+                                                np.concatenate([[mi_lb_train['jsd_loss/train'][-1] for _ in range(FLAGS.n_rollouts)], [mi_lb_test['jsd_loss/test'][-1] for _ in range(FLAGS.n_rollouts)] ], 0),
+                                            'set': [
+                                        'train'
+                                        for _ in range(FLAGS.n_rollouts)
+                                    ] + [
+                                        'test'
+                                        for _ in range(FLAGS.n_rollouts)
+                                    ],
+                                            'epoch':
+                                            np.concatenate([np.arange(FLAGS.n_rollouts),np.arange(FLAGS.n_rollouts)], 0),
+                                            'task':
+                                            task,
+                                            'difficulty':
+                                            difficulty,
+                                            'num_levels':
+                                            num_levels,
+                                            'show_mass': 'Yes' if mass == 'mass' else 'No',
+                                            'framestack': 'Yes' if fs > 1 else 'No',
+                                            'algo': algo,
+                                            'seed':
+                                            seed
+                                        }))
+                                    ctr += 1
+                                except Exception as e:
+                                    print('Exception encountered in simulation:')
+                                    print(e)
+
+            mi_df = pd.concat(mi_df)
+            pickle.dump(mi_df,
+                        open('../plots/07_MINE_SPR_CURL.pkl', "wb"))
+        
+        x = mi_df.groupby([
+            'task', 'difficulty', 'num_levels'
+        ]).apply(lambda x: x[x['set'] == 'test']['returns'].mean() - x[x[
+            'set'] == 'train']['returns'].mean()).reset_index()
+        columns = list(x.columns)
+        columns[-1] = r'$\eta_{test}-\eta_{train}$'
+        columns[1] = 'Difficulty'
+        x.columns = columns
+
+        y1 = mi_df[(mi_df['set']=='test') & (mi_df['seed']==123) & (mi_df['epoch']==0)].reset_index(drop=True)
+        y2 = mi_df[(mi_df['set']=='train') & (mi_df['seed']==123) & (mi_df['epoch']==0)].reset_index(drop=True)
+        z1 = pd.concat([x.groupby(['task','Difficulty','num_levels']).apply(lambda x:x.iloc[0]).reset_index(drop=True), y1[['JSD_MI','JSD_loss', 'set', 'algo']]], axis=1)
+        z2 = pd.concat([x.groupby(['task','Difficulty','num_levels']).apply(lambda x:x.iloc[0]).reset_index(drop=True), y2[['JSD_MI','JSD_loss', 'set', 'algo']]], axis=1)
+        z = pd.concat([z1,z2],axis=0)
+        cols = list(z.columns)
+        
+        cols[5] = r'$\mathcal{I}_{JS}[\phi(s),z]$'
+        cols[6] = 'Set'
+        cols[7] = 'Algorithm'
+        z.columns = cols
+
+        palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors
+        
+        with sns.plotting_context("notebook", font_scale=1.25):
+            g = sns.lmplot(x=r'$\mathcal{I}_{JS}[\phi(s),z]$',
+                           y=r'$\eta_{test}-\eta_{train}$',
+                        # y=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
+                           hue='Set',
+                           col='Algorithm',
+                        #    row='show_mass',
+
+                        #    line_kws={'color': 'deeppink'},
+                        #    scatter_kws={'color': 'deeppink'},
+                           palette=palette,
+                           data=z)
+            plt.savefig('../plots/07_MINE_SPR_CURL.png')
+            plt.clf()
     return 0
 
 
