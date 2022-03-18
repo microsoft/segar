@@ -31,6 +31,10 @@ import pickle
 
 import palettable
 
+import scipy as sp
+from scipy import stats
+
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer("n_rollouts", 10, "Number of per-env rollouts.")
@@ -53,63 +57,74 @@ def main(argv):
     """
     seed = np.random.randint(100000000)
     np.random.seed(seed)
-    rng = PRNGKey(seed)
-    rng, key = jax.random.split(rng)
-    dummy_env = SEGAREnv("empty-easy-rgb",
-                         num_envs=1,
-                         num_levels=1,
-                         framestack=1,
-                         resolution=64,
-                         max_steps=MAX_STEPS,
-                         _async=False,
-                         deterministic_visuals=False,
-                         seed=123)
+    # rng = PRNGKey(seed)
+    # rng, key = jax.random.split(rng)
+    # dummy_env = SEGAREnv("empty-easy-rgb",
+    #                      num_envs=1,
+    #                      num_levels=1,
+    #                      framestack=1,
+    #                      resolution=64,
+    #                      max_steps=MAX_STEPS,
+    #                      _async=False,
+    #                      deterministic_visuals=False,
+    #                      seed=123)
 
-    n_action = dummy_env.action_space[0].shape[-1]
-    model_ppo = TwinHeadModel(action_dim=n_action,
-                              prefix_critic='vfunction',
-                              prefix_actor="policy",
-                              action_scale=1.)
+    # n_action = dummy_env.action_space[0].shape[-1]
+    # model_ppo = TwinHeadModel(action_dim=n_action,
+    #                           prefix_critic='vfunction',
+    #                           prefix_actor="policy",
+    #                           action_scale=1.)
 
-    state = dummy_env.reset().astype(jnp.float32) / 255.
+    # state = dummy_env.reset().astype(jnp.float32) / 255.
 
-    tx = optax.chain(optax.clip_by_global_norm(2), optax.adam(3e-4, eps=1e-5))
-    params_model = model_ppo.init(key, state, None)
-    train_state_ppo = TrainState.create(apply_fn=model_ppo.apply,
-                                        params=params_model,
-                                        tx=tx)
+    # tx = optax.chain(optax.clip_by_global_norm(2), optax.adam(3e-4, eps=1e-5))
+    # params_model = model_ppo.init(key, state, None)
+    # train_state_ppo = TrainState.create(apply_fn=model_ppo.apply,
+    #                                     params=params_model,
+    #                                     tx=tx)
     """
     Probe 1. Compute 2-Wasserstein between task samples
     """
     plot_suffix = "fs_mass"
 
     if probe_wasserstein:
-        if os.path.isfile('../plots/01_Wasserstein_%s.pkl'%(plot_suffix)):
-            w2_df = pickle.load(open('../plots/01_Wasserstein_%s.pkl'%plot_suffix, "rb"))
+        test_ood = True
+        if test_ood:
+            fn = '../plots/01_Wasserstein_ood.pkl'
+        else:
+            fn = '../plots/01_Wasserstein.pkl'
+        if os.path.isfile(fn):
+            w2_df = pickle.load(open(fn, "rb"))
         else:
             w2_df = []
             num_test_levels = 500
             ctr = 0
             for task in ['empty', 'tiles', 'objects']:
-                for difficulty in ['easy', 'medium']:  #, 'hard']:
+                for difficulty in ['easy', 'medium', 'hard']:
                     for num_levels in [1, 10, 50, 100, 200]:
+                        if test_ood and difficulty == 'hard':
+                            continue
                         if task == 'empty':
                             env_name = "%s-%s-rgb" % (task, difficulty)
                             prefix = "checkpoint_%s_%s_%d_" % (
                                 task, difficulty, num_levels)
-                            if difficulty == 'easy':
-                                test_difficulty = 'medium'
-                            elif difficulty == 'medium':
-                                test_difficulty = 'hard'
+                            test_difficulty = difficulty
+                            if test_ood:
+                                if difficulty == 'easy':
+                                    test_difficulty = 'medium'
+                                elif difficulty == 'medium':
+                                    test_difficulty = 'hard'
                             test_env_name = "%s-%s-rgb" % (task, test_difficulty)
                         else:
                             env_name = "%sx1-%s-rgb" % (task, difficulty)
                             prefix = "checkpoint_%sx1_%s_%d_" % (
                                 task, difficulty, num_levels)
-                            if difficulty == 'easy':
-                                test_difficulty = 'medium'
-                            elif difficulty == 'medium':
-                                test_difficulty = 'hard'
+                            test_difficulty = difficulty
+                            if test_ood:
+                                if difficulty == 'easy':
+                                    test_difficulty = 'medium'
+                                elif difficulty == 'medium':
+                                    test_difficulty = 'hard'
                             test_env_name = "%sx1-%s-rgb" % (task, test_difficulty)
                         
                         ckpt_path = glob.glob(
@@ -188,26 +203,24 @@ def main(argv):
                                         'num_levels':
                                         num_levels
                                     }))
-                                print('W2(train levels, test levels)=%.5f' %
-                                      w2_distance)
                                 ctr += 1
                             except Exception as e:
                                 print('Exception encountered in simulation:')
                                 print(e)
 
             w2_df = pd.concat(w2_df)
-            pickle.dump(w2_df, open('../plots/01_Wasserstein_%s.pkl'%plot_suffix, "wb"))
+            pickle.dump(w2_df, open(fn, "wb"))
 
         w2_df = w2_df.reset_index(drop=True)
-        g = sns.FacetGrid(w2_df[w2_df['task'] == 'empty'],
-                          hue="set",
-                          col="num_levels",
-                          row="difficulty",
-                          sharex=False)
-        g.map(plt.hist, "returns", alpha=.6)
-        plt.legend()
-        plt.savefig('../plots/03_returns_%s.png'%plot_suffix)
-        plt.clf()
+        # g = sns.FacetGrid(w2_df[w2_df['task'] == 'empty'],
+        #                   hue="set",
+        #                   col="num_levels",
+        #                   row="difficulty",
+        #                   sharex=False)
+        # g.map(plt.hist, "returns", alpha=.6)
+        # plt.legend()
+        # plt.savefig('../plots/03_returns_%s.png'%plot_suffix)
+        # plt.clf()
 
         x = w2_df.groupby([
             'task', 'difficulty', 'num_levels',
@@ -223,6 +236,8 @@ def main(argv):
 
         # Conditional plot per task type /difficulty
         tasks = ['Empty', 'Objects', 'Tiles']
+        if test_ood:
+            x['Difficulty'] = x['Difficulty'].replace({'easy': r'easy$\to$medium', 'medium': r'medium$\to$hard'})
         with sns.plotting_context("notebook", font_scale=1.5):
             g = sns.lmplot(
                 x=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
@@ -235,11 +250,37 @@ def main(argv):
                 sharey=False,
                 ci=75,
                 data=x)
+            
+            def annotate(data, **kws):
+                r, p = sp.stats.pearsonr(data[r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$'], data[r'$\eta_{test}-\eta_{train}$'])
+                ax = plt.gca()
+                if data['Difficulty'].iloc[0] == r'easy$\to$medium' or data['Difficulty'].iloc[0] == 'easy':
+                    if test_ood:
+                        ax.text(.05, .88, r'$\rho$=%.2f, p=%.2f [easy$\to$medium]'%(r,p),
+                        transform=ax.transAxes, font = {'size' : 10})
+                    else:
+                        ax.text(.05, .88, r'$\rho$=%.2f, p=%.2f [easy]'%(r,p),
+                        transform=ax.transAxes, font = {'size' : 10})
+                elif data['Difficulty'].iloc[0] == r'medium$\to$hard' or data['Difficulty'].iloc[0] == 'medium':
+                    if test_ood:
+                        ax.text(.05, .93, r'$\rho$=%.2f, p=%.2f [medium$\to$hard]'%(r,p),
+                            transform=ax.transAxes, font = {'size' : 10})
+                    else:
+                        ax.text(.05, .93, r'$\rho$=%.2f, p=%.2f [Medium]'%(r,p),
+                            transform=ax.transAxes, font = {'size' : 10})
+                elif data['Difficulty'].iloc[0] == 'hard':
+                    ax.text(.05, .98, r'$\rho$=%.2f, p=%.2f [Hard]'%(r,p),
+                        transform=ax.transAxes, font = {'size' : 10})
+                    
+            g.map_dataframe(annotate)
             for ax, task in zip(g.axes.flatten(), tasks):
                 ax.set_title(task)
             # sns.move_legend(g, "lower center", bbox_to_anchor=(.5, 1), ncol=3)
             # plt.tight_layout()
-            plt.savefig('../plots/01_Wasserstein_%s.png'%plot_suffix)
+            if test_ood:
+                plt.savefig('../plots/01_Wasserstein_ood.png')
+            else:
+                plt.savefig('../plots/01_Wasserstein.png')
             plt.clf()
 
         # Average plot with all tasks combined
@@ -249,7 +290,18 @@ def main(argv):
                            line_kws={'color': 'deeppink'},
                            scatter_kws={'color': 'deeppink'},
                            data=x)
-            plt.savefig('../plots/01_Wasserstein_join_%s.png'%plot_suffix)
+            def annotate(data, **kws):
+                r, p = sp.stats.pearsonr(data[r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$'], data[r'$\eta_{test}-\eta_{train}$'])
+                ax = plt.gca()
+                
+                ax.text(.05, .95, r'$\rho$=%.2f, p=%.2f'%(r,p),
+                    transform=ax.transAxes, font = {'size' : 10})
+                    
+            g.map_dataframe(annotate)
+            if test_ood:
+                plt.savefig('../plots/01_Wasserstein_joint_ood.png')
+            else:
+                plt.savefig('../plots/01_Wasserstein_joint.png')
     """
     Probe 2. Compute MINE lower-bound on MI between agent's state representation
     and latent factors.
@@ -742,25 +794,39 @@ def main(argv):
         z = pd.concat([z1,z2],axis=0)
         cols = list(z.columns)
         
-        # import ipdb;ipdb.set_trace()
-        cols[7] = r'$\mathcal{I}_{JS}[\phi(s),z]$'
+        cols[7] = r'Accuracy of $\mathcal{I}_{JS}[\phi(s),z]$' #r'$\mathcal{I}_{JS}[\phi(s),z]$'
         cols[8] = 'Set'
+        cols[10] = 'Mass shown?'
+        cols[11] = 'Frame stack?'
         z.columns = cols
 
         palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors
+
+        z = z[(np.abs(stats.zscore(z[[r'Accuracy of $\mathcal{I}_{JS}[\phi(s),z]$',r'$\eta_{test}-\eta_{train}$']])) < 3).all(axis=1)]
         
         with sns.plotting_context("notebook", font_scale=1.25):
-            g = sns.lmplot(x=r'$\mathcal{I}_{JS}[\phi(s),z]$',
+            g = sns.lmplot(x=r'Accuracy of $\mathcal{I}_{JS}[\phi(s),z]$',
                            y=r'$\eta_{test}-\eta_{train}$',
                         # y=r'$W_2(\mathbb{P}_{test},\mathbb{P}_{train})$',
                            hue='Set',
-                           col='framestack',
-                           row='show_mass',
+                           col='Frame stack?',
+                           row='Mass shown?',
 
                         #    line_kws={'color': 'deeppink'},
                         #    scatter_kws={'color': 'deeppink'},
                            palette=palette,
                            data=z)
+            def annotate(data, **kws):
+                r, p = sp.stats.pearsonr(data[r'Accuracy of $\mathcal{I}_{JS}[\phi(s),z]$'], data[r'$\eta_{test}-\eta_{train}$'])
+                ax = plt.gca()
+                if data['Set'].iloc[0] == 'test':
+                    ax.text(.05, .90, r'$\rho$=%.2f, p=%.2f [Test]'%(r,p),
+                        transform=ax.transAxes, font = {'size' : 10})
+                elif data['Set'].iloc[0] == 'train':
+                    ax.text(.05, .95, r'$\rho$=%.2f, p=%.2f [Train]'%(r,p),
+                        transform=ax.transAxes, font = {'size' : 10})
+                    
+            g.map_dataframe(annotate)
             plt.savefig('../plots/06_MINE_joint_fs_mass.png')
             plt.clf()
 
