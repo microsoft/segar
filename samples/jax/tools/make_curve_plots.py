@@ -12,7 +12,7 @@ def scale(x, pos):
     return '%dk' % (x * 1e-3)
 formatter = FuncFormatter(scale)
 
-folder = 'CURL'
+folder = 'PPO'
 metric = 'Returns'
 
 files = glob.glob("../data/%s/*.csv" % folder)
@@ -46,6 +46,7 @@ n_cols = len(df['Number of levels'].unique())
 palette = palettable.cartocolors.qualitative.Pastel_10.mpl_colors[:n_cols]
 
 tasks = ['Empty', 'Objects', 'Tiles']
+df = df[df['seed']==1]
 with sns.plotting_context("notebook", font_scale=1.5):
     g = sns.relplot(
         x='Frames',
@@ -61,7 +62,8 @@ with sns.plotting_context("notebook", font_scale=1.5):
         data=df)
     for ax, task in zip(g.axes.flatten(), tasks):
         ax.set_title(task)
-        ax.set(xticks=([0, 4]))
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%dK'%(x/1000) ))
+        #ax.set(xticks=([0, 4]))
         # ax.set_major_formatter(formatter)
     # sns.move_legend(g, "lower center", bbox_to_anchor=(.5, 1), ncol=3)
     # plt.tight_layout()

@@ -34,8 +34,14 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test, max_epochs=10):
 
         loss = E_neg.mean() - E_pos.mean()
         jsd_mi = 1. + joint.mean() - torch.exp(marginal).mean()
+
+        num_correct = (joint > 0).sum() + (marginal < 0).sum().detach().cpu().item()
+        num_total = (joint.size(0) + marginal.size(0))
+        acc = float(num_correct) / float(num_total)
+
         results = {'jsd_loss': -loss.detach().cpu().item(),
-                    'jsd_mi': jsd_mi.detach().cpu().item()}
+                    'jsd_mi': jsd_mi.detach().cpu().item(),
+                    'jsd_acc': acc}
         features = None
 
         opt.zero_grad()
@@ -55,8 +61,12 @@ def MINE(model, opt, X_train, Z_train, X_test, Z_test, max_epochs=10):
 
         loss = E_neg.mean() - E_pos.mean()
         jsd_mi = 1. + joint.mean() - torch.exp(marginal).mean()
+        num_correct = (joint > 0).sum() + (marginal < 0).sum().detach().cpu().item()
+        num_total = (joint.size(0) + marginal.size(0))
+        acc = float(num_correct) / float(num_total)
         results = {'jsd_loss': -loss.detach().cpu().item(),
-                    'jsd_mi': jsd_mi.detach().cpu().item()}
+                    'jsd_mi': jsd_mi.detach().cpu().item(),
+                    'jsd_acc':acc}
         return results
 
     yielder = lambda _DEVICE, inputs: [inp.to(_DEVICE) for inp in inputs]
