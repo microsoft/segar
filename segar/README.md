@@ -26,7 +26,7 @@ the distance between distributions.
 ![Billiards](../resources/readme-images/billiards_example.gif)
 ![Invisiball](../resources/readme-images/invisiball_example.gif)
 
-Project code documentation can be found [here](https://animated-train-17411965.pages.github.io/).
+Project code documentation can be found [here](https://segar.readthedocs.io/).
 
 ## The simulator
 
