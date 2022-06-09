@@ -56,7 +56,7 @@ flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
 ################ 
 # Logging
 flags.DEFINE_integer("checkpoint_interval", 10, "Checkpoint frequency")
-flags.DEFINE_string("run_id", "jax_ppo",
+flags.DEFINE_string("run_id", "jax_run",
                     "Run ID. Change that to change W&B name")
 flags.DEFINE_string("wandb_mode", "disabled",
                     "W&B logging (disabled, online, offline)")
@@ -65,7 +65,7 @@ flags.DEFINE_string("wandb_entity", "dummy_username",
                     "W&B entity (username or team name)")
 flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 ########
-flags.DEFINE_string('save_dir', './tmp/', 'Tensorboard logging dir.')
+flags.DEFINE_string('save_dir', './runs/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
 flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
@@ -80,7 +80,7 @@ flags.DEFINE_integer(
 flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
 config_flags.DEFINE_config_file(
     'config',
-    'jaxrl/configs/drq_default.py',
+    'jaxrl/configs/drq_faster.py',
     'File path to the training hyperparameter configuration.',
     lock_config=False)
 
@@ -94,6 +94,7 @@ PLANET_ACTION_REPEAT = {
 }
 
 def main(_):
+    kwargs = dict(FLAGS.config)
     # Setting all rnadom seeds
     if FLAGS.seed == -1:
         seed = np.random.randint(100000000)
@@ -101,13 +102,17 @@ def main(_):
         seed = FLAGS.seed
     np.random.seed(seed)
 
+    algo = kwargs.pop('algo')
+    replay_buffer_size = kwargs.pop('replay_buffer_size')
+
     # If W&B is to be used - set job and group names
     if FLAGS.wandb_key is not None:
         os.environ["WANDB_API_KEY"] = FLAGS.wandb_key
     group_name = "%s_%s_%d" % (FLAGS.run_id, FLAGS.env_name,
                                FLAGS.num_train_levels)
-    run_name = "%s_%s_%d_%d" % (
+    run_name = "%s_%s_%s_%d_%d" % (
         FLAGS.run_id,
+        algo,
         FLAGS.env_name,
         FLAGS.num_train_levels,
         np.random.randint(100000000),
@@ -130,8 +135,6 @@ def main(_):
         action_repeat = FLAGS.action_repeat
     else:
         action_repeat = PLANET_ACTION_REPEAT.get(FLAGS.env_name, 2)
-
-    kwargs = dict(FLAGS.config)
 
     env = SEGAREnv(
         FLAGS.env_name,
@@ -159,14 +162,11 @@ def main(_):
     np.random.seed(FLAGS.seed)
     random.seed(FLAGS.seed)
 
-    algo = kwargs.pop('algo')
-    replay_buffer_size = kwargs.pop('replay_buffer_size')
-
     if algo == 'sac':
         agent = SACLearner(FLAGS.seed,
                            env.observation_space.sample(),
                            jax.numpy.array(env.action_space.sample()), **kwargs)
-    elif algo == 'drq':
+    else:
         agent = DrQLearner(FLAGS.seed,
                         env.observation_space.sample(),
                         jax.numpy.array(env.action_space.sample()), **kwargs)
