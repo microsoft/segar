@@ -5,7 +5,7 @@ import ml_collections
 def get_config():
     config = ml_collections.ConfigDict()
 
-    config.algo = 'drq'
+    config.algo = 'drq_faster'
 
     config.actor_lr = 3e-4
     config.critic_lr = 3e-4
@@ -13,9 +13,9 @@ def get_config():
 
     config.hidden_dims = (256, 256)
 
-    config.cnn_features = (32, 32, 32, 32)
-    config.cnn_strides = (2, 1, 1, 1)
-    config.cnn_padding = 'VALID'
+    config.cnn_features = (32, 64, 128, 256)
+    config.cnn_strides = (2, 2, 2, 2)
+    config.cnn_padding = 'SAME'
     config.latent_dim = 50
 
     config.discount = 0.99
@@ -28,7 +28,5 @@ def get_config():
 
     config.replay_buffer_size = 100_000
 
-    # config.gray_scale = False
-    # config.image_size = 84
 
     return config
