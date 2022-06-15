@@ -16,7 +16,7 @@ class ReplayBuffer(Dataset):
                                      gym.spaces.Box], capacity: int):
         observations = np.empty((capacity, *observation_space.shape),
                                 dtype=observation_space.dtype)
-        actions = np.empty((capacity, len(action_space), action_space[0].shape[-1]),
+        actions = np.empty((capacity, action_space[0].shape[-1]),
                            dtype=action_space.dtype)
                            
         rewards = np.empty((capacity, ), dtype=np.float32)

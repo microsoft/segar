@@ -45,7 +45,7 @@ FLAGS = flags.FLAGS
 # Task
 flags.DEFINE_string("env_name", "tilesx1-medium-rgb", "Env name")
 flags.DEFINE_integer("seed", 123, "Random seed.")
-flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
+flags.DEFINE_integer("num_envs", 1, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
 flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
@@ -63,7 +63,7 @@ flags.DEFINE_string("wandb_entity", "dummy_username",
                     "W&B entity (username or team name)")
 flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 ########
-flags.DEFINE_string('save_dir', './supp_exps/', 'Tensorboard logging dir.')
+flags.DEFINE_string('save_dir', './supp_exps_2/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
 flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
