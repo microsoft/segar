@@ -32,9 +32,7 @@ def setup_packages():
     spec = importlib.util.find_spec("segar")
     globals()["segar"] = importlib.util.module_from_spec(spec)
 
-
 # setup_packages()
-
 
 # try:
 #     from azureml.core.run import Run
@@ -45,9 +43,9 @@ def setup_packages():
 
 FLAGS = flags.FLAGS
 # Task
-flags.DEFINE_string("env_name", "empty-easy-rgb", "Env name")
-flags.DEFINE_integer("seed", 42, "Random seed.")
-flags.DEFINE_integer("num_envs", 1, "Num of parallel envs.")
+flags.DEFINE_string("env_name", "tilesx1-medium-rgb", "Env name")
+flags.DEFINE_integer("seed", 123, "Random seed.")
+flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
 flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
@@ -65,7 +63,7 @@ flags.DEFINE_string("wandb_entity", "dummy_username",
                     "W&B entity (username or team name)")
 flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 ########
-flags.DEFINE_string('save_dir', './runs/', 'Tensorboard logging dir.')
+flags.DEFINE_string('save_dir', './supp_exps/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
 flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
@@ -108,15 +106,10 @@ def main(_):
     # If W&B is to be used - set job and group names
     if FLAGS.wandb_key is not None:
         os.environ["WANDB_API_KEY"] = FLAGS.wandb_key
-    group_name = "%s_%s_%d" % (FLAGS.run_id, FLAGS.env_name,
-                               FLAGS.num_train_levels)
-    run_name = "%s_%s_%s_%d_%d" % (
-        FLAGS.run_id,
-        algo,
-        FLAGS.env_name,
-        FLAGS.num_train_levels,
-        np.random.randint(100000000),
-    )
+    
+    group_name = "%s" % (algo)
+    run_name = "%s_nenvs_%d_ltrain_%d_ltest_%d" % (FLAGS.env_name, FLAGS.num_envs, FLAGS.num_train_levels, FLAGS.num_test_levels)
+
     run = wandb.init(
         project=FLAGS.wandb_project,
         entity=FLAGS.wandb_entity,
@@ -129,7 +122,7 @@ def main(_):
     )
 
     summary_writer = SummaryWriter(
-        os.path.join(FLAGS.save_dir, 'tb', str(FLAGS.seed)))
+        os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed)))
 
     if FLAGS.action_repeat is not None:
         action_repeat = FLAGS.action_repeat
@@ -145,7 +138,7 @@ def main(_):
         max_steps=FLAGS.max_steps,
         _async=False,
         seed=FLAGS.seed,
-        save_path=os.path.join(FLAGS.save_dir, run_name)
+        save_path=os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
     )
     eval_env = SEGAREnv(
         FLAGS.env_name,
@@ -156,7 +149,7 @@ def main(_):
         max_steps=FLAGS.max_steps,
         _async=False,
         seed=FLAGS.seed + 42,
-        save_path=os.path.join(FLAGS.save_dir, run_name)
+        save_path=os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
     )
 
     np.random.seed(FLAGS.seed)
@@ -223,17 +216,17 @@ def main(_):
             eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation_{e}/average_{k}s', v, i)
-                wandb.log({f'evaluation_{e}/average_{k}s': v}, step=i)
+                summary_writer.add_scalar(f'evaluation/average_{k}s', v, i)
+                wandb.log({f'evaluation/average_{k}s': v}, step=i)
             summary_writer.flush()
 
             eval_returns.append((i, eval_stats['return']))
-            np.savetxt(os.path.join(FLAGS.save_dir, f'{FLAGS.seed}.txt'),
+            np.savetxt(os.path.join(FLAGS.save_dir, group_name, run_name, f'{FLAGS.seed}.txt'),
                        eval_returns,
                        fmt=['%d', '%.1f'])
         
         if i % FLAGS.checkpoint_interval == 0:
-            model_dir = os.path.join(FLAGS.save_dir, run_name, "model_weights")
+            model_dir = os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
             checkpoints.save_checkpoint(
                 ckpt_dir=model_dir,
                 target=observation,
