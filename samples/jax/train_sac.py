@@ -44,8 +44,8 @@ def setup_packages():
 FLAGS = flags.FLAGS
 # Task
 flags.DEFINE_string("env_name", "tilesx1-medium-rgb", "Env name")
-flags.DEFINE_integer("seed", 123, "Random seed.")
-flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
+flags.DEFINE_integer("seed", 42, "Random seed.")
+flags.DEFINE_integer("num_envs", 1, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
 flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
@@ -63,7 +63,7 @@ flags.DEFINE_string("wandb_entity", "dummy_username",
                     "W&B entity (username or team name)")
 flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 ########
-flags.DEFINE_string('save_dir', './supp_exps/', 'Tensorboard logging dir.')
+flags.DEFINE_string('save_dir', './supp_exps_returns_agent/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
 flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
@@ -110,7 +110,7 @@ def main(_):
     group_name = "%s" % (algo)
     run_name = "%s_nenvs_%d_ltrain_%d_ltest_%d" % (FLAGS.env_name, FLAGS.num_envs, FLAGS.num_train_levels, FLAGS.num_test_levels)
 
-    run = wandb.init(
+    wandb.init(
         project=FLAGS.wandb_project,
         entity=FLAGS.wandb_entity,
         config=FLAGS,
@@ -193,12 +193,14 @@ def main(_):
             maybe_epinfo = info[e].get("returns")
             if maybe_epinfo:
                 returns_train_buf.append(maybe_epinfo)
+                wandb.log({f'training/all_returns': maybe_epinfo}, step=i)
+
             maybe_timelimit = info[e].get("TimeLimit.truncated")
             if maybe_timelimit:
                 mask = 1
 
         replay_buffer.insert(jax.numpy.array(observation),
-                             jax.numpy.array(action), reward.mean(), mask, float(done[0]),
+                             jax.numpy.array(action), reward, mask, float(done[0]),
                              jax.numpy.array(next_observation))
         observation = next_observation
 
@@ -216,11 +218,11 @@ def main(_):
             eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v, i)
-                wandb.log({f'evaluation/average_{k}s': v}, step=i)
+                summary_writer.add_scalar(f'evaluation/average_{k}', v, i)
+                wandb.log({f'evaluation/average_{k}': v}, step=i)
             summary_writer.flush()
 
-            eval_returns.append((i, eval_stats['return']))
+            eval_returns.append((i, eval_stats['returns']))
             np.savetxt(os.path.join(FLAGS.save_dir, group_name, run_name, f'{FLAGS.seed}.txt'),
                        eval_returns,
                        fmt=['%d', '%.1f'])
@@ -229,7 +231,7 @@ def main(_):
             model_dir = os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
             checkpoints.save_checkpoint(
                 ckpt_dir=model_dir,
-                target=observation,
+                target=(agent.actor, agent.critic, agent.target_critic, agent.temp),
                 step=i,
                 overwrite=True,
                 keep=1,

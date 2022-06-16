@@ -9,7 +9,7 @@ import numpy as np
 
 
 def evaluate(agent, env: gym.Env, num_episodes: int) -> Dict[str, float]:
-    stats = {'return': [], 'length': []}
+    stats = {'returns': []}
     successes = None
     for _ in range(num_episodes):
         observation, done = env.reset(), False
@@ -18,15 +18,15 @@ def evaluate(agent, env: gym.Env, num_episodes: int) -> Dict[str, float]:
             observation, _, done, info = env.step(action)
         
         for i in range(len(info)):
-            for k in stats.keys():
-                maybe_episode = info[i].get("episode")
-                if maybe_episode:
-                    stats[k].append(maybe_episode[k])
-
-            if 'is_success' in info[i]:
+            maybe_success = info[i].get("success")
+            if maybe_success:
                 if successes is None:
                     successes = 0.0
-                successes += info[i]['is_success']
+                successes += maybe_success
+
+            maybe_returns = info[i].get("returns")
+            if maybe_returns:
+                stats['returns'].append(maybe_returns)
 
     for k, v in stats.items():
         stats[k] = np.mean(v)
