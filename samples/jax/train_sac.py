@@ -63,7 +63,7 @@ flags.DEFINE_string("wandb_entity", "dummy_username",
                     "W&B entity (username or team name)")
 flags.DEFINE_string("wandb_project", "dummy_project", "W&B project name")
 ########
-flags.DEFINE_string('save_dir', './supp_exps_agent/', 'Tensorboard logging dir.')
+flags.DEFINE_string('save_dir', './supp_exps_returns_agent/', 'Tensorboard logging dir.')
 flags.DEFINE_integer('eval_episodes', 10,
                      'Number of episodes used for evaluation.')
 flags.DEFINE_integer('log_interval', 1000, 'Logging interval.')
@@ -193,6 +193,8 @@ def main(_):
             maybe_epinfo = info[e].get("returns")
             if maybe_epinfo:
                 returns_train_buf.append(maybe_epinfo)
+                wandb.log({f'training/all_returns': maybe_epinfo}, step=i)
+
             maybe_timelimit = info[e].get("TimeLimit.truncated")
             if maybe_timelimit:
                 mask = 1
@@ -216,15 +218,20 @@ def main(_):
             eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
 
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v, i)
-                wandb.log({f'evaluation/average_{k}s': v}, step=i)
+                summary_writer.add_scalar(f'evaluation/average_{k}', v, i)
+                wandb.log({f'evaluation/average_{k}': v}, step=i)
             summary_writer.flush()
+
+            eval_returns.append((i, eval_stats['returns']))
+            np.savetxt(os.path.join(FLAGS.save_dir, group_name, run_name, f'{FLAGS.seed}.txt'),
+                       eval_returns,
+                       fmt=['%d', '%.1f'])
         
         if i % FLAGS.checkpoint_interval == 0:
             model_dir = os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
             checkpoints.save_checkpoint(
                 ckpt_dir=model_dir,
-                target=(agent.actor, agent.critic),
+                target=(agent.actor, agent.critic, agent.target_critic, agent.temp),
                 step=i,
                 overwrite=True,
                 keep=1,
