@@ -4,16 +4,16 @@ __license__ = "MIT"
 
 """
 
-__all__ = ("RGBRenderer", "RGBTextureRenderer")
+__all__ = ("RGBRenderer", "RGBTextureRenderer", "register_rule", "register_color")
 
-from typing import Optional, Type, Union
+from typing import Optional, Type, Union, Callable
 
 import numpy as np
 import os
 import random
 
 from segar.things import Thing, Wall
-from segar.factors import Circle, ConvexHullShape, Factor, Mobile
+from segar.factors import Circle, ConvexHullShape, Factor, Mobile, Color
 
 from .generators import Generator
 from .rendering import Visual, Renderer, WallVisual, CircleVisual, PolyVisual
@@ -25,6 +25,10 @@ def _get_default_color(thing: Thing):
     :param thing: Thing to determine color from.
     :return: color tuple.
     """
+
+    if thing.has_factor(Color) and thing.Color is not None:
+        return thing.Color.value
+
     tag = thing.Label
     if tag == "damper":
         return 0, 100, 100
@@ -80,12 +84,19 @@ def register_color(tag, color):
 
         def rule(thing):
             return color(thing) if thing.Label == tag else None
-
     else:
-
         def rule(thing):
             return color if thing.Label == tag else None
 
+    _COLOR_RULES = [rule] + _COLOR_RULES
+
+
+def register_rule(rule: Callable):
+    """Registers a new rule
+
+    :param rule: a callable rule that takes a Thing and returns None or a color.
+    """
+    global _COLOR_RULES
     _COLOR_RULES = [rule] + _COLOR_RULES
 
 
@@ -109,9 +120,8 @@ class RGBRenderer(Renderer):
 
     """
 
-    def __init__(
-        self, n_channels: int = 3, img_type: type = np.uint8, annotation: bool = False, **kwargs,
-    ) -> None:
+    def __init__(self, n_channels: int = 3, img_type: type = np.uint8, annotation: bool = False, **kwargs
+                 ) -> None:
         """
 
         :param n_channels: Number of channels. Default is 3.

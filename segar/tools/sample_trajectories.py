@@ -98,10 +98,10 @@ def rollout(mdp: MDP, observation: RGBObservation = None,
     def render_observation():
         if observation is None:
             if show_render:
-                obs = mdp.render(mode='human', label=label, agent_view=True)
+                obs = mdp.render(mode='human', label=label, agent_view=False)
             else:
                 obs = mdp.render(mode='rgb_array', label=label,
-                                 agent_view=True)
+                                 agent_view=False)
         else:
             obs = observation.render()
             if label is not None:
@@ -117,7 +117,7 @@ def rollout(mdp: MDP, observation: RGBObservation = None,
     action = mdp.demo_action()
     while not done:
         _, _, done, _ = mdp.step(action)
-        action = np.array((0., 0.))
+        action = mdp.demo_action()
         render_observation()
         trajectories_.append(sim_.state)
     return renderings_, trajectories_

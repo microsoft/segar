@@ -1,7 +1,7 @@
 __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Institute"
 __license__ = "MIT"
 
-from .arrays import Position, Velocity, Acceleration, VectorFactor
+from .arrays import Position, Velocity, Acceleration, VectorFactor, Force
 from .bools import Visible, Done, Alive, InfiniteEnergy, Mobile, BooleanFactor
 from .factors import (Factor, FactorContainer, DEFAULTS as FACTOR_DEFAULTS,
                       FACTORS)
@@ -10,7 +10,7 @@ from .noise import (Noise, GaussianNoise, GaussianMixtureNoise, UniformNoise,
                     Deterministic)
 from .number_factors import (NumericFactor, Order, Size, Mass, Density, Charge,
                              Magnetism, StoredEnergy, Heat, Friction)
-from .properties import Floor, Collides, Consumes, ID, Label, Text
+from .properties import Floor, Collides, Consumes, ID, Label, Text, Color
 from .shapes import (Shape, Circle, Square, RandomConvexHull, Hexagon,
                      Triangle, ConvexHullShape, BaseShape)
 
@@ -24,4 +24,4 @@ __all__ = ['Position', 'Velocity', 'Acceleration', 'Visible', 'Done', 'Alive',
            'Friction', 'Floor', 'Collides', 'Consumes', 'ID', 'Label',
            'Text', 'Shape', 'Circle', 'Square', 'RandomConvexHull', 'Hexagon',
            'Triangle', 'ConvexHullShape', 'BaseShape', 'VectorFactor',
-           'BooleanFactor', 'Deterministic']
+           'BooleanFactor', 'Deterministic', 'Color', 'Force']

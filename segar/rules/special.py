@@ -12,6 +12,7 @@ __all__ = (
     "apply_friction",
     "consume",
     "accelerate",
+    "apply_force"
 )
 
 from typing import Tuple
@@ -29,6 +30,7 @@ from segar.factors import (
     Heat,
     Done,
     Consumes,
+    Force
 )
 from .relations import IsOn, Contains
 from .transitions import (
@@ -66,6 +68,19 @@ def accelerate(v: Velocity, a: Acceleration) -> Differential[Velocity]:
     """
     dv = a
     return Differential[Velocity](v, dv)
+
+
+@TransitionFunction
+def apply_force(f: Force, a: Acceleration, m: Mass) -> Tuple[Aggregate[Acceleration], SetFactor[Force]]:
+    """For external forces, just as actions.
+
+    :param f: Force applied
+    :param a: Acceleration to change
+    :param m: Mass of the object
+
+    """
+    da = f / m.value
+    return Aggregate[Acceleration](a, da), SetFactor[Force](f, [0., 0.])
 
 
 @TransitionFunction

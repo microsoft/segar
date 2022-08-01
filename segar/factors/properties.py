@@ -7,6 +7,7 @@ __license__ = "MIT"
 __all__ = ("Floor", "Collides", "Consumes", "ID", "Label", "Text")
 
 from typing import TypeVar
+from numbers import Number
 
 from .factors import Factor
 
@@ -63,3 +64,24 @@ class Label(Factor[str]):
 
 class Text(Factor[str], default=None):
     pass
+
+
+class Color(Factor[list], default=(0, 0, 0)):
+    @Factor.value.setter
+    def value(self, value):
+        if isinstance(value, tuple):
+            value = list(value)
+        super(Color, type(self)).value.fset(self, value)
+        error = False
+        if len(self._value) != 3:
+            error = True
+        for i, v in enumerate(self._value):
+            if isinstance(v, Number):
+                if not(0. <= v <= 255.):
+                    error = True
+                else:
+                    self._value[i] = int(v)
+            else:
+                error = True
+        if error:
+            raise ValueError(f'Incorrect value for color, got ({self._value})')

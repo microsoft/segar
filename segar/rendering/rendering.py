@@ -273,6 +273,7 @@ class Renderer:
         dim_y: Optional[int] = None,
         filter_factors: Optional[list[Factor]] = None,
         annotation: bool = False,
+        reset_every_call: bool = False
     ):
         """
 
@@ -282,6 +283,7 @@ class Renderer:
         :param dim_x: Optional number of x pixels.
         :param dim_y: Optional number of y pixels.
         :param filter_factors: Factors to filter from rendering.
+        :param reset_every_call: Reset the object visuals every time called.
         """
         if isinstance(res, Resolution):
             res = res.value
@@ -298,6 +300,7 @@ class Renderer:
         self.img = np.zeros((self.dim_x, dim_y, self.n_channels), dtype=img_type)
         self.obj_visuals = []
         self.tile_visuals = []
+        self._reset_every_call = reset_every_call
         self._filter_factors = filter_factors or []
         self.annotation = annotation
 
@@ -504,6 +507,10 @@ class Renderer:
         :return: Rendered image of the environment.
         """
 
+        # To make things fast, usually the objects are all rendered ahead of time and we move them around. However,
+        # if you want the visual appearance of the object to change, this is the quickest fix.
+        if self._reset_every_call:
+            self.reset(self.sim)
         self.img[:, : self.dim_y] = self.floor[:]
 
         for obj_vis in self.obj_visuals:

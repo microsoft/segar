@@ -7,7 +7,7 @@ __license__ = "MIT"
 
 """
 
-__all__ = ("VectorFactor", "Position", "Velocity", "Acceleration")
+__all__ = ("VectorFactor", "Position", "Velocity", "Acceleration", "Force")
 
 from numbers import Number
 from typing import TypeVar, Union
@@ -133,4 +133,8 @@ class Velocity(VectorFactor, default=[0.0, 0.0]):
 
 
 class Acceleration(VectorFactor, default=[0.0, 0.0]):
+    pass
+
+
+class Force(VectorFactor, default=[0.0, 0.0]):
     pass

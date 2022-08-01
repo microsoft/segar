@@ -67,6 +67,9 @@ class Factor(Generic[T], metaclass=MetaFactor):
     def __ne__(self, other: Union[Factor, T]) -> bool:
         return self.value != Factor._get_value(other)
 
+    def _test_value(self, value: Any):
+        pass
+
     @property
     def t(self) -> type:
         # typing isn't really designed for runtime inference, but we do that

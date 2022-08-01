@@ -42,6 +42,7 @@ class MDP(gym.Env):
         episodes_per_arena: int = 1,
         result_keys: Optional[dict] = None,
         sim: Optional[Simulator] = None,
+        reset_renderer_every_call: bool = False
     ):
         """
 
@@ -56,12 +57,13 @@ class MDP(gym.Env):
         every randomization of the MDP.
         :param result_keys: Results from the full state dictionary to log.
         :param sim: Optional non-global simulator to pass to MDP.
+        :param reset_renderer_every_call: Resets the renderer every call. Only use if visual appearances change.
         """
 
         self._observation = observation
         self._task = task
         # This renderer is for human consumption.
-        self._renderer = RGBRenderer(annotation=True)
+        self._renderer = RGBRenderer(annotation=True, reset_every_call=reset_renderer_every_call)
 
         self.sub_steps = sub_steps
         self.num_episodes = 0
@@ -252,7 +254,6 @@ class MDP(gym.Env):
 
         results = dict()
         rew = 0
-
         done = False
         for _ in range(self.sub_steps):
             rew, done, step_results = self.substep()

@@ -284,7 +284,7 @@ class Differential(Transition, Generic[F]):
     """
 
     def __repr__(self) -> str:
-        return f"{self.factor} += Δt {self.value}"
+        return f"{self.factor} <= {self.factor} + Δt {self.value}"
 
     def __call__(self, dt: Time) -> F:
         if not self.applied:
@@ -300,7 +300,7 @@ class Aggregate(Transition, Generic[F]):
     """
 
     def __repr__(self) -> str:
-        return f"{self.factor} += {self.value}"
+        return f"{self.factor} <= {self.value}"
 
     def __call__(self) -> F:
         if not self.applied:

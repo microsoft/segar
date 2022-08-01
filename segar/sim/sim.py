@@ -36,6 +36,7 @@ from segar.factors import (
     StoredEnergy,
     Text,
     Velocity,
+    Force,
     FACTORS,
     FACTOR_DEFAULTS,
 )
@@ -69,6 +70,7 @@ from segar.rules import (
     kill_condition,
     consume,
     accelerate,
+    apply_force
 )
 from segar.rules.collisions import (
     overlap_time,
@@ -107,10 +109,16 @@ DEFAULT_RULES = [
     kill_condition,
     consume,
     accelerate,
+    apply_force
 ]
 _PRECISION = 1e-6  # For collision checks.
 
 FactorOrder = tuple[list[Type[Factor]], ...]
+
+
+def change_precision(value: float):
+    global _PRECISION
+    _PRECISION = value
 
 
 class Simulator:
@@ -130,6 +138,7 @@ class Simulator:
         save_path: str = None,
         state_buffer_length: int = 1,
         rules: Optional[List[Rule]] = None,
+        wall_collision_rule: Optional[Rule] = None,
         factor_update_order: FactorOrder = _DEFAULT_FACTOR_UPDATE_ORDER,
         local_sim: bool = False,
     ):
@@ -175,9 +184,10 @@ class Simulator:
             MinVelocity: MinVelocity(min_velocity),
         }
         self._rules = []
+        self._wall_collision_rule = wall_collision_rule or wall_collision
         self.set_rules(rules or DEFAULT_RULES)
         self._valid_ep_rules = None
-        self._factor_update_order = factor_update_order
+        self._factor_update_order = factor_update_order[:]
 
         # Sim parameters
         self._save_path = save_path
@@ -632,10 +642,11 @@ class Simulator:
 
                 for res_ in res:
                     factor = res_.factor
-                    if factor in factor_outcomes:
-                        factor_outcomes[factor].append(res_)
-                    else:
-                        factor_outcomes[factor] = [res_]
+                    if type(factor) in affected_factors:
+                        if factor in factor_outcomes:
+                            factor_outcomes[factor].append(res_)
+                        else:
+                            factor_outcomes[factor] = [res_]
 
         # Conflict resolution. One transition per factor.
         final_outcomes = {}
@@ -699,7 +710,7 @@ class Simulator:
         for factor_types in self._factor_update_order:
             if Position in factor_types:
                 raise ValueError(
-                    f"{Position} factor type must be modified " f"only during collision management."
+                    f"{Position} factor type must be modified only during collision management."
                 )
             rule_outcomes = self.get_final_outcomes(
                 self._valid_ep_rules, affected_factors=factor_types
@@ -1085,8 +1096,8 @@ class Simulator:
             return
 
         try:
-            with thing[Velocity].in_place():
-                thing[Velocity] += np.array(force / thing[Mass].value)
+            with thing[Force].in_place():
+                thing[Force] += np.array(force)
         except KeyError:
             raise KeyError("Force can only be added to objects with mass " "and velocity.")
 
@@ -1328,7 +1339,7 @@ class Simulator:
             o1, o2 = colliding_pair
 
             if isinstance(o2, SquareWall):
-                final_collisions = [wall_collision(o1, o2)]
+                final_collisions = [self._wall_collision_rule(o1, o2)]
             else:
                 final_collisions = object_collision(o1, o2)
 

@@ -39,6 +39,7 @@ from .special import (
     apply_friction,
     consume,
     accelerate,
+    apply_force
 )
 
 __all__ = (
@@ -76,4 +77,5 @@ __all__ = (
     "apply_friction",
     "consume",
     "accelerate",
+    "apply_force"
 )

@@ -4,6 +4,6 @@ __license__ = "MIT"
 
 """
 
-from .sim import Simulator
+from .sim import change_precision, Simulator
 
-__all__ = ["Simulator"]
+__all__ = ["change_precision", "Simulator"]
