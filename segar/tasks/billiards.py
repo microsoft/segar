@@ -9,6 +9,7 @@ __all__ = ("billiards_default_config", "Billiards", "BilliardsInitialization")
 import math
 from typing import Optional
 
+from gym.spaces import Box
 import numpy as np
 
 from segar.mdps.initializations import ArenaInitialization
@@ -204,12 +205,11 @@ class Billiards(Task):
         """
 
         action_type = np.float16
-        baseline_action = np.array([0, 0]).astype(action_type)
+        action_space = Box(
+            action_range[0], action_range[1], shape=action_shape, dtype=action_type,
+        )
         super().__init__(
-            action_range=action_range,
-            action_shape=action_shape,
-            action_type=action_type,
-            baseline_action=baseline_action,
+            action_space=action_space,
             initialization=initialization,
         )
 

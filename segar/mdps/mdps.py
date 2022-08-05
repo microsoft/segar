@@ -189,7 +189,6 @@ class MDP(gym.Env):
                     results = None
                 else:
                     results = self._task.results(self.state)
-
                 img = self._observation.render(results=results)
                 if hasattr(self._observation, "add_text"):
                     if label is not None:
@@ -203,7 +202,8 @@ class MDP(gym.Env):
                 raise AttributeError("Agent's observation space is not " "pixel-based.")
 
         else:
-            img = self._renderer()
+            results = self._task.results(self.state)
+            img = self._renderer(results=results)
             if label is not None:
                 self._renderer.add_text(label)
             if mode == "rgb_array":

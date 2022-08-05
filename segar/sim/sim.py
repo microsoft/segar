@@ -641,8 +641,10 @@ class Simulator:
                     res = [res]
 
                 for res_ in res:
+                    if res_ is None:
+                        continue
                     factor = res_.factor
-                    if type(factor) in affected_factors:
+                    if (affected_factors is None) or (type(factor) in affected_factors):
                         if factor in factor_outcomes:
                             factor_outcomes[factor].append(res_)
                         else:
@@ -703,10 +705,12 @@ class Simulator:
 
         :param dt: Time scale.
         """
+
         dt = dt or self.parameters[Time]
 
         if self._valid_ep_rules is None:
             self._valid_ep_rules = self.get_valid_rules()
+
         for factor_types in self._factor_update_order:
             if Position in factor_types:
                 raise ValueError(
@@ -1077,18 +1081,15 @@ class Simulator:
     # API for thing factors
 
     def add_force(
-        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray]
+        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray], continuous: bool = False
     ) -> None:
-        """Apply a force to an object that results in a velocity that's
-        relative to the object's mass
-
-        Results in a change to the object's velocity.
+        """Apply an instantaneous or continuous force to an object
 
         :param force: Force vector.
         :param thing_id: Object to apply force to.
+        :param continuous: Whether to apply the force continuously across the time interval.
         :return: None
         """
-        # F = m*v
         if isinstance(thing_id, ID):
             thing_id = thing_id.value
         thing = self.things[thing_id]
@@ -1097,9 +1098,25 @@ class Simulator:
 
         try:
             with thing[Force].in_place():
+                force = np.array(force)
+                if not continuous:
+                    force /= self.parameters[Time]
                 thing[Force] += np.array(force)
         except KeyError:
             raise KeyError("Force can only be added to objects with mass " "and velocity.")
+
+    def add_continuous_force(
+        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray]
+    ) -> None:
+        """Apply an continuous force to an object over a time interval.
+
+        Results in a change to the object's velocity.
+
+        :param force: Force vector.
+        :param thing_id: Object to apply force to.
+        :return: None
+        """
+        return self.add_force(thing_id, force * self.parameters[Time])
 
     def add_velocity(
         self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray]

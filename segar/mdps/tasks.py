@@ -12,7 +12,7 @@ __all__ = ("Task",)
 
 from typing import Optional, Type
 
-from gym.spaces import Box
+from gym.spaces import Space
 import numpy as np
 
 from segar import get_sim
@@ -31,26 +31,19 @@ class Task:
 
     def __init__(
         self,
-        action_range: tuple[float, float],
-        action_shape: tuple,
-        action_type: type,
-        baseline_action: np.ndarray,
         initialization: Initialization,
+        action_space: Space,
+        baseline_action: Optional[np.ndarray] = None,
     ):
         """
 
-        :param action_range: Range of legal actions.
-        :param action_shape: Shape of the actions.
-        :param action_type: Type of the actions.
+        :param action_space: gym.spaces.Space action space.
         :param baseline_action: Action to add as baseline to all actions.
         :param initialization: Initialization object for the task.
         """
 
         self._sim = None
-        self._action_space = Box(
-            action_range[0], action_range[1], shape=action_shape, dtype=action_type,
-        )
-
+        self._action_space = action_space
         self._initialization = initialization
         self._baseline_action = baseline_action
 
@@ -65,7 +58,7 @@ class Task:
         self._initialization.set_sim(self._sim)
 
     @property
-    def action_space(self) -> Box:
+    def action_space(self) -> Space:
         return self._action_space
 
     def check_action(self, action: np.ndarray) -> bool:
@@ -96,7 +89,8 @@ class Task:
         :return: New action.
         """
         self.check_action(action)
-        action += self._baseline_action
+        if self._baseline_action is not None:
+            action += self._baseline_action
         return action
 
     def reward(self, state: dict) -> float:

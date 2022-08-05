@@ -6,6 +6,7 @@ __license__ = "MIT"
 
 import logging
 
+from gym.spaces import Box
 import numpy as np
 
 from segar.factors import (
@@ -159,13 +160,12 @@ def _create_mdp(sim=None):
     action_range = (-100, 100)  # Range of valid action values
     action_shape = (2,)  # 2d vectors
     action_type = np.float32
-    baseline_action = np.zeros(2).astype(np.float32)
+    action_space = Box(
+        action_range[0], action_range[1], shape=action_shape, dtype=action_type,
+    )
 
     task = MyTask(
-        action_range=action_range,
-        action_shape=action_shape,
-        action_type=action_type,
-        baseline_action=baseline_action,
+        action_space=action_space,
         initialization=initialization,
     )
 
@@ -186,21 +186,12 @@ def test_apply_action():
     for _ in range(100):
         action = np.random.uniform(-2, 2, size=(2,))
         mdp.reset()
-
         mdp.step(action)
         vel = sim.things[0][Velocity].value
-        expected_vel = Velocity(action / mass)
-
-        vel_sign = expected_vel.sign()
-        vel_norm = expected_vel.norm()
-
-        f_mag = mu * gravity
-        norm_abs_vel = expected_vel.abs() / vel_norm
-        da = -vel_sign * f_mag * norm_abs_vel / mass
-        expected_vel = (expected_vel + da * dt).value
+        expected_vel = Velocity(action / mass).value
 
         if not np.allclose(expected_vel, vel, atol=1e-7):
-            raise ValueError(f"Velocity {vel} doesn't match expected " f"{expected_vel}.")
+            raise ValueError(f"Force wasVelocity {vel} doesn't match expected " f"{expected_vel}.")
     print("[PASSED]")
 
 

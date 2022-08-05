@@ -40,6 +40,8 @@ class NumericFactor(Factor[T], default=0):
         "__idiv__",
     )
 
+    _range = None
+
     __array_priority__ = 1  # For numpy array functionality
 
     def __init_subclass__(cls, /, default=None, range: Tuple = None, **kwargs):
