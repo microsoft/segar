@@ -12,7 +12,7 @@ def scale(x, pos):
     return '%dk' % (x * 1e-3)
 formatter = FuncFormatter(scale)
 
-folder = 'PPO'
+folder = 'SAC'
 metric = 'Returns'
 
 files = glob.glob("../data/%s/*.csv" % folder)

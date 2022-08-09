@@ -60,7 +60,7 @@ flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
 flags.DEFINE_integer("framestack", 1, "Number of frames to stack")
 flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
-flags.DEFINE_list("factor_delete_list", ['mass'],
+flags.DEFINE_list("factor_delete_list", [],
                   "List of factors to remove from observations.")
 # PPO
 flags.DEFINE_float("max_grad_norm", 10, "Max grad norm")
@@ -326,7 +326,7 @@ def main(argv):
                     data,
                     FLAGS.num_envs,
                     FLAGS.n_steps,
-                    FLAGS.n_minibatch,
+                    32,
                     FLAGS.epoch_ppo,
                     FLAGS.clip_eps,
                     FLAGS.entropy_coeff,

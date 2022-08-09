@@ -26,20 +26,10 @@ def main(argv):
 
     for run in tqdm.tqdm(runs):
         params = json.loads(run.json_config)
-        if 'SPR_noMassDelete' not in params['run_id']['value']:
-            continue
 
         env_name = params['env_name']['value']
         num_levels = params['num_train_levels']['value']
         seed = params['seed']['value']
-        if 'factor_delete_list' in params:
-            factor_delete_list = params['factor_delete_list']['value']
-            if len(factor_delete_list):
-                factor_delete_list = factor_delete_list[0]
-            else:
-                factor_delete_list = ''
-        else:
-            factor_delete_list = ''
         framestack = params['framestack']['value']
         things, difficulty, _ = env_name.split('-')
 
@@ -54,22 +44,10 @@ def main(argv):
         run_df['things'] = things
         run_df['difficulty'] = difficulty
         run_df['num_levels'] = num_levels
-        run_df['factor_delete_list'] = factor_delete_list
         run_df['framestack'] = framestack
         run_df['seed'] = seed
 
-        artifact = run.logged_artifacts()
-        if not len(artifact):
-            continue
-
-        artifact = artifact[0]
-        fn = artifact.file().split(os.path.sep)[-1]
-        artifact_dir = artifact.download(dir_)
-        os.rename(os.path.join(dir_, fn), os.path.join(
-            dir_, 'checkpoint_%s_%s_%s_%s_%d_%d' % (things, difficulty, num_levels, factor_delete_list, framestack, seed)))
-
-        run_df.to_csv(os.path.join(dir_,
-                                '%s_%s_%s_%s_%d_%d.csv' % (things, difficulty, num_levels, factor_delete_list, framestack, seed)))
+        run_df.to_csv(os.path.join(dir_, '%s_%s_%d_%d.csv' % (things, difficulty, num_levels, seed)))
                                 
         time.sleep(3.)
 

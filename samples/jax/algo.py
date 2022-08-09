@@ -447,8 +447,8 @@ def update_spr(train_state: TrainState, train_state_target: TrainState,
             grads = jax.tree_util.tree_map(jnp.nan_to_num, grads)
             train_state = train_state.apply_gradients(grads=grads)
 
-    total_loss, (spr_loss) = total_loss
+            total_loss, (spr_loss) = total_loss
 
-    avg_metrics_dict['spr_loss'] += spr_loss.mean()
+            avg_metrics_dict['spr_loss'] += spr_loss.mean() / (n_minibatch * epoch_ppo)
 
     return avg_metrics_dict, train_state, rng

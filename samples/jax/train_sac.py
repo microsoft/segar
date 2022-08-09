@@ -45,7 +45,7 @@ FLAGS = flags.FLAGS
 # Task
 flags.DEFINE_string("env_name", "tilesx1-medium-rgb", "Env name")
 flags.DEFINE_integer("seed", 123, "Random seed.")
-flags.DEFINE_integer("num_envs", 64, "Num of parallel envs.")
+flags.DEFINE_integer("num_envs", 1, "Num of parallel envs.")
 flags.DEFINE_integer("num_train_levels", 10, "Num of training levels envs.")
 flags.DEFINE_integer("num_test_levels", 500, "Num of test levels envs.")
 flags.DEFINE_integer("train_steps", 1_000_000, "Number of train frames.")
@@ -53,7 +53,7 @@ flags.DEFINE_integer("framestack", 1, "Number of frames to stack")
 flags.DEFINE_integer("resolution", 64, "Resolution of pixel observations")
 ################ 
 # Logging
-flags.DEFINE_integer("checkpoint_interval", 10, "Checkpoint frequency")
+flags.DEFINE_integer("checkpoint_interval", 100_000, "Checkpoint frequency")
 flags.DEFINE_string("run_id", "jax_run",
                     "Run ID. Change that to change W&B name")
 flags.DEFINE_string("wandb_mode", "disabled",
@@ -76,11 +76,7 @@ flags.DEFINE_integer(
     'action_repeat', None,
     'Action repeat, if None, uses 2 or PlaNet default values.')
 flags.DEFINE_boolean('tqdm', True, 'Use tqdm progress bar.')
-config_flags.DEFINE_config_file(
-    'config',
-    'jaxrl/configs/drq_faster.py',
-    'File path to the training hyperparameter configuration.',
-    lock_config=False)
+
 
 PLANET_ACTION_REPEAT = {
     'cartpole-swingup': 8,
@@ -92,7 +88,29 @@ PLANET_ACTION_REPEAT = {
 }
 
 def main(_):
-    kwargs = dict(FLAGS.config)
+    kwargs = {
+        'algo' : 'drq_faster',
+        'actor_lr' : 3e-4,
+        'critic_lr' : 3e-4,
+        'temp_lr' : 3e-4,
+
+        'hidden_dims' : (256, 256),
+
+        'cnn_features' : (32, 64, 128, 256),
+        'cnn_strides' : (2, 2, 2, 2),
+        'cnn_padding' : 'SAME',
+        'latent_dim' : 50,
+
+        'discount' : 0.99,
+
+        'tau' : 0.005,
+        'target_update_period' : 1,
+
+        'init_temperature' : 0.1,
+        'target_entropy' : None,
+
+        'replay_buffer_size' : 100_000,
+    }
     # Setting all rnadom seeds
     if FLAGS.seed == -1:
         seed = np.random.randint(100000000)
@@ -174,7 +192,7 @@ def main(_):
     returns_train_buf = deque(maxlen=10)
     success_train_buf = deque(maxlen=10)
     #####
-
+    eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
     for i in tqdm.tqdm(range(1, FLAGS.train_steps // action_repeat + 1),
                        smoothing=0.1,
                        disable=not FLAGS.tqdm):
@@ -186,19 +204,18 @@ def main(_):
         next_observation, reward, done, info = env.step(action)
        
         mask = 0
-        for e in range(len(info)):
-            maybe_success = info[e].get("success")
-            if maybe_success:
-                success_train_buf.append(maybe_success)
-            maybe_epinfo = info[e].get("returns")
-            if maybe_epinfo:
-                returns_train_buf.append(maybe_epinfo)
-            maybe_timelimit = info[e].get("TimeLimit.truncated")
-            if maybe_timelimit:
-                mask = 1
+        maybe_success = info.get("success")
+        if maybe_success:
+            success_train_buf.append(maybe_success)
+        maybe_epinfo = info.get("returns")
+        if maybe_epinfo:
+            returns_train_buf.append(maybe_epinfo)
+        maybe_timelimit = info.get("TimeLimit.truncated")
+        if maybe_timelimit:
+            mask = 1
 
         replay_buffer.insert(jax.numpy.array(observation),
-                             jax.numpy.array(action), reward.mean(), mask, float(done[0]),
+                             jax.numpy.array(action), reward.mean(), mask, float(done),
                              jax.numpy.array(next_observation))
         observation = next_observation
 
@@ -214,13 +231,12 @@ def main(_):
 
         if i % FLAGS.eval_interval == 0:
             eval_stats = evaluate(agent, eval_env, FLAGS.eval_episodes)
-
             for k, v in eval_stats.items():
-                summary_writer.add_scalar(f'evaluation/average_{k}s', v, i)
+                summary_writer.add_scalar(f'evaluation/{k}', v, i)
                 wandb.log({f'evaluation/average_{k}s': v}, step=i)
             summary_writer.flush()
 
-            eval_returns.append((i, eval_stats['return']))
+            eval_returns.append((i, eval_stats['returns']))
             np.savetxt(os.path.join(FLAGS.save_dir, group_name, run_name, f'{FLAGS.seed}.txt'),
                        eval_returns,
                        fmt=['%d', '%.1f'])
@@ -229,7 +245,7 @@ def main(_):
             model_dir = os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
             checkpoints.save_checkpoint(
                 ckpt_dir=model_dir,
-                target=observation,
+                target=(agent.actor, agent.critic),
                 step=i,
                 overwrite=True,
                 keep=1,

@@ -43,3 +43,17 @@ def rollouts(env: Env,
                 returns.append(maybe_epinfo)
                 n_rollouts -= 1
     return returns, (states, zs, actions, factors, task_ids)
+
+
+def rollouts_random(env: Env, n_rollouts: int = 10):
+    state = env.reset()
+    returns = []
+    while n_rollouts:
+        action = env.action_space.sample()
+        state, _, _, infos = env.step(action)
+        for info in infos:
+            maybe_epinfo = info.get('returns')
+            if maybe_epinfo:
+                returns.append(maybe_epinfo)
+                n_rollouts -= 1
+    return returns
