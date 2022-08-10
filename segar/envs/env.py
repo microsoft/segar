@@ -339,24 +339,26 @@ class SEGAREnv(gym.Env):
                 task_str_to_class(task_class),
             )
 
+        dummy_env = make_env()
+
         if not _async:
             print("Making sync envs.")
             self.env = gym.vector.SyncVectorEnv(
                 [make_env for _ in range(num_envs)],
-                observation_space=self.observation_space,
-                action_space=self.action_space,
+                observation_space=dummy_env.observation_space,
+                action_space=dummy_env.action_space,
             )
         else:
             print("Making async envs.")
             self.env = gym.vector.AsyncVectorEnv(
                 [make_env for _ in range(num_envs)],
-                observation_space=self.observation_space,
-                action_space=self.action_space,
+                observation_space=dummy_env.observation_space,
+                action_space=dummy_env.action_space,
                 shared_memory=True,
                 daemon=True,
             )
-        self.action_space = self.env.action_space
-        self.observation_space = self.env.observation_space
+        self.action_space = dummy_env.action_space
+        self.observation_space = dummy_env.observation_space
         # self.reset() # this should not be called in the Env itself
 
     def step(self, action):
