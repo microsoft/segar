@@ -380,6 +380,12 @@ class CartPoleTask(Task):
         first_factors = [ft for ft in FACTORS if ft not in (Velocity, AngularVelocity, Position, Angle)]
         self.sim._factor_update_order = (first_factors[:], [Velocity, AngularVelocity], [Angle])
         self.terminated = False
+        self.steps_terminated = 0
+
+    def initialize(self, init_things=None):
+        self.terminated = False
+        self.steps_terminated = 0
+        return super().initialize(init_things=init_things)
 
     def check_action(self, action: int) -> bool:
         return action in list(range(len(self._actions)))
@@ -388,7 +394,7 @@ class CartPoleTask(Task):
         return 1
 
     def reward(self, state: dict) -> float:
-        if self.terminated:
+        if self.terminated and self.steps_terminated > 0:
             return 0.
         else:
             return 1.
@@ -406,6 +412,7 @@ class CartPoleTask(Task):
         theta = state['things']['cartpole'][Angle]
         if not(_CARTPOLE_ANGLE_RANGE[0] / 2. < theta < _CARTPOLE_ANGLE_RANGE[1] / 2.):
             self.terminated = True
+            self.steps_terminated += 1
         return self.terminated
 
     def results(self, state: dict) -> dict:
