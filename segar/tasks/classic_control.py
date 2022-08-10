@@ -30,8 +30,7 @@ from segar.factors import (
     Text,
     Charge,
     ID,
-    FACTORS,
-    Force
+    FACTORS
 )
 from segar.mdps.initializations import Initialization
 from segar.mdps.observations import StateObservation
@@ -42,7 +41,7 @@ from segar.things import Entity, Object, Thing, Ball, SquareWall
 
 
 # Classic control doesn't have collisions, so threshold positions if we don't want to bounce, otherwise set to None
-_POS_THRESH = .05
+_POS_THRESH = .0
 
 
 # Mountaincar default parameters, matched to gym. Everything is in the original basis (see basis functions below).
@@ -80,7 +79,7 @@ class AngularAcceleration(NumericFactor[float], default=0.):
     pass
 
 
-class PoleMassProp(Mass, range=[0., 1.], default=0.1):
+class PoleMassProp(Mass, range=[0., 1.], default=.1/1.1):
     pass
 
 
@@ -93,24 +92,24 @@ def to_mountaincar_basis(x, recenter=True):
     mountaincar_length = _MOUNTAINCAR_POS_RANGE[1] - _MOUNTAINCAR_POS_RANGE[0]
     # center and rescale
     if recenter:
-        x -= _arena_range[0]
+        x = x - _arena_range[0]
     # We want a buffer so we don't have to deal with object size.
-    x *= mountaincar_length / _arena_length
+    x = x * mountaincar_length / _arena_length
     # shift
     if recenter:
-        x += _MOUNTAINCAR_POS_RANGE[0]
+        x = x + _MOUNTAINCAR_POS_RANGE[0]
     return x
 
 
 def from_mountaincar_basis(x, recenter=True):
     mountaincar_length = _MOUNTAINCAR_POS_RANGE[1] - _MOUNTAINCAR_POS_RANGE[0]
     if recenter:
-        x -= _MOUNTAINCAR_POS_RANGE[0]
+        x = x - _MOUNTAINCAR_POS_RANGE[0]
 
-    x *= _arena_length / mountaincar_length
+    x = x * _arena_length / mountaincar_length
 
     if recenter:
-        x += _arena_range[0]
+        x = x + _arena_range[0]
     return x
 
 
@@ -259,7 +258,7 @@ class MountainCarObservation(StateObservation):
     def __call__(self, states: dict) -> np.ndarray:
         mountaincar_state = states['things'][self.unique_id]
         pos_x = to_mountaincar_basis(mountaincar_state[Position][0])
-        vel_x = to_cartpole_basis(mountaincar_state[Velocity][0], recenter=False)
+        vel_x = to_mountaincar_basis(mountaincar_state[Velocity][0], recenter=False)
         return np.array(pos_x, vel_x)
 
 
@@ -268,24 +267,24 @@ def to_cartpole_basis(x, recenter=True):
     cartpole_length = _CARTPOLE_POS_RANGE[1] - _CARTPOLE_POS_RANGE[0]
     # center and rescale
     if recenter:
-        x -= _arena_range[0]
+        x = x - _arena_range[0]
     # We want a buffer so we don't have to deal with object size.
-    x *= cartpole_length / _arena_length
+    x = x * cartpole_length / _arena_length
     # shift
     if recenter:
-        x += _CARTPOLE_POS_RANGE[0]
+        x = x + _CARTPOLE_POS_RANGE[0]
     return x
 
 
 def from_cartpole_basis(x, recenter=True):
     cartpole_length = _CARTPOLE_POS_RANGE[1] - _CARTPOLE_POS_RANGE[0]
     if recenter:
-        x -= _CARTPOLE_POS_RANGE[0]
+        x = x - _CARTPOLE_POS_RANGE[0]
 
-    x *= _arena_length / cartpole_length
+    x = x * _arena_length / cartpole_length
 
     if recenter:
-        x += _arena_range[0]
+        x = x + _arena_range[0]
     return x
 
 
@@ -307,21 +306,21 @@ def pole_acceleration(o_factors: Tuple[Mass, Velocity, PoleMassProp, PoleLength,
                       ) -> Tuple[Aggregate[AngularAcceleration], Aggregate[Acceleration]]:
 
     total_mass, vel, pole_prop_mass, length, acceleration, theta, thetavel, thetaacc = o_factors
-
     a_y = acceleration[1]
     pole_mass = total_mass * pole_prop_mass
-    force = a_y * total_mass
-    force_cp = to_cartpole_basis(force, recenter=False)
+    force_total = a_y * total_mass
+    force_cp = to_cartpole_basis(force_total, recenter=False)
     sintheta = np.sin(theta)
     costheta = np.cos(theta)
+    polemass_length = pole_mass * length
 
     # Copied more or less from gym
     temp = (force_cp + length * thetavel ** 2 * sintheta) / total_mass
-    dthetavel = (gravity * sintheta - costheta * temp) / (length * (4.0 / 3.0 - pole_mass * costheta ** 2 / total_mass))
+    dthetavel = (gravity * sintheta - costheta * temp) / (
+            length * (4.0 / 3.0 - pole_mass * costheta ** 2 / total_mass))
 
-    # Here we need to remove the external force because it's already being applied to the ball
-    da_y = from_cartpole_basis(temp - length * dthetavel * costheta / total_mass) - force / total_mass
-
+    # Here we need to remove the acceleration because it's already being applied to the object
+    da_y = from_cartpole_basis(temp - polemass_length * dthetavel * costheta / total_mass) - a_y
     return Aggregate[AngularAcceleration](thetaacc, dthetavel), Aggregate[Acceleration](acceleration, [0., da_y])
 
 
@@ -330,7 +329,6 @@ def pole_fell(theta: Angle, thetavel: AngularVelocity, thetaacc: AngularAccelera
               ) -> Tuple[SetFactor[Angle], SetFactor[AngularVelocity], SetFactor[AngularAcceleration]]:
     if _CARTPOLE_ANGLE_RANGE[0] < theta < _CARTPOLE_ANGLE_RANGE[1]:
         return None
-
     new_theta = Angle(np.clip(theta.value, *_CARTPOLE_ANGLE_RANGE))
 
     return (SetFactor[Angle](theta, new_theta), SetFactor[AngularVelocity](thetavel, 0.),
@@ -361,7 +359,7 @@ class CartPoleInitialization(Initialization):
 
     def __call__(self, init_things: Optional[list[Entity]] = None) -> None:
         theta = float(np.random.uniform(*_CARTPOLE_INIT_ANGLE_RANGE))
-        cartpole = CartPole(initial_factors={Angle: theta, ID: 'cartpole'})
+        cartpole = CartPole(initial_factors={Angle: theta, ID: 'cartpole', Mass: 1.1})
         self.sim.adopt(cartpole)
 
 
@@ -379,8 +377,8 @@ class CartPoleTask(Task):
         self.sim.add_rule(change_angular_velocity)
         self.sim.add_rule(pole_acceleration)
         self.sim.add_rule(pole_fell)
-        first_factors = [ft for ft in FACTORS if ft not in (Velocity, AngularVelocity, Position, Angle, Force)]
-        self.sim._factor_update_order = (first_factors[:], [Force, Velocity, AngularVelocity], [Angle])
+        first_factors = [ft for ft in FACTORS if ft not in (Velocity, AngularVelocity, Position, Angle)]
+        self.sim._factor_update_order = (first_factors[:], [Velocity, AngularVelocity], [Angle])
         self.terminated = False
 
     def check_action(self, action: int) -> bool:
@@ -400,6 +398,9 @@ class CartPoleTask(Task):
         # As opposed to mountaincar, which uses force to instantaneously change the velocity,
         # the cartpole force is used directly in the equations of motion.
         self.sim.add_force('cartpole', np.array([0., force]), continuous=True)
+        # Small hack due to MDP issues
+        mass = self.sim.things['cartpole'][Mass]
+        self.sim.add_velocity('cartpole', np.array([0., force / mass * 0.02]))
 
     def done(self, state: dict) -> bool:
         theta = state['things']['cartpole'][Angle]
@@ -431,8 +432,8 @@ class CartPoleObservation(StateObservation):
 
     def __call__(self, states: dict) -> np.ndarray:
         cartpole_state = states['things']['cartpole']
-        pos_x = to_cartpole_basis(cartpole_state[Position][0])
-        vel_x = to_cartpole_basis(cartpole_state[Velocity][0])
-        theta = cartpole_state[Angle]
-        thetadot = cartpole_state[AngularVelocity]
+        pos_x = to_cartpole_basis(cartpole_state[Position][1])
+        vel_x = to_cartpole_basis(cartpole_state[Velocity][1])
+        theta = cartpole_state[Angle].value
+        thetadot = cartpole_state[AngularVelocity].value
         return np.array([pos_x, vel_x, theta, thetadot])

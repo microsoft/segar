@@ -26,7 +26,6 @@ from segar.factors import (
     StoredEnergy,
     Text,
     Velocity,
-    Force
 )
 from .things import Thing
 
@@ -48,7 +47,6 @@ class Object(Thing, default={Shape: Circle(0.2), Label: "object", Text: "O"}):
         Done,
         Mobile,
         Acceleration,
-        Force
     )
 
 

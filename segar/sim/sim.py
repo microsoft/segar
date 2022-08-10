@@ -36,7 +36,7 @@ from segar.factors import (
     StoredEnergy,
     Text,
     Velocity,
-    Force,
+    Acceleration,
     FACTORS,
     FACTOR_DEFAULTS,
 )
@@ -69,8 +69,7 @@ from segar.rules import (
     stop_condition,
     kill_condition,
     consume,
-    accelerate,
-    apply_force
+    accelerate
 )
 from segar.rules.collisions import (
     overlap_time,
@@ -108,8 +107,7 @@ DEFAULT_RULES = [
     stop_condition,
     kill_condition,
     consume,
-    accelerate,
-    apply_force
+    accelerate
 ]
 _PRECISION = 1e-6  # For collision checks.
 
@@ -639,7 +637,6 @@ class Simulator:
             if not (isinstance(res, DidNotPass) or res is None):
                 if not isinstance(res, tuple):
                     res = [res]
-
                 for res_ in res:
                     if res_ is None:
                         continue
@@ -1081,8 +1078,7 @@ class Simulator:
     # API for thing factors
 
     def add_force(
-        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray], continuous: bool = False
-    ) -> None:
+        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray], continuous=False) -> None:
         """Apply an instantaneous or continuous force to an object
 
         :param force: Force vector.
@@ -1093,30 +1089,33 @@ class Simulator:
         if isinstance(thing_id, ID):
             thing_id = thing_id.value
         thing = self.things[thing_id]
-        if thing[Mass] == 0:
-            return
-
         try:
-            with thing[Force].in_place():
-                force = np.array(force)
-                if not continuous:
-                    force /= self.parameters[Time]
-                thing[Force] += np.array(force)
+            mass = thing[Mass]
+            if thing[Mass] == 0.:
+                return
+            force = np.array(force)
+            if not continuous:
+                force /= self.parameters[Time]
+            return self.add_acceleration(thing_id, force / mass)
         except KeyError:
-            raise KeyError("Force can only be added to objects with mass " "and velocity.")
+            raise KeyError("Force can only be added to objects with mass and velocity.")
 
-    def add_continuous_force(
-        self, thing_id: Union[ThingID, ID], force: Union[Tuple[float, float], np.ndarray]
+    def add_acceleration(
+        self, thing_id: ThingID, acceleration: Union[Tuple[float, float], np.ndarray]
     ) -> None:
-        """Apply an continuous force to an object over a time interval.
+        """Apply an acceleration to an object.
 
-        Results in a change to the object's velocity.
-
-        :param force: Force vector.
-        :param thing_id: Object to apply force to.
+        :param acceleration: Acceleration vector.
+        :param thing_id: Thing to add acceleration to.
         :return: None
         """
-        return self.add_force(thing_id, force * self.parameters[Time])
+        thing = self.things[thing_id]
+        try:
+            with thing.in_place():
+                thing[Acceleration] = acceleration
+
+        except KeyError:
+            raise KeyError("Acceleration can only be added to objects with acceleration.")
 
     def add_velocity(
         self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray]
@@ -1129,7 +1128,7 @@ class Simulator:
         object's velocity.
 
         :param velocity: Velocity vector.
-        :param thing_id: Thing to apply velocity to.
+        :param thing_id: Thing to add velocity to.
         :return: None
         """
         thing = self.things[thing_id]
@@ -1138,7 +1137,7 @@ class Simulator:
                 thing[Velocity] += velocity
 
         except KeyError:
-            raise KeyError("Force can only be added to objects with velocity.")
+            raise KeyError("Velocity can only be added to objects with velocity.")
 
     def all_stopped(self) -> bool:
         min_velocity = self.parameters[MinVelocity]

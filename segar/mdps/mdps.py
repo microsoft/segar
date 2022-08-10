@@ -42,7 +42,8 @@ class MDP(gym.Env):
         episodes_per_arena: int = 1,
         result_keys: Optional[dict] = None,
         sim: Optional[Simulator] = None,
-        reset_renderer_every_call: bool = False
+        reset_renderer_every_call: bool = False,
+        stop_on_done: bool = True
     ):
         """
 
@@ -73,6 +74,7 @@ class MDP(gym.Env):
 
         self.num_steps = 0
         self.num_sub_steps = 0
+        self.stop_on_done = stop_on_done
         self.total_reward = 0
         self._sim = None
         self.set_sim(sim)
@@ -221,7 +223,7 @@ class MDP(gym.Env):
 
         state = self.state
 
-        if not self.done(state):
+        if not self.done(state) or not self.stop_on_done:
             self.sim.step()
 
         rew = self.reward(state)
