@@ -41,7 +41,7 @@ from segar.things import Entity, Object, Thing, Ball, SquareWall
 
 
 # Classic control doesn't have collisions, so threshold positions if we don't want to bounce, otherwise set to None
-_POS_THRESH = .0
+_POS_THRESH = .05
 
 
 # Mountaincar default parameters, matched to gym. Everything is in the original basis (see basis functions below).
@@ -222,7 +222,8 @@ class MountainCarTask(Task):
     def apply_action(self, action: int) -> None:
         force = from_mountaincar_basis(self._actions[action], recenter=False)
         # Cartpole force is instantaneous as far as its effect on velocity.
-        self.sim.add_force('mountaincar', np.array([force, 0.]), continuous=False)
+        mass = self.sim.things['mountaincar'][Mass]
+        self.sim.add_velocity('mountaincar', np.array([force / mass, 0.]))
 
     def done(self, state: dict) -> bool:
         pos_x = state['things']['mountaincar'][Position][0]
@@ -257,9 +258,11 @@ class MountainCarObservation(StateObservation):
 
     def __call__(self, states: dict) -> np.ndarray:
         mountaincar_state = states['things'][self.unique_id]
-        pos_x = to_mountaincar_basis(mountaincar_state[Position][0])
-        vel_x = to_mountaincar_basis(mountaincar_state[Velocity][0], recenter=False)
-        return np.array(pos_x, vel_x)
+        pos_x = mountaincar_state[Position][0]
+        vel_x = mountaincar_state[Velocity][0]
+        pos_x = to_mountaincar_basis(pos_x)
+        vel_x = to_mountaincar_basis(vel_x, recenter=False)
+        return np.array([pos_x, vel_x])
 
 
 # Cartpole rules
