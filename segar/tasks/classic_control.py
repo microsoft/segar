@@ -87,6 +87,11 @@ class PoleLength(NumericFactor[float], default=0.5):
     pass
 
 
+# To implement force on the cartpole with Markov structure like in gym
+class Force(NumericFactor[float], default=0.):
+    pass
+
+
 # New Mountaincar rules
 def to_mountaincar_basis(x, recenter=True):
     mountaincar_length = _MOUNTAINCAR_POS_RANGE[1] - _MOUNTAINCAR_POS_RANGE[0]
@@ -304,26 +309,24 @@ def change_angular_velocity(thetavel: AngularVelocity, thetaacc: AngularAccelera
 
 
 @TransitionFunction
-def pole_acceleration(o_factors: Tuple[Mass, Velocity, PoleMassProp, PoleLength, Acceleration, Angle, AngularVelocity,
-                                       AngularAcceleration], gravity: Gravity
+def pole_acceleration(o_factors: Tuple[Mass, PoleMassProp, PoleLength, Acceleration, Angle, AngularVelocity,
+                                       AngularAcceleration, Force], gravity: Gravity
                       ) -> Tuple[Aggregate[AngularAcceleration], Aggregate[Acceleration]]:
 
-    total_mass, vel, pole_prop_mass, length, acceleration, theta, thetavel, thetaacc = o_factors
-    a_y = acceleration[1]
+    total_mass, pole_prop_mass, length, acceleration, theta, thetavel, thetaacc, force = o_factors
     pole_mass = total_mass * pole_prop_mass
-    force_total = a_y * total_mass
-    force_cp = to_cartpole_basis(force_total, recenter=False)
+    force_cp = to_cartpole_basis(force, recenter=False)
     sintheta = np.sin(theta)
     costheta = np.cos(theta)
     polemass_length = pole_mass * length
 
     # Copied more or less from gym
-    temp = (force_cp + length * thetavel ** 2 * sintheta) / total_mass
+    temp = (force_cp + polemass_length * thetavel ** 2 * sintheta) / total_mass
     dthetavel = (gravity * sintheta - costheta * temp) / (
             length * (4.0 / 3.0 - pole_mass * costheta ** 2 / total_mass))
 
     # Here we need to remove the acceleration because it's already being applied to the object
-    da_y = from_cartpole_basis(temp - polemass_length * dthetavel * costheta / total_mass) - a_y
+    da_y = from_cartpole_basis(temp - polemass_length * dthetavel * costheta / total_mass)
     return Aggregate[AngularAcceleration](thetaacc, dthetavel), Aggregate[Acceleration](acceleration, [0., da_y])
 
 
@@ -354,7 +357,8 @@ register_rule(color_map)
 
 
 class CartPole(Ball, default={Shape: Circle(0.2), Mobile: True, Label: "cartpole", Text: "C", Charge: .1}):
-    _factor_types = Object._factor_types + (Angle, AngularVelocity, AngularAcceleration, PoleMassProp, PoleLength)
+    _factor_types = Object._factor_types + (Angle, AngularVelocity, AngularAcceleration, PoleMassProp, PoleLength,
+                                            Force)
 
 
 # Cartpole task
@@ -385,6 +389,10 @@ class CartPoleTask(Task):
         self.terminated = False
         self.steps_terminated = 0
 
+    @property
+    def cartpole(self):
+        return self.sim.things['cartpole']
+
     def initialize(self, init_things=None):
         self.terminated = False
         self.steps_terminated = 0
@@ -406,10 +414,8 @@ class CartPoleTask(Task):
         force = from_cartpole_basis(self._actions[action], recenter=False)
         # As opposed to mountaincar, which uses force to instantaneously change the velocity,
         # the cartpole force is used directly in the equations of motion.
-        self.sim.add_force('cartpole', np.array([0., force]), continuous=True)
-        # Small hack due to MDP issues
-        mass = self.sim.things['cartpole'][Mass]
-        self.sim.add_velocity('cartpole', np.array([0., force / mass * 0.02]))
+        with self.cartpole.in_place():
+            self.cartpole[Force] = force
 
     def done(self, state: dict) -> bool:
         theta = state['things']['cartpole'][Angle]

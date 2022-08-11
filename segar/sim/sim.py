@@ -62,6 +62,7 @@ from segar.rules import (
     Rule,
     Transition,
     TransitionFunction,
+    AggregateTo,
     move,
     lorentz_law,
     apply_friction,
@@ -186,6 +187,7 @@ class Simulator:
         self.set_rules(rules or DEFAULT_RULES)
         self._valid_ep_rules = None
         self._factor_update_order = factor_update_order[:]
+        self._step_actions = []
 
         # Sim parameters
         self._save_path = save_path
@@ -283,6 +285,7 @@ class Simulator:
         self.timer = 0
         self.time = time.time()
         self._results.clear()
+        self._step_actions = []
         # Add an entity for global friction.
         self.adopt(Entity({Friction: self.parameters[Friction], ID: "global_friction"}))
 
@@ -527,6 +530,12 @@ class Simulator:
     def rules(self) -> List[Rule]:
         return self._rules
 
+    def add_action(self, action: Rule) -> None:
+        """Adds an action to the ruleset for this step
+
+        """
+        self._step_actions.append(action)
+
     def set_rules(self, rules: List[Rule]) -> None:
         """Sets the rules of the simulator.
 
@@ -670,9 +679,10 @@ class Simulator:
         :param things_to_apply_on: Optional set of things to apply rules to.
         :return: List of valid rules and arguments.
         """
-        rules_to_apply = rules_to_apply or self.rules
-        things_to_apply_on = things_to_apply_on or self.things.values()
 
+        if rules_to_apply is None:
+            rules_to_apply = self.rules
+        things_to_apply_on = things_to_apply_on or self.things.values()
         valid_rules = []
 
         all_tuples = {}
@@ -707,14 +717,14 @@ class Simulator:
 
         if self._valid_ep_rules is None:
             self._valid_ep_rules = self.get_valid_rules()
-
+        valid_ep_rules = self._valid_ep_rules[:] + self.get_valid_rules(rules_to_apply=self._step_actions[:])
         for factor_types in self._factor_update_order:
             if Position in factor_types:
                 raise ValueError(
                     f"{Position} factor type must be modified only during collision management."
                 )
             rule_outcomes = self.get_final_outcomes(
-                self._valid_ep_rules, affected_factors=factor_types
+                valid_ep_rules, affected_factors=factor_types
             )
 
             for res in rule_outcomes.values():
@@ -723,6 +733,9 @@ class Simulator:
                 elif res is not None:
                     res()
                 del res
+
+        # Resets step actions
+        self._step_actions = []
 
     @timeit
     def get_position_transitions(self) -> dict[Factor, Transition]:
@@ -1110,12 +1123,16 @@ class Simulator:
         :return: None
         """
         thing = self.things[thing_id]
-        try:
-            with thing.in_place():
-                thing[Acceleration] = acceleration
-
-        except KeyError:
+        if not thing.has_factor(Acceleration):
             raise KeyError("Acceleration can only be added to objects with acceleration.")
+
+        @TransitionFunction
+        def action_add_acceleration(a: Acceleration, thing_id_: ID) -> AggregateTo[Acceleration]:
+            if thing_id_ != thing_id:
+                return None
+            return AggregateTo[Acceleration](a, acceleration)
+
+        self.add_action(action_add_acceleration)
 
     def add_velocity(
         self, thing_id: ThingID, velocity: Union[Tuple[float, float], np.ndarray]
@@ -1132,12 +1149,17 @@ class Simulator:
         :return: None
         """
         thing = self.things[thing_id]
-        try:
-            with thing.in_place():
-                thing[Velocity] += velocity
 
-        except KeyError:
+        if not thing.has_factor(Velocity):
             raise KeyError("Velocity can only be added to objects with velocity.")
+
+        @TransitionFunction
+        def action_add_velocity(v: Velocity, thing_id_: ID) -> AggregateTo[Velocity]:
+            if thing_id_ != thing_id:
+                return None
+            return AggregateTo[Velocity](v, velocity)
+
+        self.add_action(action_add_velocity)
 
     def all_stopped(self) -> bool:
         min_velocity = self.parameters[MinVelocity]

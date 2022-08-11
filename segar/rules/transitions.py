@@ -10,6 +10,7 @@ __all__ = (
     "Differential",
     "SetFactor",
     "Aggregate",
+    "AggregateTo",
     "DidNotMatch",
     "DidNotPass",
     "Transition",
@@ -257,10 +258,12 @@ class Transition(Generic[F]):
         elif isinstance(other, SetFactor):
             return other
         elif isinstance(self, Aggregate):
-            if isinstance(other, Aggregate):
+            if isinstance(other, (Aggregate, AggregateTo)):
                 return Aggregate(self.factor, self.value + other.value)
             else:
                 return self
+        elif isinstance(self, AggregateTo):
+            return other.__class__(self.factor, self.value + other.value)
         elif isinstance(self, Differential):
             if isinstance(other, Aggregate):
                 return other
@@ -306,6 +309,28 @@ class Aggregate(Transition, Generic[F]):
         if not self.applied:
             try:
                 self.factor.set(self.value, allow_in_place=True)
+            except (TypeError, ValueError) as e:
+                raise RuntimeError(
+                    f"Transition setting on factor "
+                    f"{self.factor} failed with rule "
+                    f"{self.rule}."
+                ) from e
+            return self.factor
+        else:
+            raise ValueError("Transition can only be applied once.")
+
+
+class AggregateTo(Transition, Generic[F]):
+    """Aggregates to previous value.
+
+    """
+    def __repr__(self) -> str:
+        return f"{self.factor} += {self.value}"
+
+    def __call__(self) -> F:
+        if not self.applied:
+            try:
+                self.factor.set(self.factor.value + self.value, allow_in_place=True)
             except (TypeError, ValueError) as e:
                 raise RuntimeError(
                     f"Transition setting on factor "
