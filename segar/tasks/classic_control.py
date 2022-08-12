@@ -201,6 +201,10 @@ class MountainCarTask(Task):
         self.sim._wall_collision_rule = mountaincar_wall_collision
         self.terminated: bool = False
 
+    def initialize(self, init_things=None):
+        self.terminated = False
+        return super().initialize(init_things=init_things)
+
     def check_action(self, action: int) -> bool:
         return action in list(range(len(self._actions)))
 
