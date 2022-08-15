@@ -15,6 +15,7 @@ __all__ = (
     "Choice",
     "GaussianNoise2D",
     "Deterministic",
+    "UniformNoise2D"
 )
 
 import math
@@ -181,13 +182,13 @@ class GaussianNoise2D(Noise[np.ndarray]):
         dist = multivariate_normal(self.mean, self.cov)
         super().__init__(dist=dist, params=dict(mean=self.mean, cov=self.cov))
 
-    def sample(self) -> Factor[float]:
+    def sample(self) -> Factor[np.ndarray]:
         s = nprandom.multivariate_normal(self.mean, self.cov)
         if self.clip is not None:
             s = np.clip(s, *self.clip)
         return Factor[np.ndarray](s)
 
-    def w2_distance(self, other: Noise[float]) -> float:
+    def w2_distance(self, other: Noise[np.ndarray]) -> float:
         if isinstance(other, GaussianNoise):
             return w2_gaussian(self.mean, self.std, other.mean, other.std)
         else:
@@ -204,6 +205,33 @@ class UniformNoise(Noise[float]):
     def sample(self) -> Factor[float]:
         s = random.uniform(self.low, self.high)
         return Factor[float](s)
+
+
+class UniformNoise2D(Noise[np.ndarray]):
+    def __init__(self, low: Tuple[float, float] = (0., 0.), high: Tuple[float, float] = (1., 1.)):
+        self.low = low
+        self.high = high
+        self._dists = [uniform(low[0], high[0]), uniform(low[1], high[1])]
+        super().__init__(params=dict(low=low, high=high))
+
+    def cdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
+        cdfs = [dist.cdf(samples[i]) for i, dist in enumerate(self._dists)]
+        return np.prod(cdfs, axis=1)
+
+    def log_cdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
+        log_cdfs = [dist.logcdf(samples[i]) for i, dist in enumerate(self._dists)]
+        return sum(log_cdfs)
+
+    def pdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
+        pdfs = [dist.pdf(samples[i]) for i, dist in enumerate(self._dists)]
+        return np.prod(pdfs, axis=1)
+
+    def log_pdf(self, samples: np.ndarray) -> Union[np.ndarray, None]:
+        log_pdfs = [dist.logpdf(samples[i]) for i, dist in enumerate(self._dists)]
+        return sum(log_pdfs)
+
+    def sample(self) -> Factor[np.ndarray]:
+        return Factor[np.ndarray](np.random.uniform(self.low, self.high))
 
 
 class GaussianMixtureNoise(Noise[float]):

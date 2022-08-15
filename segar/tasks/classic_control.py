@@ -15,7 +15,7 @@ from typing import Optional, Tuple, Union
 from gym.spaces import Box, Discrete
 import numpy as np
 
-from segar.rules.transitions import TransitionFunction, Aggregate, SetFactor, Differential
+from segar.rules import TransitionFunction, Aggregate, SetFactor, Differential, Prior
 from segar.factors import (
     Position,
     Velocity,
@@ -30,13 +30,16 @@ from segar.factors import (
     Text,
     Charge,
     ID,
-    FACTORS
+    FACTORS,
+    UniformNoise,
+    UniformNoise2D
 )
-from segar.mdps.initializations import Initialization
+from segar.mdps.initializations import Initialization, ArenaInitialization
 from segar.mdps.observations import StateObservation
 from segar.mdps.tasks import Task
 from segar.parameters import Gravity
 from segar.rendering.rgb_rendering import register_rule
+from segar.sim.location_priors import RandomMiddleLocation, RandomLeftLocation, Position2D
 from segar.things import Entity, Object, Thing, Ball, SquareWall
 
 
@@ -179,11 +182,75 @@ def mountaincar_wall_collision(obj: Object, wall: SquareWall) -> SetFactor[Veloc
 
 
 # Mountaincar task
-class MountainCarInitialization(Initialization):
+class SimpleMountainCarInitialization(Initialization):
 
     def __call__(self, init_things: Optional[list[Entity]] = None) -> None:
         x = from_mountaincar_basis(float(np.random.uniform(*_MOUNTAINCAR_INIT_POS_RANGE)))
         self.sim.add_ball(position=np.array([x, 0.]), unique_id='mountaincar', initial_factors={Mass: 1.0})
+
+
+mountaincar_init_config_a = {
+    "numbers": [(Ball, 1)],
+    "priors": [
+        Prior(Position, Position2D(lows=np.array([-.1, -.1]), highs=np.array([.1, .1])), entity_type=Ball),
+        Prior(Velocity, UniformNoise2D(low=(-0.1, -0.1), high=(-0.1, -0.1))),
+        Prior(Mass, 1.0, entity_type=Ball),
+    ],
+}
+
+
+mountaincar_init_config_b = {
+    "numbers": [(Ball, 1)],
+    "priors": [
+        Prior(Position, Position2D(lows=np.array([-.2, -.2]), highs=np.array([.0, .0])), entity_type=Ball),
+        Prior(Velocity, UniformNoise2D(low=(-0.2, -0.2), high=(-0.2, -0.2))),
+        Prior(Mass, 1.0, entity_type=Ball),
+    ],
+}
+
+
+mountaincar_init_config_c = {
+    "numbers": [(Ball, 1)],
+    "priors": [
+        Prior(Position, Position2D(lows=np.array([0., 0.]), highs=np.array([.2, .2])), entity_type=Ball),
+        Prior(Velocity, UniformNoise2D(low=(-0.2, -0.2), high=(-0.2, -0.2))),
+        Prior(Mass, 1.0, entity_type=Ball),
+    ],
+}
+
+
+class CustomMountainCarInitialization(ArenaInitialization):
+    """A more customizable initialization that uses config files to specify distributions.
+
+    """
+
+    def __init__(self, config_id: str = 'a', config: dict = None):
+        if config is None:
+            if config_id == 'a':
+                config = mountaincar_init_config_a.copy()
+            elif config_id == 'b':
+                config = mountaincar_init_config_b.copy()
+            elif config_id == 'c':
+                config = mountaincar_init_config_c.copy()
+            else:
+                raise ValueError(f'No config id called {config_id}')
+        super().__init__(config=config)
+
+    def sample(self) -> list[Entity]:
+        sampled_things = super().sample()
+        has_mountaincar = False
+
+        for thing in sampled_things:
+            if isinstance(thing, Ball):
+                if not has_mountaincar:
+                    with thing.in_place():
+                        thing[ID] = 'mountaincar'
+                has_mountaincar = True
+
+        if not has_mountaincar:
+            raise ValueError("`mountaincar` params weren't created.")
+
+        return sampled_things
 
 
 class MountainCarTask(Task):
@@ -366,12 +433,87 @@ class CartPole(Ball, default={Shape: Circle(0.2), Mobile: True, Label: "cartpole
 
 
 # Cartpole task
-class CartPoleInitialization(Initialization):
+class SimpleCartPoleInitialization(Initialization):
+    """This initialization matches the one from gym.
 
+    """
     def __call__(self, init_things: Optional[list[Entity]] = None) -> None:
         theta = float(np.random.uniform(*_CARTPOLE_INIT_ANGLE_RANGE))
         cartpole = CartPole(initial_factors={Angle: theta, ID: 'cartpole', Mass: 1.1})
         self.sim.adopt(cartpole)
+
+
+cartpole_init_config_a = {
+    "numbers": [(CartPole, 1)],
+    "priors": [
+        Prior(Position, RandomMiddleLocation(), entity_type=CartPole),
+        Prior(Angle, UniformNoise(low=_CARTPOLE_INIT_ANGLE_RANGE[0], high=_CARTPOLE_INIT_ANGLE_RANGE[1]),
+              entity_type=CartPole),
+        Prior(AngularVelocity, UniformNoise(low=-0.1, high=0.1), entity_type=CartPole),
+        Prior(Velocity, UniformNoise2D(low=(-0.1, -0.1), high=(-0.1, -0.1))),
+        Prior(Mass, 1.1, entity_type=CartPole),
+    ],
+}
+
+
+cartpole_init_config_b = {
+    "numbers": [(CartPole, 1)],
+    "priors": [
+        Prior(Position, RandomLeftLocation(), entity_type=CartPole),
+        Prior(Angle, UniformNoise(low=2. * _CARTPOLE_INIT_ANGLE_RANGE[0], high=2. * _CARTPOLE_INIT_ANGLE_RANGE[1]),
+              entity_type=CartPole),
+        Prior(AngularVelocity, UniformNoise(low=-0.1, high=0.1), entity_type=CartPole),
+        Prior(Velocity, UniformNoise2D(low=(-0.1, -0.1), high=(-0.1, -0.1))),
+        Prior(Mass, 1.1, entity_type=CartPole),
+    ],
+}
+
+
+cartpole_init_config_c = {
+    "numbers": [(CartPole, 1)],
+    "priors": [
+        Prior(Position, RandomLeftLocation(), entity_type=CartPole),
+        Prior(Angle, UniformNoise(low=2. * _CARTPOLE_INIT_ANGLE_RANGE[0], high=0.),
+              entity_type=CartPole),
+        Prior(AngularVelocity, UniformNoise(low=0., high=0.1), entity_type=CartPole),
+        Prior(Velocity, UniformNoise2D(low=(-0.0, -0.2), high=(-0.1, -0.1))),
+        Prior(Mass, 1.1, entity_type=CartPole),
+    ],
+}
+
+
+class CustomCartPoleInitialization(ArenaInitialization):
+    """A more customizable initialization that uses config files to specify distributions.
+
+    """
+
+    def __init__(self, config_id: str = 'a', config: dict = None):
+        if config is None:
+            if config_id == 'a':
+                config = cartpole_init_config_a.copy()
+            elif config_id == 'b':
+                config = cartpole_init_config_b.copy()
+            elif config_id == 'c':
+                config = cartpole_init_config_c.copy()
+            else:
+                raise ValueError(f'No config id called {config_id}')
+        super().__init__(config=config)
+
+    def sample(self) -> list[Entity]:
+        sampled_things = super().sample()
+        has_cartpole = False
+
+        for thing in sampled_things:
+            if isinstance(thing, CartPole):
+                if not has_cartpole:
+                    with thing.in_place():
+                        thing[ID] = 'cartpole'
+                has_cartpole = True
+
+        if not has_cartpole:
+            raise ValueError("`cartpole` params weren't created.")
+
+        return sampled_things
 
 
 class CartPoleTask(Task):
