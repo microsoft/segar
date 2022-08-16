@@ -7,10 +7,13 @@ __license__ = "MIT"
 __all__ = (
     "PuttPuttInitialization",
     "PuttPutt",
+    "PuttPuttNegDist",
     "Invisiball",
     "puttputt_default_config",
     "puttputt_random_middle_config",
     "invisiball_config",
+    "GolfBall",
+    "GoalTile"
 )
 
 from typing import Optional
@@ -20,6 +23,7 @@ import numpy as np
 
 from segar.mdps.initializations import ArenaInitialization
 from segar.mdps.rewards import dead_reward_fn, l2_distance_reward_fn
+from segar.mdps.observations import AllStateObservation
 from segar.mdps.tasks import Task
 from segar.rendering.rgb_rendering import register_color
 from segar.factors import (
@@ -76,7 +80,7 @@ _DEFAULT_GOLFBALL_CHARGE = 1.0
 _DEFAULT_DEAD_REWARD = -100.0
 _GOAL_DISTANCE_THRESH = 1e-2
 _MAX_BALL_AT_GOAL_VEL = None
-_ACTION_RANGE = (-100, 100)
+_ACTION_RANGE = (-2, 2)
 
 
 class GolfBall(
@@ -285,9 +289,18 @@ class PuttPutt(Task):
             initialization=initialization,
         )
 
+        self._action_range = action_range
         self._dead_reward = dead_reward
         self._goal_distance_threshold = goal_distance_threshold
         self._max_ball_at_goal_velocity = max_ball_at_goal_velocity
+
+    def make_latent_obs(self):
+        latent_obs = AllStateObservation(
+            n_things=20,
+            unique_ids=["golfball", "goal"],
+            factors=[Charge, Magnetism, Position, Friction],
+        )
+        return latent_obs
 
     @property
     def golfball_id(self) -> ID:
@@ -350,7 +363,12 @@ class PuttPutt(Task):
             (self._max_ball_at_goal_velocity is None)
             or (ball_state[Velocity].norm() <= self._max_ball_at_goal_velocity)
         )
-        return is_finished or (at_goal and under_vel)
+        if at_goal and under_vel:
+            self.success = True
+        if (at_goal and under_vel) or is_finished:
+            self.terminated = True
+            self.steps_terminated += 1
+        return self.terminated
 
     def results(self, state: dict) -> dict:
         """Results for monitoring task.
@@ -373,6 +391,7 @@ class PuttPutt(Task):
 
         :param force: (np.array) magnitude and velocity of force.
         """
+        force = np.clip(force, *self._action_range)
         self.sim.add_force(self.golfball_id, force)
 
     def demo_action(self) -> np.ndarray:

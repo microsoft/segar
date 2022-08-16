@@ -46,6 +46,13 @@ class Task:
         self._action_space = action_space
         self._initialization = initialization
         self._baseline_action = baseline_action
+        self.terminated = False
+        self.success = False
+        self.steps_terminated = 0
+        self.latent_obs = self.make_latent_obs()
+
+    def make_latent_obs(self):
+        return None
 
     @property
     def sim(self) -> Simulator:
@@ -125,6 +132,9 @@ class Task:
         """Initializes the environment and task.
 
         """
+        self.terminated = False
+        self.success = False
+        self.steps_terminated = 0
         self._initialization(init_things=init_things)
 
     @property

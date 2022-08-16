@@ -10,6 +10,7 @@ import unittest
 import test_factors
 import test_things
 import test_rules
+from test_env_wrappers import test as test_wrappers
 from test_envs import test as test_env
 from test_envs_from_config import test as test_env_config
 from unit_tests import run_all_tests
@@ -35,6 +36,8 @@ if __name__ == "__main__":
     ch = logging.StreamHandler()
     logger.addHandler(ch)
     logger.info("Beginning simulator and MDP tests.")
+
+    test_wrappers()
 
     # Test all combinations of task configs, observation state types,
     # and visual generative models. This only checks that they run without

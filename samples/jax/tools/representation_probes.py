@@ -48,14 +48,19 @@ def main(argv):
     np.random.seed(seed)
     rng = PRNGKey(seed)
     rng, key = jax.random.split(rng)
+
+    env_args = dict(
+        resolution=64,
+        max_steps=MAX_STEPS
+    )
+
     dummy_env = SEGAREnv("empty-easy-rgb",
                          num_envs=1,
                          num_levels=1,
                          framestack=1,
-                         resolution=64,
-                         max_steps=MAX_STEPS,
                          _async=False,
-                         seed=123)
+                         seed=123,
+                         env_args=env_args)
 
     n_action = dummy_env.action_space[0].shape[-1]
     model_ppo = TwinHeadModel(action_dim=n_action,
@@ -108,29 +113,23 @@ def main(argv):
                                                  num_envs=num_envs,
                                                  num_levels=num_levels,
                                                  framestack=1,
-                                                 resolution=64,
-                                                 max_steps=MAX_STEPS,
                                                  _async=False,
-                                                 seed=seed)
+                                                 seed=seed,
+                                                 env_args=env_args)
                             env_test = SEGAREnv(env_name,
                                                 num_envs=num_envs,
                                                 num_levels=num_test_levels,
                                                 framestack=1,
-                                                resolution=64,
-                                                max_steps=MAX_STEPS,
                                                 _async=False,
-                                                seed=seed + 1)
-                            returns_train, (states_train, zs_train,
-                                            actions_train, factors_train,
-                                            task_ids_train) = rollouts(
+                                                seed=seed + 1,
+                                                env_args=env_args)
+                            returns_train, _ = rollouts(
                                                 env_train,
                                                 loaded_state,
                                                 rng,
                                                 n_rollouts=FLAGS.n_rollouts,
                                                 sample=FLAGS.sample)
-                            returns_test, (states_test, zs_test, actions_test,
-                                           factors_test,
-                                           task_ids_test) = rollouts(
+                            returns_test, _ = rollouts(
                                                env_test,
                                                loaded_state,
                                                rng,
@@ -241,18 +240,16 @@ def main(argv):
                                              num_envs=num_envs,
                                              num_levels=num_levels,
                                              framestack=1,
-                                             resolution=64,
-                                             max_steps=MAX_STEPS,
                                              _async=False,
-                                             seed=seed)
+                                             seed=seed,
+                                             env_args=env_args)
                         env_test = SEGAREnv(env_name,
                                             num_envs=num_envs,
                                             num_levels=num_test_levels,
                                             framestack=1,
-                                            resolution=64,
-                                            max_steps=MAX_STEPS,
                                             _async=False,
-                                            seed=seed + 1)
+                                            seed=seed + 1,
+                                            env_args=env_args)
 
                         returns_train, (states_train, zs_train, actions_train,
                                         factors_train,

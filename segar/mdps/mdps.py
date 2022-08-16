@@ -275,3 +275,14 @@ class MDP(gym.Env):
         the entire episode.
         """
         return {}
+
+    @property
+    def success(self) -> int:
+        """Success is task is successful and done.
+
+        """
+        return self._task.success and self._task.done
+
+    @property
+    def latent_obs(self) -> Observation:
+        return self._task.latent_obs

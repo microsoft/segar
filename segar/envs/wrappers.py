@@ -2,116 +2,89 @@ __copyright__ = "Copyright (c) Microsoft Corporation and Mila - Quebec AI Instit
 __license__ = "MIT"
 
 from collections import deque
-
+import logging
 import random
-from typing import Type
 
-import numpy as np
 from gym.spaces import Box
+import numpy as np
 
-from segar.factors import Charge, Magnetism, Position, Friction
-from segar.mdps import MDP, Task
-from segar.mdps.observations import AllStateObservation
-from segar.tasks import PuttPuttInitialization, PuttPutt
-from segar import get_sim
+from segar.mdps import MDP, Observation
 
-from segar.sim import Simulator
+
+logger = logging.getLogger(__name__)
 
 
 class SequentialTaskWrapper:
     def __init__(
         self,
-        obs,
-        init_config,
-        config,
-        action_range,
+        mdp_generator,
         num_levels,
-        max_steps,
         framestack=1,
         seed=None,
-        wall_damping=0.025,
-        friction=0.05,
-        save_path="sim.state",
-        task_class: Type[Task] = PuttPutt,
+        mdp_config=None
     ):
         if seed is not None:
-            print("Setting env seed to %d" % seed)
+            logger.info(f"Setting env seed to {seed}")
             np.random.seed(seed)
             random.seed(seed)
-        self._max_steps = max_steps
 
-        self.task_list = []
-        self.mdp_list: list[FrameStackWrapper] = []
+        if mdp_config is None:
+            mdp_config = {}
+
+        self.env_list: list[FrameStackWrapper] = []
         for i in range(num_levels):
-            initialization = PuttPuttInitialization(config=init_config)
-            task = task_class(action_range=action_range, initialization=initialization)
-            sim = Simulator(
-                state_buffer_length=50,
-                wall_damping=wall_damping,
-                friction=friction,
-                safe_mode=False,
-                save_path=save_path + str(i),
-            )
-            task.set_sim(sim)
-            task.sample()
-            mdp = FrameStackWrapper(ReturnMonitor(MDP(obs, task, **config, sim=sim)), framestack)
-            self.task_list.append(task)
-            self.mdp_list.append(mdp)
+            mdp = mdp_generator(i, **mdp_config.copy())
+            env = FrameStackWrapper(ReturnMonitor(mdp), framestack)
+            self.env_list.append(env)
 
-        self.n_envs = len(self.task_list)
-        self.current_step = 0
+        self.n_envs = len(self.env_list)
         self.current_env = self._pick_env()
-        self.sobs = AllStateObservation(
-            n_things=20,
-            unique_ids=["golfball", "goal"],
-            factors=[Charge, Magnetism, Position, Friction],
-        )
+
+    @property
+    def current_step(self) -> int:
+        return self.env.num_steps
+
+    @property
+    def _max_steps(self) -> int:
+        return self.env.max_steps_per_episode
 
     @property
     def action_space(self):
-        return self.current_env.action_space
+        return self.env.action_space
 
     @property
     def sim(self):
-        return get_sim()
+        return self.env.sim
 
     @property
     def observation_space(self):
-        return self.current_env.observation_space
+        return self.env.observation_space
 
     @property
     def metadata(self):
         return None
 
+    @property
+    def env(self):
+        return self.current_env
+
     def reset(self, task_id=None):
         self.current_env = self._pick_env(task_id)
-        obs = self.current_env.reset()
-        self.current_step = 0
+        obs = self.env.reset()
         return obs
-
-    def _get_current_sim(self) -> Simulator:
-        return self.current_env.env.env.sim
 
     def step(self, action):
         try:
-            next_obs, rew, done, info = self.current_env.step(action)
+            next_obs, rew, done, info = self.env.step(action)
         except Exception as e:
             # repeat again in hopes the crash doesn't get registered
-            next_obs, rew, done, info = self.current_env.step(action)
-            print("Ignoring simulator exception:")
-            print(e)
-        self.current_step += 1
-        success = int(
-            done
-            and (self.current_step < self._max_steps)
-            and self._get_current_sim().things["golfball"].Alive.value
-        )
-        done = done or (self.current_step > self._max_steps)
-        if done:
-            next_obs = self.reset()
-            info["success"] = success
+            next_obs, rew, done, info = self.env.step(action)
+            logger.error("Ignoring simulator exception:")
+            logger.error(e)
+        success = self.env.success
+        info["success"] = success
         info["task_id"] = self.task_id
-        info["latent_features"] = self.sobs(self._get_current_sim().state)
+        info["latent_features"] = self.latent_obs(self.sim.state)
         return next_obs.copy(), rew, done, info
 
     def _pick_env(self, task_id=None):
@@ -119,15 +92,19 @@ class SequentialTaskWrapper:
             self.task_id = np.random.randint(low=0, high=self.n_envs, size=(1,)).item()
         else:
             self.task_id = task_id
-        return self.mdp_list[self.task_id]
+        return self.env_list[self.task_id]
 
     def seed(self, seed):
-        for mdp in self.mdp_list:
+        for mdp in self.env_list:
             mdp.seed(seed)
 
     def close(self):
-        for mdp in self.mdp_list:
+        for mdp in self.env_list:
             del mdp
+
+    @property
+    def latent_obs(self) -> Observation:
+        return self.env.latent_obs
 
 
 class ReturnMonitor:
@@ -158,8 +135,28 @@ class ReturnMonitor:
         self.env.close()
 
     @property
+    def success(self) -> int:
+        return self.env.success
+
+    @property
     def metadata(self):
         return None
+
+    @property
+    def num_steps(self) -> int:
+        return self.env.num_steps
+
+    @property
+    def max_steps_per_episode(self) -> int:
+        return self.env.max_steps_per_episode
+
+    @property
+    def sim(self):
+        return self.env.sim
+
+    @property
+    def latent_obs(self) -> Observation:
+        return self.env.latent_obs
 
 
 class FrameStackWrapper:
@@ -168,16 +165,18 @@ class FrameStackWrapper:
         self.n_frames = n_frames
         self.frames = deque([], maxlen=n_frames)
 
-        wrapped_obs_shape = env.observation_space.shape
-
-        self.observation_space = Box(
-            low=0,
-            high=255,
-            shape=np.concatenate(
-                [wrapped_obs_shape[:2], [wrapped_obs_shape[2] * n_frames]], axis=0
-            ),
-            dtype=np.uint8,
-        )
+        obs_space = env.observation_space
+        obs_shape = obs_space.shape
+        if isinstance(obs_space, Box):
+            new_shape = np.concatenate([obs_shape[:2], [obs_shape[2] * n_frames]], axis=0)
+            self.observation_space = Box(
+                low=obs_space.low,
+                high=obs_space.high,
+                shape=new_shape,
+                dtype=obs_space.dtype,
+            )
+        else:
+            raise NotImplementedError
 
         self.action_space = env.action_space
 
@@ -203,5 +202,25 @@ class FrameStackWrapper:
         self.env.close()
 
     @property
+    def success(self) -> int:
+        return self.env.success
+
+    @property
     def metadata(self):
         return None
+
+    @property
+    def num_steps(self) -> int:
+        return self.env.num_steps
+
+    @property
+    def max_steps_per_episode(self) -> int:
+        return self.env.max_steps_per_episode
+
+    @property
+    def sim(self):
+        return self.env.sim
+
+    @property
+    def latent_obs(self) -> Observation:
+        return self.env.latent_obs

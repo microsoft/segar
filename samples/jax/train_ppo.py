@@ -129,27 +129,30 @@ def main(argv):
     # Test environments always have the same number of test levels for
     # fair comparison across runs
     MAX_STEPS = 100
+
+    env_args = dict(
+        resolution=FLAGS.resolution,
+        max_steps=MAX_STEPS,
+        save_path=os.path.join(FLAGS.output_dir, run_name)
+    )
+
     env = SEGAREnv(
         FLAGS.env_name,
         num_envs=FLAGS.num_envs,
         num_levels=FLAGS.num_train_levels,
         framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=MAX_STEPS,
         _async=False,
         seed=FLAGS.seed,
-        save_path=os.path.join(FLAGS.output_dir, run_name)
+        env_args=env_args
     )
     env_test = SEGAREnv(
         FLAGS.env_name,
         num_envs=1,
         num_levels=FLAGS.num_test_levels,
         framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=MAX_STEPS,
         _async=False,
         seed=FLAGS.seed + 1,
-        save_path=os.path.join(FLAGS.output_dir, run_name)
+        env_args=env_args
     )
     n_action = env.action_space[0].shape[-1]
 

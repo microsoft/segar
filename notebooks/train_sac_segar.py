@@ -133,27 +133,29 @@ def main(_):
         action_repeat = 1
         # action_repeat = PLANET_ACTION_REPEAT.get(FLAGS.env_name, 2)
 
+    env_args = dict(
+        resolution=FLAGS.resolution,
+        max_steps=FLAGS.max_steps,
+        save_path=os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
+    )
+
     env = SEGAREnv(
         FLAGS.env_name,
         num_envs=FLAGS.num_envs,
         num_levels=FLAGS.num_train_levels,
         framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=FLAGS.max_steps,
         _async=False,
         seed=FLAGS.seed,
-        save_path=os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
+        env_args=env_args
     )
     eval_env = SEGAREnv(
         FLAGS.env_name,
         num_envs=1,
         num_levels=FLAGS.num_test_levels,
         framestack=FLAGS.framestack,
-        resolution=FLAGS.resolution,
-        max_steps=FLAGS.max_steps,
         _async=False,
         seed=FLAGS.seed + 42,
-        save_path=os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
+        env_args=env_args
     )
 
     np.random.seed(FLAGS.seed)
