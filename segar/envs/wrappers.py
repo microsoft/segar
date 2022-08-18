@@ -84,7 +84,8 @@ class SequentialTaskWrapper:
         success = self.env.success
         info["success"] = success
         info["task_id"] = self.task_id
-        info["latent_features"] = self.latent_obs(self.sim.state)
+        if self.latent_obs is not None:
+            info["latent_features"] = self.latent_obs(self.sim.state)
         return next_obs.copy(), rew, done, info
 
     def _pick_env(self, task_id=None):
@@ -168,7 +169,8 @@ class FrameStackWrapper:
         obs_space = env.observation_space
         obs_shape = obs_space.shape
         if isinstance(obs_space, Box):
-            new_shape = np.concatenate([obs_shape[:2], [obs_shape[2] * n_frames]], axis=0)
+            n = len(obs_shape)
+            new_shape = np.concatenate([obs_shape[:(n - 1)], [obs_shape[(n - 1)] * n_frames]], axis=0).astype('int32')
             self.observation_space = Box(
                 low=obs_space.low,
                 high=obs_space.high,

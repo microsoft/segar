@@ -57,7 +57,7 @@ class SEGAREnv(gym.Env):
             )
 
     def step(self, action):
-        self.env.step_async(np.array(action))
+        self.env.step_async(np.array(action)[None, :])
         return self.env.step_wait()
 
     def reset(self, **kwargs):
@@ -68,8 +68,8 @@ class SEGAREnv(gym.Env):
 
     @property
     def action_space(self):
-        return self.dummy_env.action_space
+        return self.env.action_space
 
     @property
     def observation_space(self):
-        return self.dummy_env.observation_space
+        return self.env.observation_space

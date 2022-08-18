@@ -376,9 +376,6 @@ def classic_control_env_generator(string_to_parse: str) -> Callable:
             framerate: int = framerate_,
             max_steps: int = max_steps_,
             save_path: str = "sim.state"):
-        initialization = task_init(config=init_config.copy())
-        obs = task_obs()
-        task = task_cls(initialization=initialization)
 
         sim = Simulator(
             state_buffer_length=50,
@@ -390,6 +387,11 @@ def classic_control_env_generator(string_to_parse: str) -> Callable:
             safe_mode=False,
             save_path=save_path + str(i),
         )
+
+        initialization = task_init(config=init_config.copy())
+        obs = task_obs()
+        task = task_cls(initialization=initialization)
+
 
         task.set_sim(sim)
         task.sample()

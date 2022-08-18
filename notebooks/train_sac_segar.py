@@ -70,28 +70,17 @@ PLANET_ACTION_REPEAT = {
 }
 
 kwargs = {
-    'algo' : 'drq_faster',
-
+    'algo' : 'sac',
     'actor_lr' : 3e-4,
     'critic_lr' : 3e-4,
     'temp_lr' : 3e-4,
-
     'hidden_dims' : (256, 256),
-
-    'cnn_features' : (32, 64, 128, 256),
-    'cnn_strides' : (2, 2, 2, 2),
-    'cnn_padding' : 'SAME',
-    'latent_dim' : 50,
-
     'discount' : 0.99,
-
     'tau' : 0.005,
     'target_update_period' : 1,
-
     'init_temperature' : 0.1,
     'target_entropy' : None,
-
-    'replay_buffer_size' : 100_000
+    'replay_buffer_size': 100000
 }
 
 def main(_):
@@ -134,7 +123,6 @@ def main(_):
         # action_repeat = PLANET_ACTION_REPEAT.get(FLAGS.env_name, 2)
 
     env_args = dict(
-        resolution=FLAGS.resolution,
         max_steps=FLAGS.max_steps,
         save_path=os.path.join(FLAGS.save_dir, group_name, run_name, str(FLAGS.seed))
     )
@@ -160,15 +148,14 @@ def main(_):
 
     np.random.seed(FLAGS.seed)
     random.seed(FLAGS.seed)
-
     if algo == 'sac':
         agent = SACLearner(FLAGS.seed,
                            env.observation_space.sample(),
-                           jax.numpy.array(env.action_space.sample()), **kwargs)
+                           jax.numpy.array(env.action_space.sample())[None, :], **kwargs)
     else:
         agent = DrQLearner(FLAGS.seed,
                         env.observation_space.sample(),
-                        jax.numpy.array(env.action_space.sample()), **kwargs)
+                        jax.numpy.array(env.action_space.sample())[None, :], **kwargs)
 
     replay_buffer = ReplayBuffer(
         env.observation_space, env.action_space, replay_buffer_size or FLAGS.max_steps // action_repeat)
