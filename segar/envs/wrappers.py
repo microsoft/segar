@@ -5,7 +5,7 @@ from collections import deque
 import logging
 import random
 
-from gym.spaces import Box
+from gym.spaces import Box, Discrete
 import numpy as np
 
 from segar.mdps import MDP, Observation
@@ -74,6 +74,10 @@ class SequentialTaskWrapper:
         return obs
 
     def step(self, action):
+        if isinstance(self.action_space, Discrete):
+            while isinstance(action, np.ndarray):
+                action = action[0]
+
         try:
             next_obs, rew, done, info = self.env.step(action)
         except Exception as e:

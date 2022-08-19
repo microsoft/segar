@@ -132,7 +132,6 @@ def mountaincar_hill(o_factors: Tuple[Size, Position, Acceleration, Mass], gravi
     slope = np.cos(3 * pos_x)
     da_x = -gravity * mass * slope * _MOUNTAINCAR_TIME_SCALE
     da_x = from_mountaincar_basis(da_x, recenter=False)
-
     da = Acceleration([da_x, 0.])
     return Aggregate[Acceleration](acc, da)
 
@@ -193,7 +192,7 @@ mountaincar_init_config_a = {
     "numbers": [(Ball, 1)],
     "priors": [
         Prior(Position, Position2D(lows=np.array([-.1, -.1]), highs=np.array([.1, .1])), entity_type=Ball),
-        Prior(Velocity, UniformNoise2D(low=(-0.1, -0.1), high=(-0.1, -0.1))),
+        Prior(Velocity, UniformNoise2D(low=(-0.001, -0.001), high=(0.001, 0.001)), entity_type=Ball),
         Prior(Mass, 1.0, entity_type=Ball),
     ],
 }
@@ -203,7 +202,7 @@ mountaincar_init_config_b = {
     "numbers": [(Ball, 1)],
     "priors": [
         Prior(Position, Position2D(lows=np.array([-.2, -.2]), highs=np.array([.0, .0])), entity_type=Ball),
-        Prior(Velocity, UniformNoise2D(low=(-0.2, -0.2), high=(-0.2, -0.2))),
+        Prior(Velocity, UniformNoise2D(low=(-0.002, -0.002), high=(0.002, 0.200)), entity_type=Ball),
         Prior(Mass, 1.0, entity_type=Ball),
     ],
 }
@@ -213,7 +212,7 @@ mountaincar_init_config_c = {
     "numbers": [(Ball, 1)],
     "priors": [
         Prior(Position, Position2D(lows=np.array([0., 0.]), highs=np.array([.2, .2])), entity_type=Ball),
-        Prior(Velocity, UniformNoise2D(low=(-0.2, -0.2), high=(-0.2, -0.2))),
+        Prior(Velocity, UniformNoise2D(low=(-0.002, -0.002), high=(0.002, 0.002)), entity_type=Ball),
         Prior(Mass, 1.0, entity_type=Ball),
     ],
 }
@@ -551,8 +550,6 @@ class CartPoleTask(Task):
             return 1.
 
     def apply_action(self, action: int) -> None:
-        while isinstance(action, np.ndarray):
-            action = action[0]
         force = from_cartpole_basis(self._actions[action], recenter=False)
         # As opposed to mountaincar, which uses force to instantaneously change the velocity,
         # the cartpole force is used directly in the equations of motion.
