@@ -551,7 +551,7 @@ class CartPoleTask(Task):
             return 1.
 
     def apply_action(self, action: int) -> None:
-        if isinstance(action, np.ndarray):
+        while isinstance(action, np.ndarray):
             action = action[0]
         force = from_cartpole_basis(self._actions[action], recenter=False)
         # As opposed to mountaincar, which uses force to instantaneously change the velocity,

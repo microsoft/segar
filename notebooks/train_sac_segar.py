@@ -172,9 +172,9 @@ def main(_):
                        smoothing=0.1,
                        disable=not FLAGS.tqdm):
         if i < FLAGS.start_training:
-            action = env.action_space.sample()
+            action = env.action_space.sample()[None, :]
         else:
-            action = tuple(agent.sample_actions(observation))
+            action = tuple(agent.sample_actions(observation)[None, :])
 
         next_observation, reward, done, info = env.step(action)
        
@@ -193,7 +193,7 @@ def main(_):
                 mask = 1
 
         replay_buffer.insert(jax.numpy.array(observation),
-                             jax.numpy.array(action), reward, mask, float(done[0]),
+                             jax.numpy.array(action)[None, :], reward, mask, float(done[0]),
                              jax.numpy.array(next_observation))
         observation = next_observation
 

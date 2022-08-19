@@ -392,7 +392,6 @@ def classic_control_env_generator(string_to_parse: str) -> Callable:
         obs = task_obs()
         task = task_cls(initialization=initialization)
 
-
         task.set_sim(sim)
         task.sample()
         mdp = MDP(obs, task, max_steps_per_episode=max_steps, sim=sim,

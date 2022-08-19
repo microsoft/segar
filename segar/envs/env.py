@@ -17,7 +17,7 @@ class SEGAREnv(gym.Env):
         self,
         env_name: str,
         num_levels: int = 100,
-        num_envs: int = 1,
+        num_envs: int = 2,
         framestack: int = 1,
         _async: bool = False,
         seed: int = 123,
